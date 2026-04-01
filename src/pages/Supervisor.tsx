@@ -1,25 +1,27 @@
 import React, { useState } from 'react';
 import { useProductionStore } from '@/store/productionStore';
-import { StatusBadge } from '@/components/StatusBadge';
+import { useLabels, useDivergences, useDeleteLabel, useReprintLabel, useWorkstations } from '@/hooks/useProductionData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShieldCheck, RotateCcw, Trash2, AlertTriangle, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Supervisor() {
-  const store = useProductionStore();
+  const { currentWorkstation } = useProductionStore();
+  const { data: labels = [] } = useLabels();
+  const { data: divergences = [] } = useDivergences();
+  const { data: workstations = [] } = useWorkstations();
+  const deleteLabel = useDeleteLabel();
+  const reprintLabel = useReprintLabel();
   const [searchId, setSearchId] = useState('');
 
   const filteredLabels = searchId
-    ? store.labels.filter(l =>
+    ? labels.filter(l =>
         l.compositeId.includes(searchId) || l.partNumber.toLowerCase().includes(searchId.toLowerCase())
       )
-    : store.labels.sort((a, b) => b.printedAt.localeCompare(a.printedAt)).slice(0, 50);
+    : [...labels].sort((a, b) => b.printedAt.localeCompare(a.printedAt)).slice(0, 50);
 
-  const handleDeleteLabel = (labelId: string) => {
-    store.deleteLabel(labelId);
-    toast.info('Etiqueta removida e saldo estornado');
-  };
+  const currentWS = workstations.find(w => w.id === currentWorkstation);
 
   return (
     <div className="space-y-6">
@@ -29,21 +31,21 @@ export default function Supervisor() {
       </div>
 
       {/* Divergences */}
-      {store.divergences.length > 0 && (
+      {divergences.length > 0 && (
         <div className="industrial-panel p-4 border-warning/30">
           <h2 className="text-sm font-semibold mb-3 flex items-center gap-2 text-warning">
             <AlertTriangle className="w-4 h-4" />
-            Divergências ({store.divergences.length})
+            Divergências ({divergences.length})
           </h2>
           <div className="space-y-2">
-            {store.divergences.map(d => (
+            {divergences.map(d => (
               <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-warning/5 border border-warning/20">
                 <div>
                   <span className="font-mono text-sm font-medium">{d.partNumber}</span>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Declarado: {d.declaredQty.toLocaleString()} · Etiquetado: {d.labeledQty.toLocaleString()} ·
+                    Remessa: {d.declaredQty.toLocaleString('pt-BR')} · Físico: {d.labeledQty.toLocaleString('pt-BR')} ·
                     <span className={d.type === 'falta' ? ' text-destructive' : ' text-warning'}>
-                      {' '}{d.type === 'falta' ? '-' : '+'}{Math.abs(d.difference)} ({d.type})
+                      {' '}{d.type === 'falta' ? '-' : '+'}{Math.abs(d.difference).toLocaleString('pt-BR')} ({d.type})
                     </span>
                   </p>
                 </div>
@@ -79,6 +81,7 @@ export default function Supervisor() {
                 <tr className="border-b border-border text-left">
                   <th className="pb-2 text-xs text-muted-foreground font-medium">ID Composto</th>
                   <th className="pb-2 text-xs text-muted-foreground font-medium">Part Number</th>
+                  <th className="pb-2 text-xs text-muted-foreground font-medium text-right">Qtd</th>
                   <th className="pb-2 text-xs text-muted-foreground font-medium">Bancada</th>
                   <th className="pb-2 text-xs text-muted-foreground font-medium">Impresso por</th>
                   <th className="pb-2 text-xs text-muted-foreground font-medium">Data/Hora</th>
@@ -90,6 +93,7 @@ export default function Supervisor() {
                   <tr key={label.id} className="hover:bg-muted/30">
                     <td className="py-2 font-mono text-xs">{label.compositeId}</td>
                     <td className="py-2 font-mono">{label.partNumber}</td>
+                    <td className="py-2 text-right font-mono">{label.quantity?.toLocaleString('pt-BR')}</td>
                     <td className="py-2">Bancada {label.workstationId}</td>
                     <td className="py-2 text-muted-foreground">{label.printedBy}</td>
                     <td className="py-2 text-muted-foreground text-xs">
@@ -99,7 +103,7 @@ export default function Supervisor() {
                       <div className="flex justify-end gap-1">
                         <button
                           onClick={() => {
-                            store.reprintLabel(label.id);
+                            reprintLabel.mutate({ id: label.id, printerIp: currentWS?.printerIp || '' });
                             toast.info(`Reimpressão: ${label.compositeId}`);
                           }}
                           className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
@@ -108,7 +112,12 @@ export default function Supervisor() {
                           <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => handleDeleteLabel(label.id)}
+                          onClick={() => {
+                            deleteLabel.mutate(label.id, {
+                              onSuccess: () => toast.info('Etiqueta removida e saldo estornado'),
+                              onError: (e: any) => toast.error(e.message),
+                            });
+                          }}
                           className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                           title="Deletar (estorno)"
                         >

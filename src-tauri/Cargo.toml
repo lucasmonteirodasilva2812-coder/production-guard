@@ -1,0 +1,31 @@
+[package]
+name = "production-guard"
+version = "0.1.0"
+description = "Sistema de Controle de Produção — Production Guard"
+authors = []
+edition = "2021"
+
+[package.metadata]
+
+[lib]
+name = "production_guard_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "production-guard"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

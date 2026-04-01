@@ -1,299 +1,549 @@
-import React, { useState } from 'react';
-import { useProductionStore } from '@/store/productionStore';
+import React, { useState, useCallback } from 'react';
+import { useAuthStore } from '@/store/authStore';
+import {
+  useShipments, usePartNumbers, useLabels, useReservations, useWorkstations,
+  useCreateReservation, useCreateLabel, useReprintLabel, useFinalizePartNumber, useAuthorizeSurplus,
+} from '@/hooks/useProductionData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Printer, AlertTriangle, CheckCircle, RotateCcw, QrCode, Package } from 'lucide-react';
+import { LabelPreview, BoxLabelPreview, LabelData } from '@/components/LabelPreview';
+import { Printer, AlertTriangle, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import type { Label } from '@/types/production';
+
+// ── Printer selection dialog ──────────────────────────────────────────────────
+interface PrinterDialogProps {
+  printers: string[];
+  selected: string;
+  onSelect: (p: string) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function PrinterDialog({ printers, selected, onSelect, onConfirm, onCancel }: PrinterDialogProps) {
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="industrial-panel p-6 w-80 space-y-4">
+        <h2 className="font-semibold flex items-center gap-2">
+          <Printer className="w-4 h-4 text-primary" /> Selecionar Impressora
+        </h2>
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {printers.map(p => (
+            <button
+              key={p}
+              onClick={() => onSelect(p)}
+              className={cn(
+                'w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors',
+                selected === p ? 'border-primary bg-primary/5 font-medium' : 'border-border hover:border-muted-foreground/30'
+              )}
+            >{p}</button>
+          ))}
+          {printers.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center py-4">Nenhuma impressora encontrada</p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={onConfirm} disabled={!selected} className="flex-1">Imprimir</Button>
+          <Button variant="outline" onClick={onCancel}>Cancelar</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Workstation tabs ──────────────────────────────────────────────────────────
+type TabType = 'normal' | 'caixa';
 
 export default function Workstation() {
-  const store = useProductionStore();
+  const user = useAuthStore(s => s.user);
+  const workstationId = useAuthStore(s => s.workstationId) || 1;
+
+  const { data: shipments = [] } = useShipments();
+  const { data: partNumbers = [] } = usePartNumbers();
+  const { data: labels = [] } = useLabels();
+  const { data: reservations = [] } = useReservations();
+  const { data: workstations = [] } = useWorkstations();
+  const createReservation = useCreateReservation();
+  const createLabel = useCreateLabel();
+  const reprintLabel = useReprintLabel();
+  const finalizePN = useFinalizePartNumber();
+  const authorizeSurplus = useAuthorizeSurplus();
+
+  // Navigation state
+  const [selectedShipment, setSelectedShipment] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('normal');
+
+  // Form state (normal label)
+  const [pnInput, setPnInput] = useState('');
   const [selectedPN, setSelectedPN] = useState<string | null>(null);
-  const [printQty, setPrintQty] = useState('1');
+  const [printQty, setPrintQty] = useState('');
+  const [msl, setMsl] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [lastLabel, setLastLabel] = useState<Label | null>(null);
+
+  // Form state (box label)
+  const [boxPn, setBoxPn] = useState('');
+  const [boxDesc, setBoxDesc] = useState('');
+  const [boxQty, setBoxQty] = useState('');
+  const [boxMsl, setBoxMsl] = useState('');
+  const [lastBoxLabel, setLastBoxLabel] = useState<LabelData | null>(null);
+
+  // Auth flow
   const [supervisorPassword, setSupervisorPassword] = useState('');
   const [showSupervisorAuth, setShowSupervisorAuth] = useState(false);
-  const [showQualityCheck, setShowQualityCheck] = useState(false);
-  const [qrInput, setQrInput] = useState('');
-  const [qualityLabelId, setQualityLabelId] = useState('');
+  const [showPrinterDialog, setShowPrinterDialog] = useState(false);
+  const [availablePrinters, setAvailablePrinters] = useState<string[]>([]);
+  const [selectedPrinter, setSelectedPrinter] = useState('');
+  const [pendingPrint, setPendingPrint] = useState<(() => void) | null>(null);
 
-  const activePNs = store.partNumbers.filter(p => p.status !== 'concluido');
-  const selected = store.partNumbers.find(p => p.id === selectedPN);
-  const available = selectedPN ? store.getAvailableQty(selectedPN) : 0;
-  const reserved = selectedPN ? store.getReservedQty(selectedPN) : 0;
+  const currentWS = workstations.find(w => w.id === workstationId);
+  const selectedShipmentData = shipments.find(s => s.id === selectedShipment);
+  const shipmentPNs = partNumbers.filter(pn => pn.shipmentId === selectedShipment);
+  const selected = partNumbers.find(p => p.id === selectedPN);
+  const reserved = selectedPN
+    ? reservations.filter(r => r.partNumberId === selectedPN && r.status === 'pendente').reduce((s, r) => s + r.quantity, 0)
+    : 0;
+  const available = selected ? selected.declaredQty - selected.labeledQty - reserved : 0;
 
-  const recentLabels = store.labels
-    .filter(l => l.workstationId === store.currentWorkstation)
+  const recentLabels = labels
+    .filter(l => l.workstationId === workstationId)
     .sort((a, b) => b.printedAt.localeCompare(a.printedAt))
-    .slice(0, 20);
+    .slice(0, 30);
 
-  const shouldQualityCheck = recentLabels.length > 0 && recentLabels.length % 50 === 0;
+  // Select PN by clicking table row or typing in input
+  const selectPnById = useCallback((id: string) => {
+    const pn = partNumbers.find(p => p.id === id);
+    if (pn) { setSelectedPN(id); setPnInput(pn.partNumber); }
+  }, [partNumbers]);
 
-  const handlePrint = () => {
-    if (!selectedPN || !selected) return;
-    const qty = parseInt(printQty);
-    if (isNaN(qty) || qty <= 0) {
-      toast.error('Quantidade inválida');
-      return;
+  const handlePnInputChange = (val: string) => {
+    setPnInput(val);
+    const match = partNumbers.find(p => p.partNumber.toLowerCase() === val.toLowerCase());
+    if (match) setSelectedPN(match.id);
+    else setSelectedPN(null);
+  };
+
+  // Printer list via Tauri or fallback to workstation config
+  const getPrinters = async (): Promise<string[]> => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const printers = await invoke<string[]>('list_printers');
+      return printers.length > 0 ? printers : [currentWS?.printerIp || ''].filter(Boolean);
+    } catch {
+      return [currentWS?.printerIp || ''].filter(Boolean);
     }
-    if (qty > available) {
-      if (available <= 0) {
-        setShowSupervisorAuth(true);
-        toast.warning('Saldo zerado! Necessária autorização de Supervisor.');
-        return;
-      }
-      toast.error(`Quantidade excede o disponível (${available})`);
-      return;
-    }
+  };
 
-    // Create reservation and generate labels
-    for (let i = 0; i < qty; i++) {
-      const resId = store.createReservation(selectedPN, 1);
-      if (resId) {
-        store.generateLabel(selectedPN, resId);
-      }
-    }
-
-    toast.success(`${qty} etiqueta(s) enviada(s) para impressão`, {
-      description: `Part Number: ${selected.partNumber}`,
+  const initiateprint = (onConfirm: (printerIp: string) => void) => {
+    getPrinters().then(printers => {
+      setAvailablePrinters(printers);
+      setSelectedPrinter(printers[0] || currentWS?.printerIp || '');
+      setPendingPrint(() => () => onConfirm(selectedPrinter));
+      setShowPrinterDialog(true);
     });
+  };
 
-    // Check for quality sampling
-    const totalPrinted = store.labels.filter(l => l.workstationId === store.currentWorkstation).length;
-    if (totalPrinted > 0 && totalPrinted % 50 === 0) {
-      const lastLabel = store.labels[store.labels.length - 1];
-      setQualityLabelId(lastLabel.id);
-      setShowQualityCheck(true);
+  // ── Normal label print ────────────────────────────────────────────────────
+  const handlePrint = () => {
+    if (!selectedPN || !selected) { toast.error('Selecione um Part Number'); return; }
+    const qty = parseInt(printQty);
+    if (isNaN(qty) || qty <= 0) { toast.error('Quantidade inválida'); return; }
+    if (qty > available) {
+      if (available <= 0) { setShowSupervisorAuth(true); toast.warning('Saldo zerado! Necessária autorização de Supervisor.'); return; }
+      toast.error(`Quantidade excede o disponível (${available.toLocaleString('pt-BR')})`);
+      return;
     }
+
+    getPrinters().then(printers => {
+      setAvailablePrinters(printers);
+      setSelectedPrinter(printers[0] || currentWS?.printerIp || '');
+      setShowPrinterDialog(true);
+      setPendingPrint(() => (printerIp: string) => {
+        createReservation.mutate(
+          { partNumberId: selectedPN, workstationId, quantity: qty },
+          {
+            onSuccess: (reservation) => {
+              createLabel.mutate(
+                {
+                  partNumberId: selectedPN, reservationId: reservation.id,
+                  workstationId, printedBy: user?.name || 'Operador',
+                  msl: msl || undefined, expiryDate: expiryDate || undefined, labelType: 'normal',
+                },
+                {
+                  onSuccess: (label) => {
+                    setLastLabel(label);
+                    toast.success(`Etiqueta enviada para ${printerIp}`, { description: `${selected.partNumber} — ${qty.toLocaleString('pt-BR')} un` });
+                  },
+                  onError: (e: any) => toast.error(`Erro ao gerar etiqueta: ${e.message}`),
+                }
+              );
+            },
+            onError: (e: any) => toast.error(`Erro ao criar reserva: ${e.message}`),
+          }
+        );
+      });
+    });
+  };
+
+  // ── Box label print ───────────────────────────────────────────────────────
+  const handleBoxPrint = () => {
+    if (!boxPn.trim()) { toast.error('Informe o Part Number'); return; }
+    const qty = parseInt(boxQty);
+    if (isNaN(qty) || qty <= 0) { toast.error('Quantidade inválida'); return; }
+
+    getPrinters().then(printers => {
+      setAvailablePrinters(printers);
+      setSelectedPrinter(printers[0] || currentWS?.printerIp || '');
+      setShowPrinterDialog(true);
+      setPendingPrint(() => (printerIp: string) => {
+        const now = new Date().toISOString();
+        const boxLabel: LabelData = {
+          partNumber: boxPn.trim(), description: boxDesc.trim(),
+          quantity: qty, printedBy: user?.name || 'Operador', printedAt: now,
+          msl: boxMsl || null, labelType: 'caixa',
+        };
+        setLastBoxLabel(boxLabel);
+        toast.success(`Etiqueta de caixa enviada para ${printerIp}`);
+      });
+    });
+  };
+
+  const handlePrinterConfirm = () => {
+    setShowPrinterDialog(false);
+    if (pendingPrint) pendingPrint(selectedPrinter);
+    setPendingPrint(null);
   };
 
   const handleSupervisorAuth = () => {
     if (supervisorPassword === 'super123') {
       if (selectedPN) {
-        store.authorizeSurplus(selectedPN, parseInt(printQty) || 1);
-        toast.success('Excedente autorizado pelo Supervisor');
-        setShowSupervisorAuth(false);
-        setSupervisorPassword('');
+        authorizeSurplus.mutate(
+          { id: selectedPN, extraQty: parseInt(printQty) || 1 },
+          { onSuccess: () => { toast.success('Excedente autorizado'); setShowSupervisorAuth(false); setSupervisorPassword(''); } }
+        );
       }
-    } else {
-      toast.error('Senha de Supervisor incorreta');
-    }
-  };
-
-  const handleQualityCheck = () => {
-    if (!qualityLabelId) return;
-    const check = store.addQualityCheck(qualityLabelId, qrInput);
-    if (check.isValid) {
-      toast.success('QR Code validado com sucesso!');
-    } else {
-      toast.error('QR Code INVÁLIDO! Verifique a impressão.');
-    }
-    setShowQualityCheck(false);
-    setQrInput('');
+    } else { toast.error('Senha de Supervisor incorreta'); }
   };
 
   const handleFinalize = () => {
     if (!selectedPN) return;
-    const report = store.finalizePartNumber(selectedPN);
-    if (report) {
-      toast.warning(`Divergência detectada: ${report.type === 'falta' ? '-' : '+'}${Math.abs(report.difference)} unidades`, {
-        description: 'Relatório gerado para o Supervisor.',
-        duration: 5000,
-      });
-    } else {
-      toast.success('Part Number finalizado com sucesso!');
-    }
-    setSelectedPN(null);
+    finalizePN.mutate(selectedPN, {
+      onSuccess: (data) => {
+        if (data.divergence) {
+          toast.warning(`Divergência: ${data.divergence.type === 'falta' ? '-' : '+'}${Math.abs(data.divergence.difference)} un`);
+        } else { toast.success('Part Number finalizado!'); }
+        setSelectedPN(null); setPnInput('');
+      },
+      onError: (e: any) => toast.error(`Erro ao finalizar: ${e.message}`),
+    });
   };
 
-  return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">Bancada {store.currentWorkstation}</h1>
-        <p className="text-sm text-muted-foreground">Impressão de etiquetas</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Part Number Selection */}
-        <div className="industrial-panel p-4 lg:col-span-1">
-          <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <Package className="w-4 h-4 text-primary" />
-            Selecionar Part Number
-          </h2>
-          <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
-            {activePNs.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-8">Nenhum PN disponível</p>
-            )}
-            {activePNs.map(pn => (
-              <button
-                key={pn.id}
-                onClick={() => setSelectedPN(pn.id)}
-                className={cn(
-                  "w-full text-left p-3 rounded-lg border transition-colors",
-                  selectedPN === pn.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-muted-foreground/30"
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-sm font-medium">{pn.partNumber}</span>
-                  <StatusBadge status={pn.status} />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1 truncate">{pn.description}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="flex-1 bg-muted rounded-full h-1">
-                    <div
-                      className="h-1 rounded-full bg-primary"
-                      style={{ width: `${Math.min((pn.labeledQty / pn.declaredQty) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {pn.labeledQty}/{pn.declaredQty}
-                  </span>
-                </div>
+  // ── Remessa selection ─────────────────────────────────────────────────────
+  if (!selectedShipment) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-bold">Bancada {workstationId}</h1>
+          <p className="text-sm text-muted-foreground">Selecione uma remessa para começar</p>
+        </div>
+        {shipments.length === 0 ? (
+          <div className="industrial-panel p-12 text-center text-muted-foreground">
+            <Package2 className="w-12 h-12 mx-auto mb-3 opacity-20" />
+            <p className="text-sm">Nenhuma remessa disponível. Importe primeiro.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {shipments.map(s => (
+              <button key={s.id} onClick={() => setSelectedShipment(s.id)}
+                className="industrial-panel p-4 text-left hover:border-primary/50 transition-colors">
+                <p className="font-semibold font-mono text-sm">{s.fileName}</p>
+                <p className="text-xs text-muted-foreground mt-1">{s.totalParts} PNs · {s.totalQuantity.toLocaleString('pt-BR')} un</p>
+                <p className="text-xs text-muted-foreground">{new Date(s.importedAt).toLocaleDateString('pt-BR')} · {s.importedBy}</p>
               </button>
             ))}
           </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Main work view ────────────────────────────────────────────────────────
+  const tabLabel = activeTab === 'normal' ? lastLabel : lastBoxLabel ? { ...lastBoxLabel } : null;
+
+  return (
+    <div className="space-y-4">
+      {showPrinterDialog && (
+        <PrinterDialog
+          printers={availablePrinters}
+          selected={selectedPrinter}
+          onSelect={setSelectedPrinter}
+          onConfirm={handlePrinterConfirm}
+          onCancel={() => setShowPrinterDialog(false)}
+        />
+      )}
+
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button onClick={() => { setSelectedShipment(null); setSelectedPN(null); setPnInput(''); }}
+          className="text-muted-foreground hover:text-foreground">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold">Bancada {workstationId}</h1>
+          <p className="text-sm text-muted-foreground">
+            Remessa: <span className="text-foreground font-medium font-mono">{selectedShipmentData?.fileName}</span>
+          </p>
         </div>
-
-        {/* Print Controls */}
-        <div className="industrial-panel p-4 lg:col-span-2">
-          {selected ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold">{selected.partNumber}</h2>
-                <StatusBadge status={selected.status} />
-              </div>
-              <p className="text-xs text-muted-foreground">{selected.description}</p>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-muted/50 p-3 rounded-lg text-center">
-                  <p className="text-[10px] text-muted-foreground uppercase">Declarado</p>
-                  <p className="text-xl font-mono font-bold">{selected.declaredQty.toLocaleString()}</p>
-                </div>
-                <div className="bg-primary/5 p-3 rounded-lg text-center border border-primary/20">
-                  <p className="text-[10px] text-primary uppercase">Disponível</p>
-                  <p className="text-xl font-mono font-bold text-primary">{available.toLocaleString()}</p>
-                  {reserved > 0 && (
-                    <p className="text-[10px] text-warning mt-1">({reserved} em processamento)</p>
-                  )}
-                </div>
-                <div className="bg-success/5 p-3 rounded-lg text-center border border-success/20">
-                  <p className="text-[10px] text-success uppercase">Etiquetado</p>
-                  <p className="text-xl font-mono font-bold text-success">{selected.labeledQty.toLocaleString()}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Input
-                  type="number"
-                  min={1}
-                  value={printQty}
-                  onChange={e => setPrintQty(e.target.value)}
-                  className="w-24 font-mono"
-                  placeholder="Qtd"
-                />
-                <Button onClick={handlePrint} className="flex-1 gap-2">
-                  <Printer className="w-4 h-4" />
-                  Imprimir
-                </Button>
-                <Button variant="outline" onClick={handleFinalize}>
-                  <CheckCircle className="w-4 h-4" />
-                  Finalizar PN
-                </Button>
-              </div>
-
-              {/* Supervisor Auth Modal */}
-              {showSupervisorAuth && (
-                <div className="p-4 rounded-lg border border-warning/50 bg-warning/5 space-y-3">
-                  <div className="flex items-center gap-2 text-warning">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span className="text-sm font-medium">Autorização de Supervisor Necessária</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Saldo zerado. Insira a senha do Supervisor para autorizar excedente.</p>
-                  <div className="flex gap-2">
-                    <Input
-                      type="password"
-                      value={supervisorPassword}
-                      onChange={e => setSupervisorPassword(e.target.value)}
-                      placeholder="Senha do Supervisor"
-                      className="flex-1"
-                    />
-                    <Button variant="outline" onClick={handleSupervisorAuth}>Autorizar</Button>
-                    <Button variant="ghost" onClick={() => setShowSupervisorAuth(false)}>Cancelar</Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Quality Check Modal */}
-              {showQualityCheck && (
-                <div className="p-4 rounded-lg border border-info/50 bg-info/5 space-y-3">
-                  <div className="flex items-center gap-2 text-info">
-                    <QrCode className="w-4 h-4" />
-                    <span className="text-sm font-medium">Verificação de Qualidade</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Bipe o QR Code da última etiqueta para validar.</p>
-                  <div className="flex gap-2">
-                    <Input
-                      value={qrInput}
-                      onChange={e => setQrInput(e.target.value)}
-                      placeholder="Dados do QR Code..."
-                      className="flex-1 font-mono"
-                      autoFocus
-                    />
-                    <Button variant="outline" onClick={handleQualityCheck}>Validar</Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
-              <div className="text-center">
-                <Printer className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">Selecione um Part Number para começar</p>
-              </div>
-            </div>
-          )}
-
-          {/* Recent Labels */}
-          {recentLabels.length > 0 && (
-            <div className="mt-4 border-t border-border pt-4">
-              <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Últimas Etiquetas</h3>
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {recentLabels.map(label => {
-                  const job = store.printJobs.find(j => j.id === label.printJobId);
-                  return (
-                    <div key={label.id} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/30 text-xs">
-                      <span className="font-mono text-foreground">{label.compositeId}</span>
-                      <span className="text-muted-foreground">{label.partNumber}</span>
-                      <div className="flex items-center gap-2">
-                        {label.qrValidated && <QrCode className="w-3 h-3 text-success" />}
-                        <span className={cn(
-                          "text-[10px] uppercase",
-                          job?.status === 'printed' ? 'text-success' :
-                          job?.status === 'failed' ? 'text-destructive' :
-                          'text-warning'
-                        )}>
-                          {job?.status || 'unknown'}
-                        </span>
-                        <button
-                          onClick={() => {
-                            store.reprintLabel(label.id);
-                            toast.info(`Reimpressão: ${label.compositeId}`);
-                          }}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+        {/* Tabs */}
+        <div className="ml-auto flex gap-2">
+          <button onClick={() => setActiveTab('normal')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', activeTab === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground')}>
+            <Printer className="w-3.5 h-3.5 inline mr-1.5" />Etiqueta
+          </button>
+          <button onClick={() => setActiveTab('caixa')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', activeTab === 'caixa' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground')}>
+            <Box className="w-3.5 h-3.5 inline mr-1.5" />Caixa
+          </button>
         </div>
       </div>
+
+      {/* ── Normal label form ── */}
+      {activeTab === 'normal' && (
+        <div className="industrial-panel p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left: form fields */}
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold">Gerar Etiqueta de Produto</h2>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Part Number *</label>
+                  <Input
+                    value={pnInput}
+                    onChange={e => handlePnInputChange(e.target.value)}
+                    placeholder="Ex: CPRE005A"
+                    className={cn('font-mono', selectedPN && 'border-success/50 bg-success/5')}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Quantidade do Lote *</label>
+                  <Input
+                    type="number" min={1} value={printQty}
+                    onChange={e => setPrintQty(e.target.value)}
+                    placeholder="Ex: 1000"
+                    className="font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">MSL</label>
+                  <Input value={msl} onChange={e => setMsl(e.target.value)} placeholder="Ex: MSL3" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Data de Validade <span className="text-muted-foreground/50">(opcional)</span></label>
+                  <Input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} />
+                </div>
+              </div>
+
+              {selected && (
+                <div className="grid grid-cols-3 gap-2 mt-1">
+                  <div className="bg-muted/50 p-2 rounded text-center">
+                    <p className="text-[10px] text-muted-foreground uppercase">Remessa</p>
+                    <p className="text-lg font-mono font-bold">{selected.declaredQty.toLocaleString('pt-BR')}</p>
+                  </div>
+                  <div className="bg-primary/5 p-2 rounded text-center border border-primary/20">
+                    <p className="text-[10px] text-primary uppercase">Disponível</p>
+                    <p className="text-lg font-mono font-bold text-primary">{available.toLocaleString('pt-BR')}</p>
+                  </div>
+                  <div className="bg-success/5 p-2 rounded text-center border border-success/20">
+                    <p className="text-[10px] text-success uppercase">Físico</p>
+                    <p className="text-lg font-mono font-bold text-success">{selected.labeledQty.toLocaleString('pt-BR')}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button onClick={handlePrint} className="flex-1 gap-2" disabled={createLabel.isPending || createReservation.isPending}>
+                  <Printer className="w-4 h-4" />Imprimir
+                </Button>
+                {selected && (
+                  <Button variant="outline" onClick={handleFinalize} disabled={finalizePN.isPending}>
+                    <CheckCircle className="w-4 h-4 mr-1" />Finalizar PN
+                  </Button>
+                )}
+              </div>
+
+              {showSupervisorAuth && (
+                <div className="p-3 rounded-lg border border-warning/50 bg-warning/5 space-y-2">
+                  <p className="text-xs font-medium text-warning flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />Autorização de Supervisor necessária</p>
+                  <div className="flex gap-2">
+                    <Input type="password" value={supervisorPassword} onChange={e => setSupervisorPassword(e.target.value)} placeholder="Senha" className="flex-1" />
+                    <Button variant="outline" size="sm" onClick={handleSupervisorAuth}>Autorizar</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setShowSupervisorAuth(false)}>×</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right: label preview */}
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs text-muted-foreground self-start">Pré-visualização</p>
+              {lastLabel ? (
+                <LabelPreview label={{
+                  labelSeqId: lastLabel.labelSeqId,
+                  compositeId: lastLabel.compositeId,
+                  partNumber: lastLabel.partNumber,
+                  description: lastLabel.description,
+                  quantity: lastLabel.quantity,
+                  printedBy: lastLabel.printedBy,
+                  printedAt: lastLabel.printedAt,
+                  msl: lastLabel.msl,
+                  expiryDate: lastLabel.expiryDate,
+                  qrValidated: lastLabel.qrValidated,
+                }} />
+              ) : (
+                <div className="border-2 border-dashed border-border rounded-lg w-full flex items-center justify-center" style={{ height: 160 }}>
+                  <p className="text-xs text-muted-foreground">A etiqueta aparecerá aqui após impressão</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Box label form ── */}
+      {activeTab === 'caixa' && (
+        <div className="industrial-panel p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold">Gerar Etiqueta de Caixa</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Part Number *</label>
+                  <Input value={boxPn} onChange={e => setBoxPn(e.target.value)} placeholder="Ex: CPRE005A" className="font-mono" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Quantidade *</label>
+                  <Input type="number" min={1} value={boxQty} onChange={e => setBoxQty(e.target.value)} placeholder="Ex: 10000" className="font-mono" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs text-muted-foreground mb-1 block">Descrição</label>
+                  <Input value={boxDesc} onChange={e => setBoxDesc(e.target.value)} placeholder="Descrição do produto" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">MSL</label>
+                  <Input value={boxMsl} onChange={e => setBoxMsl(e.target.value)} placeholder="Ex: MSL3" />
+                </div>
+              </div>
+              <Button onClick={handleBoxPrint} className="gap-2">
+                <Box className="w-4 h-4" />Imprimir Etiqueta de Caixa
+              </Button>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-xs text-muted-foreground self-start">Pré-visualização</p>
+              {lastBoxLabel ? (
+                <BoxLabelPreview label={lastBoxLabel} />
+              ) : (
+                <div className="border-2 border-dashed border-border rounded-lg w-full flex items-center justify-center" style={{ height: 160 }}>
+                  <p className="text-xs text-muted-foreground">A etiqueta aparecerá aqui após impressão</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Part Number table ── */}
+      {activeTab === 'normal' && (
+        <div className="industrial-panel overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="p-3 text-xs text-muted-foreground font-medium text-left">Part Number</th>
+                  <th className="p-3 text-xs text-muted-foreground font-medium text-left">Descrição</th>
+                  <th className="p-3 text-xs text-muted-foreground font-medium text-right">Remessa</th>
+                  <th className="p-3 text-xs text-muted-foreground font-medium text-right">Físico</th>
+                  <th className="p-3 text-xs text-muted-foreground font-medium text-right">Diferença</th>
+                  <th className="p-3 text-xs text-muted-foreground font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {shipmentPNs.length === 0 && (
+                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">Nenhum Part Number nesta remessa</td></tr>
+                )}
+                {shipmentPNs.map(pn => {
+                  const diff = pn.labeledQty - pn.declaredQty;
+                  const pct = pn.declaredQty > 0 ? Math.min((pn.labeledQty / pn.declaredQty) * 100, 100) : 0;
+                  return (
+                    <tr key={pn.id}
+                      onClick={() => selectPnById(pn.id)}
+                      className={cn('cursor-pointer hover:bg-muted/30 transition-colors', selectedPN === pn.id && 'bg-primary/5 border-l-2 border-l-primary')}>
+                      <td className="p-3 font-mono font-semibold">{pn.partNumber}</td>
+                      <td className="p-3 text-muted-foreground max-w-[200px] truncate">{pn.description}</td>
+                      <td className="p-3 text-right font-mono">{pn.declaredQty.toLocaleString('pt-BR')}</td>
+                      <td className="p-3 text-right">
+                        <span className="font-mono">{pn.labeledQty.toLocaleString('pt-BR')}</span>
+                        <div className="w-full bg-muted rounded-full h-1 mt-1.5 min-w-[60px]">
+                          <div className="h-1 rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                        </div>
+                      </td>
+                      <td className={cn('p-3 text-right font-mono font-semibold', diff < 0 ? 'text-destructive' : diff === 0 ? 'text-success' : 'text-warning')}>
+                        {diff > 0 ? '+' : ''}{diff.toLocaleString('pt-BR')}
+                      </td>
+                      <td className="p-3"><StatusBadge status={pn.status} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Labels list + preview ── */}
+      {recentLabels.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 industrial-panel p-4">
+            <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Etiquetas Geradas — Bancada {workstationId}</h3>
+            <div className="space-y-1 max-h-60 overflow-y-auto">
+              {recentLabels.map(label => (
+                <div key={label.id}
+                  onClick={() => setLastLabel(label)}
+                  className={cn('flex items-center gap-3 py-2 px-2 rounded cursor-pointer hover:bg-muted/30 text-xs', lastLabel?.id === label.id && 'bg-primary/5')}>
+                  <span className="font-mono w-28 shrink-0 text-foreground">{label.labelSeqId || label.compositeId}</span>
+                  <span className="font-mono flex-1 truncate text-muted-foreground">{label.partNumber}</span>
+                  <span className="font-mono shrink-0">{label.quantity?.toLocaleString('pt-BR')} un</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {label.qrValidated && <QrCode className="w-3 h-3 text-success" />}
+                    <button onClick={e => { e.stopPropagation(); reprintLabel.mutate({ id: label.id, printerIp: currentWS?.printerIp || '' }); toast.info(`Reimpressão: ${label.labelSeqId}`); }}
+                      className="text-muted-foreground hover:text-foreground" title="Reimprimir">
+                      <RotateCcw className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="industrial-panel p-4 flex flex-col items-center overflow-auto">
+            <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3 self-start">Última Etiqueta</h3>
+            {lastLabel ? (
+              <LabelPreview label={{
+                labelSeqId: lastLabel.labelSeqId,
+                compositeId: lastLabel.compositeId,
+                partNumber: lastLabel.partNumber,
+                description: lastLabel.description,
+                quantity: lastLabel.quantity,
+                printedBy: lastLabel.printedBy,
+                printedAt: lastLabel.printedAt,
+                msl: lastLabel.msl,
+                expiryDate: lastLabel.expiryDate,
+              }} />
+            ) : (
+              <p className="text-xs text-muted-foreground text-center mt-4">Clique em uma etiqueta para visualizar</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

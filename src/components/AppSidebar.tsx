@@ -1,49 +1,87 @@
-import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Printer, FileUp, ShieldCheck, Settings, Monitor,
-  Activity
+  LayoutDashboard, Factory, FileUp, ShieldCheck, Settings, Monitor,
+  Activity, LogOut, ChevronRight, Network
 } from 'lucide-react';
-import { useProductionStore } from '@/store/productionStore';
+import { useAuthStore } from '@/store/authStore';
+import { useLogout } from '@/hooks/useProductionData';
+import { useWorkstations } from '@/hooks/useProductionData';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/workstation', icon: Printer, label: 'Bancada' },
-  { to: '/import', icon: FileUp, label: 'Importar' },
-  { to: '/supervisor', icon: ShieldCheck, label: 'Supervisor' },
-  { to: '/admin', icon: Settings, label: 'Admin' },
-];
 
 export function AppSidebar() {
   const location = useLocation();
-  const { currentWorkstation, workstations, currentUser } = useProductionStore();
-  const ws = workstations.find(w => w.id === currentWorkstation);
+  const navigate = useNavigate();
+  const { mode, user, workstationId, serverUrl } = useAuthStore();
+  const logoutMutation = useLogout();
+  const { data: workstations = [] } = useWorkstations();
+  const [showServerUrl, setShowServerUrl] = useState(false);
+
+  const ws = workstations.find(w => w.id === workstationId);
+  const isAdmin = mode === 'admin';
+  const isOperator = mode === 'operador';
+  const isSupervisor = user?.role === 'supervisor';
+
+  const adminNav = [
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/workstation', icon: Factory, label: 'Bancada' },
+    { to: '/import', icon: FileUp, label: 'Importar' },
+    { to: '/supervisor', icon: ShieldCheck, label: 'Supervisor' },
+    { to: '/admin', icon: Settings, label: 'Admin' },
+  ];
+
+  const operatorNav = [
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/workstation', icon: Factory, label: 'Bancada' },
+  ];
+
+  const supervisorNav = [
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/workstation', icon: Factory, label: 'Bancada' },
+    { to: '/import', icon: FileUp, label: 'Importar' },
+    { to: '/supervisor', icon: ShieldCheck, label: 'Supervisor' },
+  ];
+
+  const navItems = isAdmin ? adminNav : isSupervisor ? supervisorNav : operatorNav;
+
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSettled: () => {
+        // Force full page reload to reset to mode-select
+        window.location.reload();
+      },
+    });
+  };
 
   return (
     <aside className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col shrink-0">
+      {/* Logo */}
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
             <Activity className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-sidebar-foreground">LabelPro</h1>
-            <p className="text-[10px] text-muted-foreground">Controle de Etiquetagem</p>
+            <h1 className="text-sm font-bold text-sidebar-foreground">Production Guard</h1>
+            <p className="text-[10px] text-muted-foreground capitalize">
+              {isAdmin ? '⚙ Administrador' : isOperator ? '🔧 Operador' : '👁 Supervisor'}
+            </p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1">
+      {/* Nav */}
+      <nav className="flex-1 p-3 space-y-0.5">
         {navItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
+            end={item.to === '/'}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
               location.pathname === item.to
-                ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
             )}
           >
             <item.icon className="w-4 h-4" />
@@ -52,21 +90,48 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border space-y-3">
-        <div className="flex items-center gap-2">
-          <Monitor className="w-4 h-4 text-muted-foreground" />
-          <div className="text-xs">
-            <p className="text-sidebar-foreground font-medium">{ws?.name || 'Bancada ?'}</p>
-            <p className="text-muted-foreground">{ws?.printerIp}</p>
+      {/* Footer */}
+      <div className="p-3 border-t border-sidebar-border space-y-2">
+        {/* Workstation info (operator) */}
+        {isOperator && ws && (
+          <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-sidebar-accent/30">
+            <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
+            <div className="text-xs flex-1 min-w-0">
+              <p className="text-sidebar-foreground font-medium truncate">{ws.name}</p>
+              <p className="text-muted-foreground font-mono truncate">{ws.printerIp}</p>
+            </div>
+            <div className={cn('w-2 h-2 rounded-full shrink-0', ws.isOnline ? 'bg-success' : 'bg-destructive')} />
           </div>
-          <div className={cn(
-            "w-2 h-2 rounded-full ml-auto",
-            ws?.isOnline ? "bg-success" : "bg-destructive"
-          )} />
-        </div>
-        <div className="text-xs text-muted-foreground">
-          <span className="text-sidebar-foreground">{currentUser.name}</span>
-          <span className="ml-1 text-primary capitalize">({currentUser.role})</span>
+        )}
+
+        {/* Server URL toggle (operator) */}
+        {isOperator && (
+          <button
+            onClick={() => setShowServerUrl(!showServerUrl)}
+            className="flex items-center gap-2 w-full px-2 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Network className="w-3 h-3" />
+            <span className="flex-1 text-left">Servidor</span>
+            <ChevronRight className={cn('w-3 h-3 transition-transform', showServerUrl && 'rotate-90')} />
+          </button>
+        )}
+        {isOperator && showServerUrl && (
+          <p className="text-[10px] font-mono text-muted-foreground px-2 break-all">{serverUrl}</p>
+        )}
+
+        {/* User info + logout */}
+        <div className="flex items-center gap-2 px-2">
+          <div className="text-xs flex-1 min-w-0">
+            <p className="text-sidebar-foreground font-medium truncate">{user?.name}</p>
+            <p className="text-muted-foreground truncate capitalize">{user?.role}</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="p-1.5 rounded hover:bg-sidebar-accent/50 text-muted-foreground hover:text-foreground transition-colors"
+            title="Sair"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </aside>

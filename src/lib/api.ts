@@ -1,0 +1,96 @@
+import { useAuthStore } from '@/store/authStore';
+
+function getBase(): string {
+  const stored = useAuthStore.getState().serverUrl;
+  return stored || import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+}
+
+function getHeaders(): Record<string, string> {
+  const token = useAuthStore.getState().token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${getBase()}${path}`, {
+    headers: { ...getHeaders(), ...init?.headers },
+    ...init,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export const api = {
+  // Auth
+  login: (body: { username: string; password: string }) =>
+    request<{ token: string; user: any }>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+  logout: () => request<any>('/auth/logout', { method: 'POST' }),
+  me: () => request<any>('/auth/me'),
+
+  // Users (admin)
+  getUsers: () => request<any[]>('/users'),
+  createUser: (body: { username: string; password: string; name: string; role?: string }) =>
+    request<any>('/users', { method: 'POST', body: JSON.stringify(body) }),
+  updateUser: (id: string, body: Partial<{ isBlocked: boolean; password: string; name: string; role: string }>) =>
+    request<any>(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteUser: (id: string) =>
+    request<any>(`/users/${id}`, { method: 'DELETE' }),
+
+  // Admin
+  getNetworkInfo: () => request<{ port: number | string; ips: string[] }>('/admin/network-info'),
+  getConnectedClients: () => request<any[]>('/admin/connected-clients'),
+  getBackupUrl: () => `${getBase()}/admin/backup`,
+  getExportUrl: () => `${getBase()}/admin/export/excel`,
+  restoreBackup: (data: Record<string, any[]>) =>
+    request<any>('/admin/restore', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Shipments
+  getShipments: () => request<any[]>('/shipments'),
+  createShipment: (body: { fileName: string; importedBy: string; parts: any[] }) =>
+    request<any>('/shipments', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Part Numbers
+  getPartNumbers: () => request<any[]>('/part-numbers'),
+  authorizePartNumberSurplus: (id: string, extraQty: number) =>
+    request<any>(`/part-numbers/${id}/authorize-surplus`, { method: 'POST', body: JSON.stringify({ extraQty }) }),
+
+  // Reservations
+  getReservations: () => request<any[]>('/reservations'),
+  createReservation: (body: { partNumberId: string; workstationId: number; quantity: number }) =>
+    request<any>('/reservations', { method: 'POST', body: JSON.stringify(body) }),
+
+  // Labels
+  getLabels: () => request<any[]>('/labels'),
+  createLabel: (body: {
+    partNumberId: string; reservationId: string; workstationId: number;
+    printedBy: string; msl?: string; expiryDate?: string; labelType?: string;
+  }) => request<any>('/labels', { method: 'POST', body: JSON.stringify(body) }),
+  deleteLabel: (id: string) => request<any>(`/labels/${id}`, { method: 'DELETE' }),
+  reprintLabel: (id: string, printerIp: string) =>
+    request<any>(`/labels/${id}/reprint`, { method: 'POST', body: JSON.stringify({ printerIp }) }),
+
+  // Workstations
+  getWorkstations: () => request<any[]>('/workstations'),
+  updateWorkstation: (id: number, body: Partial<{ printerIp: string; printerPort: number; isOnline: boolean }>) =>
+    request<any>(`/workstations/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  // Divergences
+  getDivergences: () => request<any[]>('/divergences'),
+  finalizePartNumber: (partNumberId: string, createdBy: string) =>
+    request<any>(`/divergences/finalize/${partNumberId}`, { method: 'POST', body: JSON.stringify({ createdBy }) }),
+
+  // SSE URL helper
+  getSseUrl: (workstationId?: number) => {
+    const base = getBase().replace('/api', '');
+    const token = useAuthStore.getState().token;
+    const params = new URLSearchParams();
+    if (token) params.set('token', token);
+    if (workstationId) params.set('workstationId', String(workstationId));
+    return `${base}/api/sse?${params}`;
+  },
+};

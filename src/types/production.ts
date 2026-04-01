@@ -33,16 +33,21 @@ export interface Reservation {
 
 export interface Label {
   id: string;
-  compositeId: string; // YYYYMMDD + WS + SEQ
+  labelSeqId: string;       // 12-digit numeric sequential ID
+  compositeId: string;      // YYYYMMDDWWSSSS
   partNumberId: string;
   partNumber: string;
   description: string;
+  quantity: number;
   workstationId: number;
   printedAt: string;
   printedBy: string;
   zplCommand: string;
   qrValidated: boolean;
   printJobId: string;
+  msl: string | null;
+  expiryDate: string | null;
+  labelType: 'normal' | 'caixa';
 }
 
 export interface PrintJob {
@@ -86,6 +91,16 @@ export interface QualityCheck {
   checkedBy: string;
 }
 
+export interface AppUser {
+  id: string;
+  username: string;
+  name: string;
+  role: UserRole;
+  isBlocked: boolean;
+  createdAt: string;
+}
+
+// Legacy User type (kept for productionStore compatibility)
 export interface User {
   id: string;
   name: string;
