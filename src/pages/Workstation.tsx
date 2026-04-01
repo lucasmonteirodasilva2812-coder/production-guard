@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
 import { LabelPreview, BoxLabelPreview, LabelData } from '@/components/LabelPreview';
-import { Printer, AlertTriangle, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box } from 'lucide-react';
+import { Printer, AlertTriangle, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Label } from '@/types/production';
@@ -74,6 +74,7 @@ export default function Workstation() {
   // Navigation state
   const [selectedShipment, setSelectedShipment] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('normal');
+  const [shipmentSearch, setShipmentSearch] = useState('');
 
   // Form state (normal label)
   const [pnInput, setPnInput] = useState('');
@@ -242,29 +243,69 @@ export default function Workstation() {
 
   // ── Remessa selection ─────────────────────────────────────────────────────
   if (!selectedShipment) {
+    const filteredShipments = shipments.filter(s =>
+      s.fileName.toLowerCase().includes(shipmentSearch.toLowerCase())
+    );
+
     return (
       <div className="space-y-4">
         <div>
           <h1 className="text-2xl font-bold">Bancada {workstationId}</h1>
           <p className="text-sm text-muted-foreground">Selecione uma remessa para começar</p>
         </div>
-        {shipments.length === 0 ? (
-          <div className="industrial-panel p-12 text-center text-muted-foreground">
-            <Package2 className="w-12 h-12 mx-auto mb-3 opacity-20" />
-            <p className="text-sm">Nenhuma remessa disponível. Importe primeiro.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {shipments.map(s => (
-              <button key={s.id} onClick={() => setSelectedShipment(s.id)}
-                className="industrial-panel p-4 text-left hover:border-primary/50 transition-colors">
-                <p className="font-semibold font-mono text-sm">{s.fileName}</p>
-                <p className="text-xs text-muted-foreground mt-1">{s.totalParts} PNs · {s.totalQuantity.toLocaleString('pt-BR')} un</p>
-                <p className="text-xs text-muted-foreground">{new Date(s.importedAt).toLocaleDateString('pt-BR')} · {s.importedBy}</p>
-              </button>
-            ))}
-          </div>
-        )}
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            value={shipmentSearch}
+            onChange={e => setShipmentSearch(e.target.value)}
+            placeholder="Buscar remessa..."
+            className="pl-9"
+          />
+        </div>
+
+        <div className="industrial-panel overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="p-3 text-xs text-muted-foreground font-medium text-left">Nome / Código</th>
+                <th className="p-3 text-xs text-muted-foreground font-medium text-right">Part Numbers</th>
+                <th className="p-3 text-xs text-muted-foreground font-medium text-right">Total un</th>
+                <th className="p-3 text-xs text-muted-foreground font-medium text-left">Data</th>
+                <th className="p-3 text-xs text-muted-foreground font-medium text-left">Importado por</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredShipments.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-12 text-center text-muted-foreground">
+                    {shipments.length === 0 ? (
+                      <div>
+                        <Package2 className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                        <p className="text-sm">Nenhuma remessa disponível. Importe primeiro.</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm">Nenhuma remessa encontrada para "{shipmentSearch}"</p>
+                    )}
+                  </td>
+                </tr>
+              )}
+              {filteredShipments.map(s => (
+                <tr
+                  key={s.id}
+                  onClick={() => setSelectedShipment(s.id)}
+                  className="cursor-pointer hover:bg-muted/30 transition-colors"
+                >
+                  <td className="p-3 font-mono font-semibold">{s.fileName}</td>
+                  <td className="p-3 text-right font-mono">{s.totalParts}</td>
+                  <td className="p-3 text-right font-mono">{s.totalQuantity.toLocaleString('pt-BR')}</td>
+                  <td className="p-3 text-muted-foreground">{new Date(s.importedAt).toLocaleDateString('pt-BR')}</td>
+                  <td className="p-3 text-muted-foreground">{s.importedBy}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Users, Network, HardDrive, Monitor, Download, Upload,
-  Plus, Shield, ShieldOff, Trash2, Save, FileSpreadsheet, Wifi
+  Plus, Shield, ShieldOff, Trash2, FileSpreadsheet, Wifi
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -241,66 +241,45 @@ function NetworkTab() {
 function WorkstationsTab() {
   const { data: workstations = [] } = useWorkstations();
   const updateWS = useUpdateWorkstation();
-  const [edits, setEdits] = useState<Record<number, { printerIp?: string; printerPort?: number }>>({});
-
-  const handleSave = (id: number) => {
-    const edit = edits[id];
-    if (!edit) return;
-    updateWS.mutate({ id, ...edit }, {
-      onSuccess: () => {
-        toast.success('Bancada atualizada');
-        setEdits(e => { const n = { ...e }; delete n[id]; return n; });
-      },
-      onError: (e: any) => toast.error(e.message),
-    });
-  };
 
   return (
-    <div className="space-y-3">
-      {workstations.map(ws => (
-        <div key={ws.id} className="industrial-panel p-4 flex items-center gap-4 flex-wrap">
-          <div className={cn('w-3 h-3 rounded-full shrink-0', ws.isOnline ? 'bg-success animate-pulse-green' : 'bg-destructive')} />
-          <div className="flex-1 min-w-[80px]">
-            <p className="font-medium text-sm">{ws.name}</p>
-            <p className={cn('text-xs', ws.isOnline ? 'text-success' : 'text-destructive')}>
-              {ws.isOnline ? 'Online' : 'Offline'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div>
-              <label className="text-[10px] text-muted-foreground block mb-0.5">IP Impressora</label>
-              <Input
-                value={edits[ws.id]?.printerIp ?? ws.printerIp}
-                onChange={e => setEdits(ed => ({ ...ed, [ws.id]: { ...ed[ws.id], printerIp: e.target.value } }))}
-                className="w-36 font-mono text-xs h-8"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-muted-foreground block mb-0.5">Porta</label>
-              <Input
-                type="number"
-                value={edits[ws.id]?.printerPort ?? ws.printerPort}
-                onChange={e => setEdits(ed => ({ ...ed, [ws.id]: { ...ed[ws.id], printerPort: Number(e.target.value) } }))}
-                className="w-20 font-mono text-xs h-8"
-              />
-            </div>
-            <div className="mt-3.5">
-              <Button size="sm" variant="outline"
-                onClick={() => updateWS.mutate({ id: ws.id, isOnline: !ws.isOnline })}
-                className="h-8 text-xs">
-                {ws.isOnline ? 'Marcar Offline' : 'Marcar Online'}
-              </Button>
-            </div>
-            {edits[ws.id] && (
-              <div className="mt-3.5">
-                <Button size="sm" onClick={() => handleSave(ws.id)} className="h-8 gap-1">
-                  <Save className="w-3.5 h-3.5" />Salvar
+    <div className="industrial-panel overflow-hidden">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-border bg-muted/30">
+            <th className="p-3 text-xs text-muted-foreground font-medium text-left">Bancada</th>
+            <th className="p-3 text-xs text-muted-foreground font-medium text-left">Status</th>
+            <th className="p-3 text-xs text-muted-foreground font-medium">Ação</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {workstations.map(ws => (
+            <tr key={ws.id} className="hover:bg-muted/20">
+              <td className="p-3 font-medium">{ws.name}</td>
+              <td className="p-3">
+                <span className={cn('flex items-center gap-1.5 text-xs font-medium w-fit')}>
+                  <div className={cn('w-2 h-2 rounded-full shrink-0', ws.isOnline ? 'bg-success animate-pulse-green' : 'bg-destructive')} />
+                  <span className={ws.isOnline ? 'text-success' : 'text-destructive'}>
+                    {ws.isOnline ? 'Online' : 'Offline'}
+                  </span>
+                </span>
+              </td>
+              <td className="p-3 text-center">
+                <Button
+                  size="sm" variant="outline"
+                  onClick={() => updateWS.mutate(
+                    { id: ws.id, isOnline: !ws.isOnline },
+                    { onSuccess: () => toast.success(`${ws.name} marcada como ${ws.isOnline ? 'offline' : 'online'}`) }
+                  )}
+                  className="h-7 text-xs"
+                >
+                  {ws.isOnline ? 'Marcar Offline' : 'Marcar Online'}
                 </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

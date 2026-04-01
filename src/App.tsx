@@ -73,11 +73,17 @@ export default function App() {
   );
   if (screen === 'login') return (
     <QueryClientProvider client={queryClient}>
-      <LoginPage onLoggedIn={() => {
-        const { mode: m, workstationId: wsId } = useAuthStore.getState();
-        if (m === 'operador' && !wsId) setScreen('workstation-select');
-        else setScreen('app');
-      }} />
+      <LoginPage
+        onLoggedIn={() => {
+          const { mode: m, workstationId: wsId } = useAuthStore.getState();
+          if (m === 'operador' && !wsId) setScreen('workstation-select');
+          else setScreen('app');
+        }}
+        onBack={() => {
+          const { mode: m } = useAuthStore.getState();
+          setScreen(m === 'operador' ? 'operator-setup' : 'mode-select');
+        }}
+      />
     </QueryClientProvider>
   );
   if (screen === 'workstation-select') return (

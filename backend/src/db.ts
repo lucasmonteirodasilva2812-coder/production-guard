@@ -155,6 +155,9 @@ if (userCount === 0) {
     .run(adminId, 'admin', hash, 'Administrador', 'admin', new Date().toISOString());
 }
 
+// Garantir que o admin nunca fique bloqueado
+db.prepare('UPDATE users SET is_blocked = 0 WHERE username = ? AND role = ?').run('admin', 'admin');
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export function nextLabelSeqId(): string {
   const row = db.prepare('UPDATE label_sequence SET last_value = last_value + 1 WHERE id = 1 RETURNING last_value').get() as { last_value: number };
