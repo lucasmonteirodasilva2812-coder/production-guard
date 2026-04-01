@@ -132,14 +132,8 @@ migrateSafe('ALTER TABLE labels ADD COLUMN expiry_date TEXT');
 migrateSafe('ALTER TABLE labels ADD COLUMN label_type TEXT NOT NULL DEFAULT "normal"');
 
 // ── Seeds ─────────────────────────────────────────────────────────────────────
-const wsCount = (db.prepare('SELECT COUNT(*) as c FROM workstations').get() as { c: number }).c;
-if (wsCount === 0) {
-  const ins = db.prepare('INSERT INTO workstations (id, name, printer_ip, printer_port, is_online) VALUES (?, ?, ?, ?, ?)');
-  ins.run(1, 'Bancada 1', '192.168.1.101', 9100, 1);
-  ins.run(2, 'Bancada 2', '192.168.1.102', 9100, 1);
-  ins.run(3, 'Bancada 3', '192.168.1.103', 9100, 0);
-  ins.run(4, 'Bancada 4', '192.168.1.104', 9100, 1);
-}
+// Todas as bancadas ficam offline ao iniciar (conexões SSE vão marcar online)
+db.prepare('UPDATE workstations SET is_online = 0').run();
 
 const seqCount = (db.prepare('SELECT COUNT(*) as c FROM label_sequence').get() as { c: number }).c;
 if (seqCount === 0) {

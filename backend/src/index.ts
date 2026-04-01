@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import db from './db';
-import { addSseClient, removeSseClient } from './sse';
+import { addSseClient, removeSseClient, getActiveWorkstationIds, broadcast } from './sse';
 import authRouter from './routes/auth';
 import usersRouter from './routes/users';
 import adminRouter from './routes/admin';
@@ -50,6 +50,12 @@ app.get('/api/sse', (req: any, res) => {
 
   const clientId = addSseClient(userId, userName, userRole, wsId, res);
 
+  // Marcar bancada como online ao conectar
+  if (wsId) {
+    db.prepare('UPDATE workstations SET is_online = 1 WHERE id = ?').run(wsId);
+    broadcast('workstations:updated', {});
+  }
+
   // Heartbeat
   const hb = setInterval(() => {
     try { res.write(':heartbeat\n\n'); } catch { clearInterval(hb); }
@@ -58,6 +64,11 @@ app.get('/api/sse', (req: any, res) => {
   req.on('close', () => {
     clearInterval(hb);
     removeSseClient(clientId);
+    // Marcar bancada como offline se não houver mais clientes nela
+    if (wsId && !getActiveWorkstationIds().has(wsId)) {
+      db.prepare('UPDATE workstations SET is_online = 0 WHERE id = ?').run(wsId);
+      broadcast('workstations:updated', {});
+    }
   });
 });
 

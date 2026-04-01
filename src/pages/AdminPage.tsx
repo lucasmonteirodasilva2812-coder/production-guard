@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
   useUsers, useCreateUser, useUpdateUser, useDeleteUser,
   useNetworkInfo, useConnectedClients, useRestoreBackup,
-  useWorkstations, useUpdateWorkstation,
+  useWorkstations, useUpdateWorkstation, useDeleteWorkstation,
 } from '@/hooks/useProductionData';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -240,46 +240,59 @@ function NetworkTab() {
 // ── Workstations Tab ──────────────────────────────────────────────────────────
 function WorkstationsTab() {
   const { data: workstations = [] } = useWorkstations();
-  const updateWS = useUpdateWorkstation();
+  const deleteWS = useDeleteWorkstation();
 
   return (
-    <div className="industrial-panel overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border bg-muted/30">
-            <th className="p-3 text-xs text-muted-foreground font-medium text-left">Bancada</th>
-            <th className="p-3 text-xs text-muted-foreground font-medium text-left">Status</th>
-            <th className="p-3 text-xs text-muted-foreground font-medium">Ação</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {workstations.map(ws => (
-            <tr key={ws.id} className="hover:bg-muted/20">
-              <td className="p-3 font-medium">{ws.name}</td>
-              <td className="p-3">
-                <span className={cn('flex items-center gap-1.5 text-xs font-medium w-fit')}>
-                  <div className={cn('w-2 h-2 rounded-full shrink-0', ws.isOnline ? 'bg-success animate-pulse-green' : 'bg-destructive')} />
-                  <span className={ws.isOnline ? 'text-success' : 'text-destructive'}>
-                    {ws.isOnline ? 'Online' : 'Offline'}
-                  </span>
-                </span>
-              </td>
-              <td className="p-3 text-center">
-                <Button
-                  size="sm" variant="outline"
-                  onClick={() => updateWS.mutate(
-                    { id: ws.id, isOnline: !ws.isOnline },
-                    { onSuccess: () => toast.success(`${ws.name} marcada como ${ws.isOnline ? 'offline' : 'online'}`) }
-                  )}
-                  className="h-7 text-xs"
-                >
-                  {ws.isOnline ? 'Marcar Offline' : 'Marcar Online'}
-                </Button>
-              </td>
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">
+        As bancadas aparecem automaticamente quando os operadores se conectam. O status é atualizado em tempo real via SSE.
+      </p>
+      <div className="industrial-panel overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/30">
+              <th className="p-3 text-xs text-muted-foreground font-medium text-left">Bancada</th>
+              <th className="p-3 text-xs text-muted-foreground font-medium text-left">Status</th>
+              <th className="p-3 text-xs text-muted-foreground font-medium text-center">Remover</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {workstations.length === 0 && (
+              <tr>
+                <td colSpan={3} className="p-8 text-center text-sm text-muted-foreground">
+                  Nenhuma bancada registrada ainda
+                </td>
+              </tr>
+            )}
+            {workstations.map(ws => (
+              <tr key={ws.id} className="hover:bg-muted/20">
+                <td className="p-3 font-medium">{ws.name}</td>
+                <td className="p-3">
+                  <span className="flex items-center gap-1.5 text-xs font-medium w-fit">
+                    <div className={cn('w-2 h-2 rounded-full shrink-0', ws.isOnline ? 'bg-success animate-pulse-green' : 'bg-muted-foreground/40')} />
+                    <span className={ws.isOnline ? 'text-success' : 'text-muted-foreground'}>
+                      {ws.isOnline ? 'Online' : 'Offline'}
+                    </span>
+                  </span>
+                </td>
+                <td className="p-3 text-center">
+                  <button
+                    onClick={() => {
+                      if (ws.isOnline) { toast.error('Não é possível remover uma bancada online'); return; }
+                      if (window.confirm(`Remover "${ws.name}"?`))
+                        deleteWS.mutate(ws.id, { onSuccess: () => toast.success('Bancada removida') });
+                    }}
+                    className="p-1.5 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
+                    title="Remover bancada"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

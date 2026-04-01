@@ -88,7 +88,10 @@ export default function App() {
   );
   if (screen === 'workstation-select') return (
     <QueryClientProvider client={queryClient}>
-      <WorkstationSelect onSelected={() => setScreen('app')} />
+      <WorkstationSelect
+        onSelected={() => setScreen('app')}
+        onBack={() => setScreen('login')}
+      />
     </QueryClientProvider>
   );
 

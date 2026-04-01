@@ -39,3 +39,9 @@ export function getConnectedClients() {
     id, userId, userName, userRole, workstationId, connectedAt,
   }));
 }
+
+export function getActiveWorkstationIds(): Set<number> {
+  const ids = new Set<number>();
+  clients.forEach(c => { if (c.workstationId) ids.add(c.workstationId); });
+  return ids;
+}

@@ -76,8 +76,12 @@ export const api = {
 
   // Workstations
   getWorkstations: () => request<any[]>('/workstations'),
-  updateWorkstation: (id: number, body: Partial<{ printerIp: string; printerPort: number; isOnline: boolean }>) =>
+  createWorkstation: (name: string) =>
+    request<any>('/workstations', { method: 'POST', body: JSON.stringify({ name }) }),
+  updateWorkstation: (id: number, body: Partial<{ isOnline: boolean }>) =>
     request<any>(`/workstations/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteWorkstation: (id: number) =>
+    request<any>(`/workstations/${id}`, { method: 'DELETE' }),
 
   // Divergences
   getDivergences: () => request<any[]>('/divergences'),

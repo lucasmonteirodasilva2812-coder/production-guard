@@ -98,7 +98,7 @@ export function AppSidebar() {
             <Monitor className="w-3.5 h-3.5 text-muted-foreground" />
             <div className="text-xs flex-1 min-w-0">
               <p className="text-sidebar-foreground font-medium truncate">{ws.name}</p>
-              <p className="text-muted-foreground font-mono truncate">{ws.printerIp}</p>
+              <p className="text-muted-foreground truncate">{ws.isOnline ? 'Online' : 'Offline'}</p>
             </div>
             <div className={cn('w-2 h-2 rounded-full shrink-0', ws.isOnline ? 'bg-success' : 'bg-destructive')} />
           </div>

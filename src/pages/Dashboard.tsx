@@ -72,7 +72,6 @@ export default function Dashboard() {
                 <span className="text-sm font-medium">{ws.name}</span>
                 <div className={`w-2.5 h-2.5 rounded-full ${ws.isOnline ? 'bg-success animate-pulse-green' : 'bg-destructive'}`} />
               </div>
-              <p className="text-xs text-muted-foreground font-mono">{ws.printerIp}</p>
               <p className={`text-xs mt-1 ${ws.isOnline ? 'text-success' : 'text-destructive'}`}>
                 {ws.isOnline ? 'Online' : 'Offline'}
               </p>

@@ -63,8 +63,6 @@ export interface PrintJob {
 export interface WorkstationConfig {
   id: number;
   name: string;
-  printerIp: string;
-  printerPort: number;
   isOnline: boolean;
 }
 

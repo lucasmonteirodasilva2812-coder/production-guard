@@ -131,16 +131,16 @@ export default function Workstation() {
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const printers = await invoke<string[]>('list_printers');
-      return printers.length > 0 ? printers : [currentWS?.printerIp || ''].filter(Boolean);
+      return printers.length > 0 ? printers : [''].filter(Boolean);
     } catch {
-      return [currentWS?.printerIp || ''].filter(Boolean);
+      return [''].filter(Boolean);
     }
   };
 
   const initiateprint = (onConfirm: (printerIp: string) => void) => {
     getPrinters().then(printers => {
       setAvailablePrinters(printers);
-      setSelectedPrinter(printers[0] || currentWS?.printerIp || '');
+      setSelectedPrinter(printers[0] || '');
       setPendingPrint(() => () => onConfirm(selectedPrinter));
       setShowPrinterDialog(true);
     });
@@ -159,7 +159,7 @@ export default function Workstation() {
 
     getPrinters().then(printers => {
       setAvailablePrinters(printers);
-      setSelectedPrinter(printers[0] || currentWS?.printerIp || '');
+      setSelectedPrinter(printers[0] || '');
       setShowPrinterDialog(true);
       setPendingPrint(() => (printerIp: string) => {
         createReservation.mutate(
@@ -196,7 +196,7 @@ export default function Workstation() {
 
     getPrinters().then(printers => {
       setAvailablePrinters(printers);
-      setSelectedPrinter(printers[0] || currentWS?.printerIp || '');
+      setSelectedPrinter(printers[0] || '');
       setShowPrinterDialog(true);
       setPendingPrint(() => (printerIp: string) => {
         const now = new Date().toISOString();
@@ -556,7 +556,7 @@ export default function Workstation() {
                   <span className="font-mono shrink-0">{label.quantity?.toLocaleString('pt-BR')} un</span>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {label.qrValidated && <QrCode className="w-3 h-3 text-success" />}
-                    <button onClick={e => { e.stopPropagation(); reprintLabel.mutate({ id: label.id, printerIp: currentWS?.printerIp || '' }); toast.info(`Reimpressão: ${label.labelSeqId}`); }}
+                    <button onClick={e => { e.stopPropagation(); reprintLabel.mutate({ id: label.id, printerIp: '' }); toast.info(`Reimpressão: ${label.labelSeqId}`); }}
                       className="text-muted-foreground hover:text-foreground" title="Reimprimir">
                       <RotateCcw className="w-3 h-3" />
                     </button>

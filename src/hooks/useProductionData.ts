@@ -23,6 +23,7 @@ export function useSseUpdates() {
     es.addEventListener('labels:deleted', () => invalidate(['labels', 'part-numbers']));
     es.addEventListener('part-numbers:updated', () => invalidate(['part-numbers']));
     es.addEventListener('shipments:created', () => invalidate(['shipments', 'part-numbers']));
+    es.addEventListener('workstations:updated', () => invalidate(['workstations']));
 
     return () => { es.close(); esRef.current = null; };
   }, [token, workstationId, qc]);
@@ -175,14 +176,30 @@ export function useReprintLabel() {
 
 // ── Workstations ─────────────────────────────────────────────────────────────
 export function useWorkstations() {
-  return useQuery({ queryKey: ['workstations'], queryFn: api.getWorkstations, staleTime: 30_000 });
+  return useQuery({ queryKey: ['workstations'], queryFn: api.getWorkstations, staleTime: 5_000 });
+}
+
+export function useCreateWorkstation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => api.createWorkstation(name),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['workstations'] }),
+  });
 }
 
 export function useUpdateWorkstation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...body }: { id: number; printerIp?: string; printerPort?: number; isOnline?: boolean }) =>
+    mutationFn: ({ id, ...body }: { id: number; isOnline?: boolean }) =>
       api.updateWorkstation(id, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['workstations'] }),
+  });
+}
+
+export function useDeleteWorkstation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteWorkstation(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['workstations'] }),
   });
 }

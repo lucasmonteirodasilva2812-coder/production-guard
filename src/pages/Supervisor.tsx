@@ -103,7 +103,7 @@ export default function Supervisor() {
                       <div className="flex justify-end gap-1">
                         <button
                           onClick={() => {
-                            reprintLabel.mutate({ id: label.id, printerIp: currentWS?.printerIp || '' });
+                            reprintLabel.mutate({ id: label.id, printerIp: '' });
                             toast.info(`Reimpressão: ${label.compositeId}`);
                           }}
                           className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
