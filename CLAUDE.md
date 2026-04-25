@@ -87,7 +87,7 @@ production-guard/
 │   │   ├── main.rs           # entry point
 │   │   └── lib.rs            # comando list_printers via wmic
 │   └── tauri.conf.json
-└── .env                      # VITE_API_URL=http://localhost:3001/api
+└── .env                      # VITE_API_URL=https://production-guard-2.onrender.com/api
 ```
 
 ---

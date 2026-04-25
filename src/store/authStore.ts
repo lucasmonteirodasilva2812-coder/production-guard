@@ -14,7 +14,7 @@ interface AuthState {
   mode: AppMode | null;
   user: AuthUser | null;
   token: string | null;
-  /** For admin: http://localhost:3001/api  |  For operator: http://<ip>:<port>/api */
+  /** Para admin: usa import.meta.env.VITE_API_URL | Para operador: http(s)://<ip>:<port>/api */
   serverUrl: string;
   workstationId: number | null;
 

@@ -2,7 +2,7 @@ import { useAuthStore } from '@/store/authStore';
 
 function getBase(): string {
   const stored = useAuthStore.getState().serverUrl;
-  return stored || import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  return stored || import.meta.env.VITE_API_URL;
 }
 
 function getHeaders(): Record<string, string> {
