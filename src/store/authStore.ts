@@ -31,11 +31,11 @@ export const useAuthStore = create<AuthState>()(
       mode: null,
       user: null,
       token: null,
-      serverUrl: 'http://localhost:3001/api',
+      serverUrl: import.meta.env.VITE_API_URL || 'https://production-guard-2.onrender.com/api',
       workstationId: null,
 
       setMode: (mode) => {
-        const serverUrl = mode === 'admin' ? 'http://localhost:3001/api' : '';
+        const serverUrl = import.meta.env.VITE_API_URL || 'https://production-guard-2.onrender.com/api';
         set({ mode, serverUrl });
       },
       setAuth: (user, token) => set({ user, token }),
