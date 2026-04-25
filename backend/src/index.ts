@@ -36,6 +36,11 @@ app.use((req: any, _res, next) => {
   next();
 });
 
+// Healthcheck para Render
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // ── SSE endpoint ──────────────────────────────────────────────────────────────
 app.get('/api/sse', (req: any, res) => {
   res.setHeader('Content-Type', 'text/event-stream');

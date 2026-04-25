@@ -1,0 +1,28 @@
+services:
+  - name: production-guard-backend
+    type: web
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: DB_PATH
+        value: /data
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    autoDeploy: true
+
+  - name: production-guard-frontend
+    type: web
+    env: static
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://production-guard-backend-<sufixo>.onrender.com/api
+    autoDeploy: true

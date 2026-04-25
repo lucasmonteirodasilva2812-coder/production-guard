@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview",
+    "preview": "vite preview --port 4173 --host",
     "test": "vitest run",
     "test:watch": "vitest",
     "backend:dev": "cd backend && npm run dev",
