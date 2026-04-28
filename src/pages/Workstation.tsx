@@ -1,5 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { useWorkstationNavStore } from '@/store/workstationNavStore';
 import {
   useShipments, usePartNumbers, useLabels, useReservations, useWorkstations,
   useCreateReservation, useCreateLabel, useReprintLabel, useFinalizePartNumber, useAuthorizeSurplus,
@@ -71,14 +72,18 @@ export default function Workstation() {
   const finalizePN = useFinalizePartNumber();
   const authorizeSurplus = useAuthorizeSurplus();
 
-  // Navigation state
-  const [selectedShipment, setSelectedShipment] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('normal');
+  // Persisted navigation state
+  const selectedShipment = useWorkstationNavStore(s => s.selectedShipment);
+  const setSelectedShipment = useWorkstationNavStore(s => s.setSelectedShipment);
+  const activeTab = useWorkstationNavStore(s => s.activeTab);
+  const setActiveTab = useWorkstationNavStore(s => s.setActiveTab);
+  const selectedPN = useWorkstationNavStore(s => s.selectedPN);
+  const setSelectedPN = useWorkstationNavStore(s => s.setSelectedPN);
+  const resetNav = useWorkstationNavStore(s => s.reset);
   const [shipmentSearch, setShipmentSearch] = useState('');
 
   // Form state (normal label)
   const [pnInput, setPnInput] = useState('');
-  const [selectedPN, setSelectedPN] = useState<string | null>(null);
   const [printQty, setPrintQty] = useState('');
   const [msl, setMsl] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -117,7 +122,7 @@ export default function Workstation() {
   const selectPnById = useCallback((id: string) => {
     const pn = partNumbers.find(p => p.id === id);
     if (pn) { setSelectedPN(id); setPnInput(pn.partNumber); }
-  }, [partNumbers]);
+  }, [partNumbers, setSelectedPN]);
 
   const handlePnInputChange = (val: string) => {
     setPnInput(val);
@@ -125,6 +130,14 @@ export default function Workstation() {
     if (match) setSelectedPN(match.id);
     else setSelectedPN(null);
   };
+
+  // Sincronizar pnInput ao restaurar selectedPN
+  useEffect(() => {
+    if (selectedPN) {
+      const pn = partNumbers.find(p => p.id === selectedPN);
+      if (pn) setPnInput(pn.partNumber);
+    }
+  }, [selectedPN, partNumbers]);
 
   // Printer list via Tauri or fallback to workstation config
   const getPrinters = async (): Promise<string[]> => {
@@ -358,7 +371,7 @@ export default function Workstation() {
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => { setSelectedShipment(null); setSelectedPN(null); setPnInput(''); }}
+        <button onClick={() => { setSelectedShipment(null); setSelectedPN(null); setPnInput(''); resetNav(); }}
           className="text-muted-foreground hover:text-foreground">
           <ChevronLeft className="w-5 h-5" />
         </button>
