@@ -19,6 +19,7 @@ import ImportPage from './pages/ImportPage';
 import Supervisor from './pages/Supervisor';
 import AdminPage from './pages/AdminPage';
 import NotFound from './pages/NotFound';
+import PrintLabel from './pages/PrintLabel';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 5_000, refetchOnWindowFocus: false } },
@@ -102,6 +103,7 @@ export default function App() {
                 <>
                   <Route path="/import" element={<ImportPage />} />
                   <Route path="/supervisor" element={<Supervisor />} />
+                  <Route path="/print/label/:id" element={<PrintLabel />} />
                 </>
               )}
               {isAdmin && <Route path="/admin" element={<AdminPage />} />}

@@ -14,45 +14,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Label } from '@/types/production';
 
-// ── Printer selection dialog ──────────────────────────────────────────────────
-interface PrinterDialogProps {
-  printers: string[];
-  selected: string;
-  onSelect: (p: string) => void;
-  onConfirm: () => void;
-  onCancel: () => void;
-}
-
-function PrinterDialog({ printers, selected, onSelect, onConfirm, onCancel }: PrinterDialogProps) {
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="industrial-panel p-6 w-80 space-y-4">
-        <h2 className="font-semibold flex items-center gap-2">
-          <Printer className="w-4 h-4 text-primary" /> Selecionar Impressora
-        </h2>
-        <div className="space-y-2 max-h-48 overflow-y-auto">
-          {printers.map(p => (
-            <button
-              key={p}
-              onClick={() => onSelect(p)}
-              className={cn(
-                'w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors',
-                selected === p ? 'border-primary bg-primary/5 font-medium' : 'border-border hover:border-muted-foreground/30'
-              )}
-            >{p}</button>
-          ))}
-          {printers.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-4">Nenhuma impressora encontrada</p>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={onConfirm} disabled={!selected} className="flex-1">Imprimir</Button>
-          <Button variant="outline" onClick={onCancel}>Cancelar</Button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Impressora/modal removidos: impressão 100% web
 
 // ── Workstation tabs ──────────────────────────────────────────────────────────
 type TabType = 'normal' | 'caixa';
@@ -139,25 +101,7 @@ export default function Workstation() {
     }
   }, [selectedPN, partNumbers]);
 
-  // Printer list via Tauri or fallback to workstation config
-  const getPrinters = async (): Promise<string[]> => {
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const printers = await invoke<string[]>('list_printers');
-      return printers.length > 0 ? printers : [''].filter(Boolean);
-    } catch {
-      return [''].filter(Boolean);
-    }
-  };
-
-  const initiateprint = (onConfirm: (printerIp: string) => void) => {
-    getPrinters().then(printers => {
-      setAvailablePrinters(printers);
-      setSelectedPrinter(printers[0] || '');
-      setPendingPrint(() => () => onConfirm(selectedPrinter));
-      setShowPrinterDialog(true);
-    });
-  };
+  // Impressora/modal removidos
 
   // ── Normal label print ────────────────────────────────────────────────────
   const handlePrint = () => {
@@ -169,67 +113,29 @@ export default function Workstation() {
       toast.error(`Quantidade excede o disponível (${available.toLocaleString('pt-BR')})`);
       return;
     }
-
-    // Forçar fluxo web SEMPRE no Render/navegador: nunca mostrar modal de impressora
-    // Só mostra modal se for Tauri desktop (userAgent ou checagem robusta)
-    // Checagem robusta: só mostra modal se for Tauri desktop
-    const isTauriDesktop = !!(window as any).__TAURI__ && navigator.userAgent.toLowerCase().includes('tauri') && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
-    if (!isTauriDesktop) {
-      // Fluxo web/Render: gera etiqueta direto, mostra preview e botão de impressão
-      createReservation.mutate(
-        { partNumberId: selectedPN, workstationId, quantity: qty },
-        {
-          onSuccess: (reservation) => {
-            createLabel.mutate(
-              {
-                partNumberId: selectedPN, reservationId: reservation.id,
-                workstationId, printedBy: user?.name || 'Operador',
-                msl: msl || undefined, expiryDate: expiryDate || undefined, labelType: 'normal',
-              },
-              {
-                onSuccess: (label) => {
-                  setLastLabel(label);
-                  toast.success(`Etiqueta gerada!`, { description: `${selected.partNumber} — ${qty.toLocaleString('pt-BR')} un` });
-                },
-                onError: (e: any) => toast.error(`Erro ao gerar etiqueta: ${e.message}`),
-              }
-            );
-          },
-          onError: (e: any) => toast.error(`Erro ao criar reserva: ${e.message}`),
-        }
-      );
-      return;
-    }
-    // Fluxo Tauri (desktop): mantém modal de impressora
-    getPrinters().then(printers => {
-      setAvailablePrinters(printers);
-      setSelectedPrinter(printers[0] || '');
-      setShowPrinterDialog(true);
-      setPendingPrint(() => (printerIp: string) => {
-        createReservation.mutate(
-          { partNumberId: selectedPN, workstationId, quantity: qty },
-          {
-            onSuccess: (reservation) => {
-              createLabel.mutate(
-                {
-                  partNumberId: selectedPN, reservationId: reservation.id,
-                  workstationId, printedBy: user?.name || 'Operador',
-                  msl: msl || undefined, expiryDate: expiryDate || undefined, labelType: 'normal',
-                },
-                {
-                  onSuccess: (label) => {
-                    setLastLabel(label);
-                    toast.success(`Etiqueta enviada para ${printerIp}`, { description: `${selected.partNumber} — ${qty.toLocaleString('pt-BR')} un` });
-                  },
-                  onError: (e: any) => toast.error(`Erro ao gerar etiqueta: ${e.message}`),
-                }
-              );
+    createReservation.mutate(
+      { partNumberId: selectedPN, workstationId, quantity: qty },
+      {
+        onSuccess: (reservation) => {
+          createLabel.mutate(
+            {
+              partNumberId: selectedPN, reservationId: reservation.id,
+              workstationId, printedBy: user?.name || 'Operador',
+              msl: msl || undefined, expiryDate: expiryDate || undefined, labelType: 'normal',
             },
-            onError: (e: any) => toast.error(`Erro ao criar reserva: ${e.message}`),
-          }
-        );
-      });
-    });
+            {
+              onSuccess: (label) => {
+                setLastLabel(label);
+                toast.success(`Etiqueta gerada!`, { description: `${selected.partNumber} — ${qty.toLocaleString('pt-BR')} un` });
+                window.open(`/print/label/${label.id}`, '_blank', 'width=420,height=620');
+              },
+              onError: (e: any) => toast.error(`Erro ao gerar etiqueta: ${e.message}`),
+            }
+          );
+        },
+        onError: (e: any) => toast.error(`Erro ao criar reserva: ${e.message}`),
+      }
+    );
   };
 
   // ── Box label print ───────────────────────────────────────────────────────
@@ -502,15 +408,8 @@ export default function Workstation() {
                     <Button
                       className="mt-2"
                       onClick={() => {
-                        const printWindow = window.open('', '_blank', 'width=500,height=300');
-                        if (printWindow) {
-                          printWindow.document.write('<html><head><title>Imprimir Etiqueta</title>');
-                          printWindow.document.write('<style>body{margin:0;display:flex;align-items:center;justify-content:center;}@media print{body{margin:0;}}</style>');
-                          printWindow.document.write('</head><body>');
-                          printWindow.document.write(document.querySelector('.label-preview-print')?.outerHTML || '');
-                          printWindow.document.write('</body></html>');
-                          printWindow.document.close();
-                          setTimeout(() => printWindow.print(), 300);
+                        if (lastLabel?.id) {
+                          window.open(`/print/label/${lastLabel.id}`, '_blank', 'width=420,height=620');
                         }
                       }}
                     >Imprimir etiqueta</Button>

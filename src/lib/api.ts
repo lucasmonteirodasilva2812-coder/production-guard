@@ -1,3 +1,4 @@
+  getLabelById: (id: string) => request<any>(`/labels?id=${id}`),
 import { useAuthStore } from '@/store/authStore';
 
 function getBase(): string {
