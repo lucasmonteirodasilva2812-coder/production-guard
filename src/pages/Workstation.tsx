@@ -441,18 +441,37 @@ export default function Workstation() {
             <div className="flex flex-col items-center gap-2">
               <p className="text-xs text-muted-foreground self-start">Pré-visualização</p>
               {lastLabel ? (
-                <LabelPreview label={{
-                  labelSeqId: lastLabel.labelSeqId,
-                  compositeId: lastLabel.compositeId,
-                  partNumber: lastLabel.partNumber,
-                  description: lastLabel.description,
-                  quantity: lastLabel.quantity,
-                  printedBy: lastLabel.printedBy,
-                  printedAt: lastLabel.printedAt,
-                  msl: lastLabel.msl,
-                  expiryDate: lastLabel.expiryDate,
-                  qrValidated: lastLabel.qrValidated,
-                }} />
+                <>
+                  <div className="w-full flex flex-col items-center">
+                    <LabelPreview label={{
+                      labelSeqId: lastLabel.labelSeqId,
+                      compositeId: lastLabel.compositeId,
+                      partNumber: lastLabel.partNumber,
+                      description: lastLabel.description,
+                      quantity: lastLabel.quantity,
+                      printedBy: lastLabel.printedBy,
+                      printedAt: lastLabel.printedAt,
+                      msl: lastLabel.msl,
+                      expiryDate: lastLabel.expiryDate,
+                      qrValidated: lastLabel.qrValidated,
+                    }} />
+                    <Button
+                      className="mt-2"
+                      onClick={() => {
+                        const printWindow = window.open('', '_blank', 'width=500,height=300');
+                        if (printWindow) {
+                          printWindow.document.write('<html><head><title>Imprimir Etiqueta</title>');
+                          printWindow.document.write('<style>body{margin:0;display:flex;align-items:center;justify-content:center;}@media print{body{margin:0;}}</style>');
+                          printWindow.document.write('</head><body>');
+                          printWindow.document.write(document.querySelector('.label-preview-print')?.outerHTML || '');
+                          printWindow.document.write('</body></html>');
+                          printWindow.document.close();
+                          setTimeout(() => printWindow.print(), 300);
+                        }
+                      }}
+                    >Imprimir etiqueta</Button>
+                  </div>
+                </>
               ) : (
                 <div className="border-2 border-dashed border-border rounded-lg w-full flex items-center justify-center" style={{ height: 160 }}>
                   <p className="text-xs text-muted-foreground">A etiqueta aparecerá aqui após impressão</p>

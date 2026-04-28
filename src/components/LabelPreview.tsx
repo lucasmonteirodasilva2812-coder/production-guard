@@ -55,7 +55,7 @@ export function LabelPreview({ label }: { label: LabelData }) {
     : '';
 
   return (
-    <div style={{ width: 420, height: 210, fontFamily: 'Arial, sans-serif', background: '#fff', color: '#000', border: '2px solid #222', userSelect: 'none', fontSize: 11, boxSizing: 'border-box', overflow: 'hidden' }}>
+    <div className="label-preview-print" style={{ width: 420, height: 210, fontFamily: 'Arial, sans-serif', background: '#fff', color: '#000', border: '2px solid #222', userSelect: 'none', fontSize: 11, boxSizing: 'border-box', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #222', padding: '4px 8px', background: '#f5f5f5' }}>
         <span style={{ fontWeight: 700, fontSize: 9, letterSpacing: 0.5, textTransform: 'uppercase' }}>
