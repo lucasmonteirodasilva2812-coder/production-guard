@@ -36,26 +36,15 @@ export default function App() {
   const { mode, token, user, serverUrl, workstationId } = useAuthStore();
   const [screen, setScreen] = useState<Screen>('splash');
 
+  // Sempre força o fluxo de login ao abrir o app
+  useEffect(() => {
+    useAuthStore.getState().logout();
+    useAuthStore.getState().setMode(null);
+  }, []);
+
   // After splash, determine where to go
   const handleSplashDone = () => {
-    if (!mode) { setScreen('mode-select'); return; }
-    if (!token) {
-      if (mode === 'operador') { setScreen('operator-setup'); return; }
-      setScreen('login');
-      return;
-    }
-    // Re-validate token against server
-    api.me().then(u => {
-      useAuthStore.getState().setAuth(u, token);
-      if (mode === 'operador' && !workstationId) {
-        setScreen('workstation-select');
-      } else {
-        setScreen('app');
-      }
-    }).catch(() => {
-      useAuthStore.getState().logout();
-      setScreen('login');
-    });
+    setScreen('mode-select');
   };
 
   if (screen === 'splash') return <SplashScreen onDone={handleSplashDone} />;

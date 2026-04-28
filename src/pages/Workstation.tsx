@@ -360,6 +360,7 @@ export default function Workstation() {
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Part Number *</label>
                   <Input
+                    id="pn-input"
                     value={pnInput}
                     onChange={e => handlePnInputChange(e.target.value)}
                     placeholder="Ex: CPRE005A"
@@ -369,10 +370,21 @@ export default function Workstation() {
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Quantidade do Lote *</label>
                   <Input
-                    type="number" min={1} value={printQty}
+                    type="number"
+                    min={1}
+                    value={printQty}
                     onChange={e => setPrintQty(e.target.value)}
                     placeholder="Ex: 1000"
                     className="font-mono"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handlePrint();
+                        setPrintQty('');
+                        const pnInputEl = document.getElementById('pn-input');
+                        if (pnInputEl) (pnInputEl as HTMLInputElement).focus();
+                      }
+                    }}
                   />
                 </div>
                 <div>

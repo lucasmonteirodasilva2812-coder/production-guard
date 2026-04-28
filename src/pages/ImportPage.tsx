@@ -30,7 +30,7 @@ export default function ImportPage() {
   const user = useAuthStore(s => s.user);
   const { data: shipments = [] } = useShipments();
   const createShipment = useCreateShipment();
-  const [shipmentName, setShipmentName] = useState('');
+  // Removido campo de nome manual da remessa
   const [search, setSearch] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -40,10 +40,7 @@ export default function ImportPage() {
       toast.error('Formato inválido. Use .xlsx, .xls ou .csv');
       return;
     }
-    if (!shipmentName.trim()) {
-      toast.error('Informe o Nome / Código da Remessa antes de carregar o arquivo');
-      return;
-    }
+    // Nome da remessa será sempre o nome original do arquivo
     try {
       let parts: { partNumber: string; description: string; quantity: number }[] = [];
       if (file.name.match(/\.csv$/i)) {
@@ -65,11 +62,10 @@ export default function ImportPage() {
       }
 
       createShipment.mutate(
-        { fileName: shipmentName.trim(), importedBy: user?.name || 'Admin', parts },
+        { fileName: file.name, importedBy: user?.name || 'Admin', parts },
         {
           onSuccess: () => {
             toast.success(`${parts.length} Part Numbers importados com sucesso!`);
-            setShipmentName('');
             if (fileRef.current) fileRef.current.value = '';
           },
           onError: (e: any) => toast.error(`Erro ao importar: ${e.message}`),
@@ -111,15 +107,7 @@ export default function ImportPage() {
           <span className="text-sm font-medium">Nova Remessa</span>
         </div>
 
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Nome / Código da Remessa *</label>
-          <Input
-            value={shipmentName}
-            onChange={e => setShipmentName(e.target.value)}
-            placeholder="Ex: REM-2024-001"
-            className="font-mono max-w-xs"
-          />
-        </div>
+        {/* Campo de nome/código removido. Nome da remessa será sempre o nome do arquivo importado. */}
 
         {/* Drop zone */}
         <div
