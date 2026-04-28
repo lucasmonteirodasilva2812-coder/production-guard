@@ -157,6 +157,37 @@ export default function Workstation() {
       return;
     }
 
+    // Forçar fluxo web SEMPRE no Render/navegador: nunca mostrar modal de impressora
+    // Só mostra modal se for Tauri desktop (userAgent ou checagem robusta)
+    // Checagem robusta: só mostra modal se for Tauri desktop
+    const isTauriDesktop = !!(window as any).__TAURI__ && navigator.userAgent.toLowerCase().includes('tauri') && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+    if (!isTauriDesktop) {
+      // Fluxo web/Render: gera etiqueta direto, mostra preview e botão de impressão
+      createReservation.mutate(
+        { partNumberId: selectedPN, workstationId, quantity: qty },
+        {
+          onSuccess: (reservation) => {
+            createLabel.mutate(
+              {
+                partNumberId: selectedPN, reservationId: reservation.id,
+                workstationId, printedBy: user?.name || 'Operador',
+                msl: msl || undefined, expiryDate: expiryDate || undefined, labelType: 'normal',
+              },
+              {
+                onSuccess: (label) => {
+                  setLastLabel(label);
+                  toast.success(`Etiqueta gerada!`, { description: `${selected.partNumber} — ${qty.toLocaleString('pt-BR')} un` });
+                },
+                onError: (e: any) => toast.error(`Erro ao gerar etiqueta: ${e.message}`),
+              }
+            );
+          },
+          onError: (e: any) => toast.error(`Erro ao criar reserva: ${e.message}`),
+        }
+      );
+      return;
+    }
+    // Fluxo Tauri (desktop): mantém modal de impressora
     getPrinters().then(printers => {
       setAvailablePrinters(printers);
       setSelectedPrinter(printers[0] || '');
