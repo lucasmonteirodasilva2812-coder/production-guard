@@ -7,7 +7,7 @@ import crypto from 'crypto';
 
 const DB_DIR = process.env.DB_PATH || path.join(os.homedir(), '.production-guard');
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
-const dbPath = path.join(DB_DIR, 'data.db');
+let dbPath = path.join(DB_DIR, 'data.db');
 if (process.env.RENDER) {
   // Render.com: usar disco persistente montado em /data
   const renderDbDir = '/data';
