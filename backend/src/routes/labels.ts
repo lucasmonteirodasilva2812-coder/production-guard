@@ -92,12 +92,34 @@ router.post('/', async (req, res) => {
 
     // Se cloud, retorna ZPL para download
     if (isCloud) {
-      res.status(201).json({ ...mappedLabel, zplDownload: Buffer.from(zpl).toString('base64') });
+      let zplBase64 = null;
+      let bufferError = null;
+      try {
+        if (typeof Buffer !== 'undefined' && Buffer.from) {
+          zplBase64 = Buffer.from(zpl).toString('base64');
+        } else {
+          bufferError = 'Buffer não está disponível no ambiente Node';
+        }
+      } catch (e) {
+        bufferError = 'Erro ao usar Buffer: ' + (e && e.stack ? e.stack : String(e));
+      }
+      if (bufferError) {
+        logLabelError('POST / Buffer', bufferError, { typeofBuffer: typeof Buffer, env: process?.env, body: req.body });
+        return res.status(500).json({ error: 'Ambiente não suporta Buffer para base64', details: bufferError });
+      }
+      res.status(201).json({ ...mappedLabel, zplDownload: zplBase64 });
     } else {
       res.status(201).json(mappedLabel);
     }
   } catch (err) {
-    logLabelError('POST /', err, { body: req.body });
+    // Log detalhado para debug em produção
+    logLabelError('POST /', err, {
+      body: req.body,
+      stack: err && err.stack ? err.stack : undefined,
+      typeofBuffer: typeof Buffer,
+      typeofProcess: typeof process,
+      env: typeof process !== 'undefined' && process.env ? process.env : undefined,
+    });
     res.status(500).json({ error: 'Erro ao criar etiqueta', details: String(err) });
   }
 });
