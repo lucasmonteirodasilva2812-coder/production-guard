@@ -106,14 +106,14 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           }}
         >
           <div style={{ marginTop: 2, marginBottom: 0 }}>
-            <QRImg value={label.partNumber} size={80} />
+            <QRImg value={label.partNumber} size={70} />
           </div>
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, justifyContent: 'flex-end', flex: 1 }}>
-            <div style={{ border: '1px solid #111', borderRadius: 3, padding: '2px 4px', width: '90%', margin: '0 auto', background: '#f9f9f9', marginBottom: 2, marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, justifyContent: 'flex-end', flex: 1 }}>
+            <div style={{ border: '1px solid #111', borderRadius: 2, padding: '1.5px 3px', width: '80%', margin: '0 auto', background: '#f9f9f9', marginBottom: 2, marginTop: 'auto', fontSize: 7.5, lineHeight: 1.1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontWeight: 700 }}>Data Venc</span>
               <span style={{ fontWeight: 700 }}>{label.expiryDate || '-'}</span>
             </div>
-            <div style={{ border: '1px solid #111', borderRadius: 3, padding: '2px 4px', width: '90%', margin: '0 auto', background: '#f9f9f9', fontWeight: 700, textAlign: 'center', display: 'block', marginBottom: 2 }}>MSL {label.msl || '-'}</div>
+            <div style={{ border: '1px solid #111', borderRadius: 2, padding: '1.5px 3px', width: '80%', margin: '0 auto', background: '#f9f9f9', fontWeight: 700, textAlign: 'center', display: 'block', marginBottom: 2, fontSize: 7.5, lineHeight: 1.1 }}>MSL {label.msl || '-'}</div>
           </div>
         </div>
 
@@ -131,13 +131,13 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
             overflow: 'hidden',
           }}
         >
-          {/* Bloco superior: Part Number, código, descrição em célula Excel */}
-          <div style={{ width: '100%', textAlign: 'center', overflow: 'hidden', border: '1px solid #111', borderRadius: 3, background: '#fff', marginBottom: 4, padding: '4px 2px 2px 2px', boxSizing: 'border-box' }}>
-            <div style={{ fontWeight: 700, fontSize: 9, marginBottom: 1, lineHeight: 1 }}>Part Number:</div>
+          {/* Bloco superior: Part Number, código, descrição em célula Excel mais compacta */}
+          <div style={{ width: '100%', textAlign: 'center', overflow: 'hidden', border: '1px solid #111', borderRadius: 3, background: '#fff', marginBottom: 2, padding: '2.5px 2px 1.5px 2px', boxSizing: 'border-box' }}>
+            <div style={{ fontWeight: 700, fontSize: 8, marginBottom: 1, lineHeight: 1 }}>Part Number:</div>
             <div
               style={{
                 fontWeight: 900,
-                fontSize: label.partNumber.length > 16 ? 13 : label.partNumber.length > 12 ? 15 : 17,
+                fontSize: label.partNumber.length > 16 ? 12 : label.partNumber.length > 12 ? 13 : 15,
                 fontFamily: 'Arial Black, Arial, sans-serif',
                 letterSpacing: 0.5,
                 marginBottom: 1,
@@ -155,21 +155,19 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
             >
               {label.partNumber}
             </div>
-            <div style={{ fontWeight: 700, fontSize: label.description.length > 32 ? 8 : 9, marginBottom: 1, whiteSpace: 'pre-line', wordBreak: 'break-word', lineHeight: 1.1, maxHeight: 24, overflow: 'hidden', textAlign: 'center' }}>{label.description}</div>
+            <div style={{ fontWeight: 700, fontSize: label.description.length > 32 ? 7 : 8, marginBottom: 1, whiteSpace: 'pre-line', wordBreak: 'break-word', lineHeight: 1.1, maxHeight: 18, overflow: 'hidden', textAlign: 'center' }}>{label.description}</div>
           </div>
-          {/* Bloco meio: Quantidade em célula Excel */}
-          <div style={{ width: '100%', border: '1px solid #111', borderRadius: 3, background: '#eaeaea', marginBottom: 4, padding: '2px 0', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontWeight: 700, fontSize: 10, lineHeight: 1 }}>Quantidade:</div>
-            <div style={{ fontWeight: 900, fontSize: 18, fontFamily: 'Arial Black, Arial, sans-serif', lineHeight: 1 }}>{label.quantity}</div>
+          {/* Bloco meio: Quantidade em célula Excel mais compacta */}
+          <div style={{ width: '100%', border: '1px solid #111', borderRadius: 3, background: '#eaeaea', marginBottom: 2, padding: '1.5px 0', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 8, lineHeight: 1 }}>Quantidade:</div>
+            <div style={{ fontWeight: 900, fontSize: 15, fontFamily: 'Arial Black, Arial, sans-serif', lineHeight: 1 }}>{label.quantity}</div>
           </div>
-          {/* ID em célula Excel ao centro */}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 2, marginBottom: 0 }}>
-            <div style={{ border: '1px solid #111', borderRadius: 3, padding: '2px 4px', background: '#f9f9f9', fontWeight: 700, minWidth: 38, textAlign: 'center' }}>
-              ID: <span style={{ fontWeight: 900 }}>{label.labelSeqId}</span>
-            </div>
+          {/* ID igual usuário/data/hora */}
+          <div style={{ width: '100%', fontSize: 8, marginTop: 2, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderTop: '1px solid #eee', padding: '2px 4px 0 4px', background: 'transparent' }}>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center', width: '100%' }}>ID: <span style={{ fontWeight: 900 }}>{label.labelSeqId}</span></span>
           </div>
           {/* Usuário/data/hora na última linha, largura total, sem letras extras */}
-          <div style={{ width: '100%', fontSize: 8, marginTop: 2, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderTop: '1px solid #eee', padding: '2px 4px 0 4px', background: 'transparent' }}>
+          <div style={{ width: '100%', fontSize: 8, marginTop: 0, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderTop: '1px solid #eee', padding: '2px 4px 0 4px', background: 'transparent' }}>
             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center', width: '100%' }}>{label.printedBy} - {label.printedAt}</span>
           </div>
         </div>
@@ -190,14 +188,14 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
             gap: 8,
           }}
         >
-          <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 70, height: 70 }}>
-            <QRImg value={label.partNumber} size={70} />
+          <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 60, height: 60 }}>
+            <QRImg value={label.partNumber} size={60} />
           </div>
-          <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 70, height: 70 }}>
-            <QRImg value={String(label.quantity)} size={70} />
+          <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 60, height: 60 }}>
+            <QRImg value={String(label.quantity)} size={60} />
           </div>
           {/* Processo em célula Excel no canto inferior direito */}
-          <div style={{ position: 'absolute', bottom: 6, right: 4, width: 70, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 10px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', bottom: 6, right: 4, width: 60, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 8px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             Processo:
           </div>
         </div>
