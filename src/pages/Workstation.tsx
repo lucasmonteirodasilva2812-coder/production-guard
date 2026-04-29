@@ -1,3 +1,41 @@
+// Função utilitária para abrir popup limpo com etiqueta pronta
+function openLabelPrintPopup(label: any, onAfterPrint?: () => void) {
+  const w = 440, h = 240;
+  const printWin = window.open('', '_blank', `width=${w},height=${h},left=200,top=200,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=0`);
+  if (!printWin) return;
+  // HTML/CSS minimalista
+  printWin.document.write(`<!DOCTYPE html><html><head><title>Imprimir Etiqueta</title>
+    <link rel=\"stylesheet\" href=\"/src/App.css\">
+    <style>
+      @media print { body { margin:0!important; } }
+      body { background:#fff; margin:0; padding:0; }
+    </style>
+  </head><body></body></html>`);
+  printWin.document.body.innerHTML = `<div id='label-print-root'></div>`;
+  // Renderiza LabelPreview no popup
+  setTimeout(() => {
+    // @ts-ignore
+    import('@/components/LabelPreview').then(mod => {
+      const root = printWin.document.getElementById('label-print-root');
+      if (root) {
+        // Renderiza usando ReactDOM
+        // @ts-ignore
+        import('react-dom/client').then(({ createRoot }) => {
+          createRoot(root).render(
+            React.createElement(mod.LabelPreview, { label })
+          );
+          setTimeout(() => {
+            printWin.focus();
+            printWin.print();
+            // Fecha popup após impressão
+            printWin.close();
+            if (onAfterPrint) onAfterPrint();
+          }, 400);
+        });
+      }
+    });
+  }, 100);
+}
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useWorkstationNavStore } from '@/store/workstationNavStore';
@@ -127,7 +165,10 @@ export default function Workstation() {
               onSuccess: (label) => {
                 setLastLabel(label);
                 toast.success(`Etiqueta gerada!`, { description: `${selected.partNumber} — ${qty.toLocaleString('pt-BR')} un` });
-                window.open(`/print/label/${label.id}`, '_blank', 'width=420,height=620');
+                openLabelPrintPopup(label, () => {
+                  const pnInputEl = document.getElementById('pn-input');
+                  if (pnInputEl) (pnInputEl as HTMLInputElement).focus();
+                });
               },
               onError: (e: any) => toast.error(`Erro ao gerar etiqueta: ${e.message}`),
             }
@@ -157,7 +198,7 @@ export default function Workstation() {
     // Aqui, exemplo simples:
     const tempId = `caixa-${Date.now()}`;
     window.localStorage.setItem(`box-label-${tempId}`, JSON.stringify(boxLabel));
-    window.open(`/print/label/${tempId}?box=1`, '_blank', 'width=420,height=620');
+    openLabelPrintPopup(boxLabel);
     toast.success('Etiqueta de caixa pronta para impressão');
   };
 
@@ -391,8 +432,7 @@ export default function Workstation() {
                     <Button
                       className="mt-2"
                       onClick={() => {
-                        // Aciona impressão da etiqueta preview na própria janela
-                        window.print();
+                        if (lastLabel) openLabelPrintPopup(lastLabel);
                       }}
                     >Imprimir etiqueta</Button>
                   </div>

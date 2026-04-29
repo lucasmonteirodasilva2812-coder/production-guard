@@ -103,7 +103,7 @@ export default function App() {
                 <>
                   <Route path="/import" element={<ImportPage />} />
                   <Route path="/supervisor" element={<Supervisor />} />
-                  <Route path="/print/label/:id" element={<PrintLabel />} />
+                  {/* <Route path="/print/label/:id" element={<PrintLabel />} /> */}
                 </>
               )}
               {isAdmin && <Route path="/admin" element={<AdminPage />} />}
