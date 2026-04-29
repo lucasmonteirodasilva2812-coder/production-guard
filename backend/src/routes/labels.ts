@@ -5,96 +5,126 @@ import { broadcast } from '../sse';
 
 const router = Router();
 
+// LOG helper
+function logLabelError(context, err, extra = {}) {
+  console.error(`[labels] ERRO [${context}]`, err, extra);
+}
+
 router.get('/', (_req, res) => {
-  const rows = db.prepare('SELECT * FROM labels ORDER BY printed_at DESC').all();
-  res.json(rows.map(mapLabel));
+  try {
+    const rows = db.prepare('SELECT * FROM labels ORDER BY printed_at DESC').all();
+    res.json(rows.map(mapLabel));
+  } catch (err) {
+    logLabelError('GET /', err);
+    res.status(500).json({ error: 'Erro ao buscar etiquetas' });
+  }
 });
 
 router.post('/', (req, res) => {
-  const { partNumberId, reservationId, workstationId, printedBy, msl, expiryDate, labelType = 'normal' } = req.body as {
-    partNumberId: string;
-    reservationId: string;
-    workstationId: number;
-    printedBy: string;
-    msl?: string;
-    expiryDate?: string;
-    labelType?: string;
-  };
+  try {
+    const { partNumberId, reservationId, workstationId, printedBy, msl, expiryDate, labelType = 'normal' } = req.body as {
+      partNumberId: string;
+      reservationId: string;
+      workstationId: number;
+      printedBy: string;
+      msl?: string;
+      expiryDate?: string;
+      labelType?: string;
+    };
 
-  const pn = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
-  const reservation = db.prepare('SELECT * FROM reservations WHERE id = ?').get(reservationId) as any;
-  const ws = db.prepare('SELECT * FROM workstations WHERE id = ?').get(workstationId) as any;
-  if (!pn || !reservation) return res.status(404).json({ error: 'Part number ou reserva não encontrados' });
+    if (!partNumberId || !reservationId || !workstationId || !printedBy) {
+      return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
+    }
 
-  const qty = reservation.quantity;
-  const seqId = nextLabelSeqId();
+    const pn = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
+    const reservation = db.prepare('SELECT * FROM reservations WHERE id = ?').get(reservationId) as any;
+    const ws = db.prepare('SELECT * FROM workstations WHERE id = ?').get(workstationId) as any;
+    if (!pn || !reservation) return res.status(404).json({ error: 'Part number ou reserva não encontrados' });
 
-  // Composite ID: YYYYMMDDWWSSSS
-  const now = new Date();
-  const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  const seqRow = db.prepare(`SELECT COUNT(*) as c FROM labels WHERE workstation_id = ? AND printed_at LIKE ?`)
-    .get(workstationId, `${date}%`) as any;
-  const seq = seqRow.c + 1;
-  const compositeId = `${date}${String(workstationId).padStart(2, '0')}${String(seq).padStart(4, '0')}`;
+    const qty = reservation.quantity;
+    const seqId = nextLabelSeqId();
 
-  const zpl = `^XA^FO50,50^A0N,40,40^FD${pn.part_number}^FS^FO50,100^A0N,30,30^FD${pn.description}^FS^FO50,150^A0N,25,25^FDQTD: ${qty}^FS^FO50,190^A0N,25,25^FDID: ${seqId}^FS^FO50,230^BQN,2,6^FDQA,${seqId}|${pn.part_number}|${qty}^FS^XZ`;
+    // Composite ID: YYYYMMDDWWSSSS
+    const now = new Date();
+    const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    const seqRow = db.prepare(`SELECT COUNT(*) as c FROM labels WHERE workstation_id = ? AND printed_at LIKE ?`)
+      .get(workstationId, `${date}%`) as any;
+    const seq = seqRow.c + 1;
+    const compositeId = `${date}${String(workstationId).padStart(2, '0')}${String(seq).padStart(4, '0')}`;
 
-  const labelId = uuid();
-  const jobId = uuid();
-  const printedAt = now.toISOString();
+    // Geração ZPL (simulado)
+    const zpl = `^XA^FO50,50^A0N,40,40^FD${pn.part_number}^FS^FO50,100^A0N,30,30^FD${pn.description}^FS^FO50,150^A0N,25,25^FDQTD: ${qty}^FS^FO50,190^A0N,25,25^FDID: ${seqId}^FS^FO50,230^BQN,2,6^FDQA,${seqId}|${pn.part_number}|${qty}^FS^XZ`;
 
-  db.prepare(`
-    INSERT INTO labels (id, label_seq_id, composite_id, part_number_id, part_number, description, quantity,
-      workstation_id, printed_at, printed_by, zpl_command, qr_validated, print_job_id, msl, expiry_date, label_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
-  `).run(labelId, seqId, compositeId, partNumberId, pn.part_number, pn.description, qty,
-    workstationId, printedAt, printedBy, zpl, jobId, msl || null, expiryDate || null, labelType);
+    const labelId = uuid();
+    const jobId = uuid();
+    const printedAt = now.toISOString();
 
-  db.prepare(`INSERT INTO print_jobs (id, label_id, status, printer_ip, created_at, retries) VALUES (?, ?, 'queued', ?, ?, 0)`)
-    .run(jobId, labelId, ws?.printer_ip || '', printedAt);
+    db.prepare(`
+      INSERT INTO labels (id, label_seq_id, composite_id, part_number_id, part_number, description, quantity,
+        workstation_id, printed_at, printed_by, zpl_command, qr_validated, print_job_id, msl, expiry_date, label_type)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+    `).run(labelId, seqId, compositeId, partNumberId, pn.part_number, pn.description, qty,
+      workstationId, printedAt, printedBy, zpl, jobId, msl || null, expiryDate || null, labelType);
 
-  db.prepare("UPDATE reservations SET status = 'consumido' WHERE id = ?").run(reservationId);
-  db.prepare('UPDATE part_numbers SET labeled_qty = labeled_qty + ?, status = CASE WHEN status = "pendente" THEN "em_processo" ELSE status END WHERE id = ?').run(qty, partNumberId);
-  db.prepare("UPDATE print_jobs SET status = 'printed', completed_at = ? WHERE id = ?").run(new Date().toISOString(), jobId);
+    db.prepare(`INSERT INTO print_jobs (id, label_id, status, printer_ip, created_at, retries) VALUES (?, ?, 'queued', ?, ?, 0)`)
+      .run(jobId, labelId, ws?.printer_ip || '', printedAt);
 
-  const updatedPN = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
-  if (updatedPN && updatedPN.labeled_qty >= updatedPN.declared_qty) {
-    db.prepare("UPDATE part_numbers SET status = 'concluido' WHERE id = ?").run(partNumberId);
+    db.prepare("UPDATE reservations SET status = 'consumido' WHERE id = ?").run(reservationId);
+    db.prepare('UPDATE part_numbers SET labeled_qty = labeled_qty + ?, status = CASE WHEN status = "pendente" THEN "em_processo" ELSE status END WHERE id = ?').run(qty, partNumberId);
+    db.prepare("UPDATE print_jobs SET status = 'printed', completed_at = ? WHERE id = ?").run(new Date().toISOString(), jobId);
+
+    const updatedPN = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
+    if (updatedPN && updatedPN.labeled_qty >= updatedPN.declared_qty) {
+      db.prepare("UPDATE part_numbers SET status = 'concluido' WHERE id = ?").run(partNumberId);
+    }
+
+    const label = db.prepare('SELECT * FROM labels WHERE id = ?').get(labelId);
+    const mappedLabel = mapLabel(label);
+
+    broadcast('labels:created', mappedLabel);
+    broadcast('part-numbers:updated', { id: partNumberId });
+
+    res.status(201).json(mappedLabel);
+  } catch (err) {
+    logLabelError('POST /', err, { body: req.body });
+    res.status(500).json({ error: 'Erro ao criar etiqueta', details: String(err) });
   }
-
-  const label = db.prepare('SELECT * FROM labels WHERE id = ?').get(labelId);
-  const mappedLabel = mapLabel(label);
-
-  broadcast('labels:created', mappedLabel);
-  broadcast('part-numbers:updated', { id: partNumberId });
-
-  res.status(201).json(mappedLabel);
 });
 
 router.delete('/:id', (req, res) => {
-  const label = db.prepare('SELECT * FROM labels WHERE id = ?').get(req.params.id) as any;
-  if (!label) return res.status(404).json({ error: 'Etiqueta não encontrada' });
+  try {
+    const label = db.prepare('SELECT * FROM labels WHERE id = ?').get(req.params.id) as any;
+    if (!label) return res.status(404).json({ error: 'Etiqueta não encontrada' });
 
-  db.prepare('DELETE FROM labels WHERE id = ?').run(req.params.id);
-  db.prepare('UPDATE part_numbers SET labeled_qty = MAX(0, labeled_qty - ?) WHERE id = ?')
-    .run(label.quantity, label.part_number_id);
+    db.prepare('DELETE FROM labels WHERE id = ?').run(req.params.id);
+    db.prepare('UPDATE part_numbers SET labeled_qty = MAX(0, labeled_qty - ?) WHERE id = ?')
+      .run(label.quantity, label.part_number_id);
 
-  broadcast('labels:deleted', { id: req.params.id });
-  broadcast('part-numbers:updated', { id: label.part_number_id });
+    broadcast('labels:deleted', { id: req.params.id });
+    broadcast('part-numbers:updated', { id: label.part_number_id });
 
-  res.json({ ok: true });
+    res.json({ ok: true });
+  } catch (err) {
+    logLabelError('DELETE /:id', err, { id: req.params.id });
+    res.status(500).json({ error: 'Erro ao deletar etiqueta', details: String(err) });
+  }
 });
 
 router.post('/:id/reprint', (req, res) => {
-  const label = db.prepare('SELECT * FROM labels WHERE id = ?').get(req.params.id) as any;
-  if (!label) return res.status(404).json({ error: 'Etiqueta não encontrada' });
+  try {
+    const label = db.prepare('SELECT * FROM labels WHERE id = ?').get(req.params.id) as any;
+    if (!label) return res.status(404).json({ error: 'Etiqueta não encontrada' });
 
-  const { printerIp } = req.body as { printerIp: string };
-  const jobId = uuid();
-  db.prepare(`INSERT INTO print_jobs (id, label_id, status, printer_ip, created_at, retries) VALUES (?, ?, 'printed', ?, ?, 0)`)
-    .run(jobId, label.id, printerIp || '', new Date().toISOString());
+    const { printerIp } = req.body as { printerIp: string };
+    const jobId = uuid();
+    db.prepare(`INSERT INTO print_jobs (id, label_id, status, printer_ip, created_at, retries) VALUES (?, ?, 'printed', ?, ?, 0)`)
+      .run(jobId, label.id, printerIp || '', new Date().toISOString());
 
-  res.status(201).json({ jobId });
+    res.status(201).json({ jobId });
+  } catch (err) {
+    logLabelError('POST /:id/reprint', err, { id: req.params.id, body: req.body });
+    res.status(500).json({ error: 'Erro ao reimprimir etiqueta', details: String(err) });
+  }
 });
 
 function mapLabel(row: any) {
