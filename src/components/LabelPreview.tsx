@@ -32,22 +32,14 @@ function fmtQty(n: number) {
 
 // ─── Etiqueta de Produto ──────────────────────────────────────────────────────
 
+// ─── Seleção automática do modelo ─────────────────────────────────────────────
 export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
-  // Tamanho 100x50mm = 420x210px (300dpi ~ 12px/mm)
-  const qrVal = `${label.partNumber}|${label.quantity}`;
-  const expiryFmt = label.expiryDate
-    ? (() => { const d = new Date(label.expiryDate!); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; })()
-    : '';
-
-  // onQrLoad será chamado quando ambos os QR Codes carregarem
-  const [qrLoaded, setQrLoaded] = React.useState(0);
-  React.useEffect(() => { if (qrLoaded >= 2 && onQrLoad) onQrLoad(); }, [qrLoaded, onQrLoad]);
-
-  return (
-    <div className="label-preview-print" style={{ width: 420, height: 210, fontFamily: 'Arial, sans-serif', background: '#fff', color: '#000', border: '2px solid #222', userSelect: 'none', fontSize: 11, boxSizing: 'border-box', overflow: 'hidden' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #222', padding: '4px 8px', background: '#f5f5f5' }}>
-        <span style={{ fontWeight: 700, fontSize: 9, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+  if (label.labelType === 'caixa') {
+    return <IndustrialLabelModelo2 label={label as any} onQrLoad={onQrLoad} />;
+  }
+  // Modelo 1 padrão
+  return <IndustrialLabelModelo1 label={label as any} onQrLoad={onQrLoad} />;
+}
           ETIQUETA DE IDENTIFICAÇÃO DE PRODUTO
         </span>
         <span style={{ fontSize: 11, fontWeight: 900 }}>grupo<span style={{ fontStyle: 'italic' }}>Multilaser</span></span>
