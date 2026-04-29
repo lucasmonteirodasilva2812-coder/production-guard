@@ -14,27 +14,11 @@ export interface LabelData {
   labelType?: 'normal' | 'caixa';
 }
 
-// Deterministic QR-like block pattern
-function QRBlock({ value, size = 52 }: { value: string; size?: number }) {
-  const N = 11;
-  const cell = Math.floor(size / N);
-  let seed = value.split('').reduce((a, c) => (Math.imul(a, 31) + c.charCodeAt(0)) | 0, 0);
-  const next = () => { seed = (Math.imul(seed, 1664525) + 1013904223) | 0; return (seed >>> 0) / 0xffffffff; };
 
-  const cells = Array.from({ length: N * N }, (_, i) => {
-    const r = Math.floor(i / N); const c = i % N;
-    if ((r < 3 && c < 3) || (r < 3 && c >= N - 3) || (r >= N - 3 && c < 3)) return true;
-    if (r === 3 || c === 3) return false;
-    return next() > 0.42;
-  });
-
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${N}, ${cell}px)`, gap: 0, border: '1px solid #000', padding: 2, background: '#fff' }}>
-      {cells.map((dark, i) => (
-        <div key={i} style={{ width: cell, height: cell, background: dark ? '#111' : '#fff' }} />
-      ))}
-    </div>
-  );
+// QR Code real via API externa (sem dependência)
+function QRImg({ value, size = 72, onLoad }: { value: string; size?: number; onLoad?: () => void }) {
+  const url = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}`;
+  return <img src={url} width={size} height={size} alt="QR Code" style={{ display: 'block', background: '#fff', border: '1px solid #000' }} onLoad={onLoad} />;
 }
 
 function fmtDate(iso: string) {
@@ -47,12 +31,17 @@ function fmtQty(n: number) {
 }
 
 // ─── Etiqueta de Produto ──────────────────────────────────────────────────────
-export function LabelPreview({ label }: { label: LabelData }) {
+
+export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
   // Tamanho 100x50mm = 420x210px (300dpi ~ 12px/mm)
   const qrVal = `${label.partNumber}|${label.quantity}`;
   const expiryFmt = label.expiryDate
     ? (() => { const d = new Date(label.expiryDate!); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; })()
     : '';
+
+  // onQrLoad será chamado quando ambos os QR Codes carregarem
+  const [qrLoaded, setQrLoaded] = React.useState(0);
+  React.useEffect(() => { if (qrLoaded >= 2 && onQrLoad) onQrLoad(); }, [qrLoaded, onQrLoad]);
 
   return (
     <div className="label-preview-print" style={{ width: 420, height: 210, fontFamily: 'Arial, sans-serif', background: '#fff', color: '#000', border: '2px solid #222', userSelect: 'none', fontSize: 11, boxSizing: 'border-box', overflow: 'hidden' }}>
@@ -67,7 +56,7 @@ export function LabelPreview({ label }: { label: LabelData }) {
       {/* Main row: QR | PN + Description | QR */}
       <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px', gap: 6, padding: '8px 6px 6px', borderBottom: '1px solid #ccc' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-          <QRBlock value={qrVal} size={72} />
+          <QRImg value={qrVal} size={72} onLoad={() => setQrLoaded(qrLoaded => qrLoaded + 1)} />
         </div>
         <div>
           <div style={{ fontSize: 8, color: '#666', marginBottom: 1 }}>Part Number:</div>
@@ -75,7 +64,7 @@ export function LabelPreview({ label }: { label: LabelData }) {
           <div style={{ fontSize: 9, color: '#333', marginTop: 3, lineHeight: 1.4 }}>{label.description}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
-          <QRBlock value={qrVal} size={72} />
+          <QRImg value={qrVal} size={72} onLoad={() => setQrLoaded(qrLoaded => qrLoaded + 1)} />
         </div>
       </div>
 
@@ -103,7 +92,7 @@ export function LabelPreview({ label }: { label: LabelData }) {
         </div>
         {/* Right: small QR + Processo */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '6px 4px' }}>
-          <QRBlock value={qrVal} size={48} />
+          <QRImg value={qrVal} size={48} onLoad={() => setQrLoaded(qrLoaded => qrLoaded + 1)} />
           <div style={{ fontSize: 8, color: '#666', marginTop: 4 }}>Processo:</div>
         </div>
       </div>
@@ -125,7 +114,6 @@ export function LabelPreview({ label }: { label: LabelData }) {
 // ─── Etiqueta de Caixa ────────────────────────────────────────────────────────
 export function BoxLabelPreview({ label }: { label: LabelData }) {
   const qrVal = label.partNumber;
-
   return (
     <div style={{ width: 420, fontFamily: 'Arial, sans-serif', background: '#fff', color: '#000', border: '2px solid #222', userSelect: 'none', fontSize: 11 }}>
       {/* Header */}
@@ -147,7 +135,7 @@ export function BoxLabelPreview({ label }: { label: LabelData }) {
       <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 60px', borderBottom: '1px solid #ccc' }}>
         {/* Left: QR */}
         <div style={{ borderRight: '1px solid #ccc', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <QRBlock value={qrVal} size={64} />
+          <QRImg value={qrVal} size={64} />
         </div>
         {/* Center: PN + Description */}
         <div style={{ borderRight: '1px solid #ccc', padding: '6px 8px' }}>
@@ -156,7 +144,7 @@ export function BoxLabelPreview({ label }: { label: LabelData }) {
         </div>
         {/* Right: QR */}
         <div style={{ padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <QRBlock value={qrVal + '_caixa'} size={48} />
+          <QRImg value={qrVal + '_caixa'} size={48} />
         </div>
       </div>
 

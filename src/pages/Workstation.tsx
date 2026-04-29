@@ -3,7 +3,6 @@ function openLabelPrintPopup(label: any, onAfterPrint?: () => void) {
   const w = 440, h = 240;
   const printWin = window.open('', '_blank', `width=${w},height=${h},left=200,top=200,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=0`);
   if (!printWin) return;
-  // HTML/CSS minimalista
   printWin.document.write(`<!DOCTYPE html><html><head><title>Imprimir Etiqueta</title>
     <link rel=\"stylesheet\" href=\"/src/App.css\">
     <style>
@@ -12,25 +11,27 @@ function openLabelPrintPopup(label: any, onAfterPrint?: () => void) {
     </style>
   </head><body></body></html>`);
   printWin.document.body.innerHTML = `<div id='label-print-root'></div>`;
-  // Renderiza LabelPreview no popup
   setTimeout(() => {
     // @ts-ignore
     import('@/components/LabelPreview').then(mod => {
       const root = printWin.document.getElementById('label-print-root');
       if (root) {
-        // Renderiza usando ReactDOM
         // @ts-ignore
         import('react-dom/client').then(({ createRoot }) => {
+          // Renderiza LabelPreview e só imprime após QR carregar
           createRoot(root).render(
-            React.createElement(mod.LabelPreview, { label })
+            React.createElement(mod.LabelPreview, {
+              label,
+              onQrLoad: () => {
+                setTimeout(() => {
+                  printWin.focus();
+                  printWin.print();
+                  printWin.close();
+                  if (onAfterPrint) onAfterPrint();
+                }, 100);
+              }
+            })
           );
-          setTimeout(() => {
-            printWin.focus();
-            printWin.print();
-            // Fecha popup após impressão
-            printWin.close();
-            if (onAfterPrint) onAfterPrint();
-          }, 400);
         });
       }
     });
