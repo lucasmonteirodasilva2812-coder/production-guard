@@ -111,11 +111,11 @@ export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?:
   );
 }
 
-// ─── Etiqueta de Caixa ────────────────────────────────────────────────────────
-  // Seleção automática do modelo
+// ─── Seleção automática do modelo ─────────────────────────────────────────────
+export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
   if (label.labelType === 'caixa') {
     return <IndustrialLabelModelo2 label={label as any} onQrLoad={onQrLoad} />;
   }
   // Modelo 1 padrão
   return <IndustrialLabelModelo1 label={label as any} onQrLoad={onQrLoad} />;
-        <span style={{ fontWeight: 700, fontSize: 9, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+}
