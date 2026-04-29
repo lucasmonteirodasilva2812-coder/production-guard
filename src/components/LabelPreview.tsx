@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 
 export interface LabelData {
@@ -16,7 +15,7 @@ export interface LabelData {
   labelType?: 'normal' | 'caixa';
 }
 
-export function QRImg({ value, size = 72, onLoad }: { value: string; size?: number; onLoad?: () => void }) {
+function QRImg({ value, size = 72, onLoad }: { value: string; size?: number; onLoad?: () => void }) {
   const url = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}`;
   return (
     <img
@@ -30,7 +29,7 @@ export function QRImg({ value, size = 72, onLoad }: { value: string; size?: numb
   );
 }
 
-export function IndustrialLabelModelo1({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
+function IndustrialLabelModelo1({ label }: { label: LabelData }) {
   return (
     <div style={{ width: 420, height: 210, border: '2px solid #222', background: '#fff', color: '#000', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box', padding: 12 }}>
       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>ETIQUETA DE IDENTIFICAÇÃO DE PRODUTO</div>
@@ -50,7 +49,7 @@ export function IndustrialLabelModelo1({ label, onQrLoad }: { label: LabelData, 
   );
 }
 
-export function IndustrialLabelModelo2({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
+function IndustrialLabelModelo2({ label }: { label: LabelData }) {
   return (
     <div style={{ width: 420, height: 210, border: '2px solid #222', background: '#fff', color: '#000', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box', padding: 12 }}>
       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>ETIQUETA DE IDENTIFICAÇÃO DE CAIXA</div>
@@ -70,11 +69,18 @@ export function IndustrialLabelModelo2({ label, onQrLoad }: { label: LabelData, 
   );
 }
 
-export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
+interface LabelPreviewProps {
+  label: LabelData;
+}
+
+const LabelPreview: React.FC<LabelPreviewProps> = ({ label }) => {
   if (label.labelType === 'caixa') {
-    return <IndustrialLabelModelo2 label={label} onQrLoad={onQrLoad} />;
+    return <IndustrialLabelModelo2 label={label} />;
   }
-  return <IndustrialLabelModelo1 label={label} onQrLoad={onQrLoad} />;
+  return <IndustrialLabelModelo1 label={label} />;
+};
+
+export default LabelPreview;
 
         {/* Right: small QR + Processo */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '6px 4px' }}>
