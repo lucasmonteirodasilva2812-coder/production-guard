@@ -197,17 +197,20 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
             boxSizing: 'border-box',
             overflow: 'hidden',
             position: 'relative',
-            gap: 14,
           }}
         >
-          <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 54, height: 54, marginTop: 2 }}>
-            <QRImg value={label.partNumber} size={54} />
+          <div style={{ marginTop: 0, marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 54, height: 54 }}>
+              <QRImg value={label.partNumber} size={54} />
+            </div>
+            <div style={{ height: 10 }} />
+            <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 54, height: 54 }}>
+              <QRImg value={String(label.quantity)} size={54} />
+            </div>
           </div>
-          <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, marginBottom: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 54, height: 54, marginTop: 0 }}>
-            <QRImg value={String(label.quantity)} size={54} />
-          </div>
-          {/* Processo em célula Excel no canto inferior direito */}
-          <div style={{ position: 'absolute', bottom: 6, right: 4, width: 54, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 8px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Processo em célula Excel no canto inferior direito, com respiro visível acima */}
+          <div style={{ flex: 1 }} />
+          <div style={{ width: 54, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 8px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
             Processo:
           </div>
         </div>
@@ -221,30 +224,33 @@ function IndustrialLabelModelo2({ label }: { label: LabelData }) {
   return (
     <div style={{ width: 420, height: 210, border: '2.5px solid #111', background: '#fff', color: '#111', fontFamily: 'Arial, Arial Black, sans-serif', boxSizing: 'border-box', padding: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
       <div style={{ display: 'flex', flex: 1, alignItems: 'stretch', padding: '0 0 0 0' }}>
-        {/* QR produto (85x85) */}
+        {/* QR produto (esquerda) */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 110, height: '100%' }}>
-          <QRImg value={label.partNumber} size={85} />
+          <QRImg value={label.partNumber} size={54} />
         </div>
         {/* Centro: dados da caixa */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '12px 0 12px 8px', gap: 0 }}>
           <div style={{ fontWeight: 900, fontSize: 20, letterSpacing: 1, lineHeight: 1.1, fontFamily: 'Arial Black, Arial, sans-serif', marginBottom: 2 }}>{label.partNumber}</div>
           <div style={{ fontWeight: 700, fontSize: 13, color: '#222', marginBottom: 6 }}>{label.description}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
-            <span style={{ fontWeight: 700, fontSize: 13 }}>QTD:</span>
-            <span style={{ fontWeight: 900, fontSize: 24, color: '#111', letterSpacing: 1 }}>{label.quantity}</span>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#222', marginBottom: 6 }}>QTD: {label.quantity}</div>
+        </div>
+        {/* QR quantidade (direita) + Processo */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', width: 110, height: '100%', position: 'relative' }}>
+          <div style={{ marginTop: 0, marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 54, height: 54 }}>
+              <QRImg value={String(label.quantity)} size={54} />
+            </div>
+            <div style={{ height: 10 }} />
+            <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 54, height: 54 }}>
+              <QRImg value={label.partNumber} size={54} />
+            </div>
           </div>
-          <div style={{ fontWeight: 700, fontSize: 11, color: '#444', marginBottom: 2 }}>ID: {label.labelSeqId}</div>
-          <div style={{ fontWeight: 700, fontSize: 11, color: '#444', marginBottom: 2 }}>MSL: {label.msl || '-'}</div>
+          {/* Processo em célula Excel no canto inferior direito, com respiro visível acima */}
+          <div style={{ flex: 1 }} />
+          <div style={{ width: 54, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 8px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
+            Processo:
+          </div>
         </div>
-        {/* QR quantidade (85x85) */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 110, height: '100%' }}>
-          <QRImg value={String(label.quantity)} size={85} />
-        </div>
-      </div>
-      {/* Rodapé: operador + data */}
-      <div style={{ borderTop: '1.5px solid #e6e6e6', padding: '4px 12px', display: 'flex', alignItems: 'center', fontSize: 11, fontWeight: 700, color: '#222', justifyContent: 'space-between', background: '#fafafa' }}>
-        <span>Operador: {label.printedBy}</span>
-        <span>{label.printedAt}</span>
       </div>
     </div>
   );
