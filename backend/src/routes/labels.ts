@@ -20,7 +20,7 @@ router.get('/', (_req, res) => {
   }
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { partNumberId, reservationId, workstationId, printedBy, msl, expiryDate, labelType = 'normal' } = req.body as {
       partNumberId: string;
@@ -66,12 +66,18 @@ router.post('/', (req, res) => {
     `).run(labelId, seqId, compositeId, partNumberId, pn.part_number, pn.description, qty,
       workstationId, printedAt, printedBy, zpl, jobId, msl || null, expiryDate || null, labelType);
 
-    db.prepare(`INSERT INTO print_jobs (id, label_id, status, printer_ip, created_at, retries) VALUES (?, ?, 'queued', ?, ?, 0)`)
-      .run(jobId, labelId, ws?.printer_ip || '', printedAt);
+    // Em ambiente cloud, não imprime — retorna ZPL para download
+    const isCloud = process.env.RENDER || process.env.NODE_ENV === 'production';
+    let printJobStatus = 'skipped';
+    if (!isCloud) {
+      db.prepare(`INSERT INTO print_jobs (id, label_id, status, printer_ip, created_at, retries) VALUES (?, ?, 'queued', ?, ?, 0)`)
+        .run(jobId, labelId, ws?.printer_ip || '', printedAt);
+      db.prepare("UPDATE print_jobs SET status = 'printed', completed_at = ? WHERE id = ?").run(new Date().toISOString(), jobId);
+      printJobStatus = 'printed';
+    }
 
     db.prepare("UPDATE reservations SET status = 'consumido' WHERE id = ?").run(reservationId);
     db.prepare('UPDATE part_numbers SET labeled_qty = labeled_qty + ?, status = CASE WHEN status = "pendente" THEN "em_processo" ELSE status END WHERE id = ?').run(qty, partNumberId);
-    db.prepare("UPDATE print_jobs SET status = 'printed', completed_at = ? WHERE id = ?").run(new Date().toISOString(), jobId);
 
     const updatedPN = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
     if (updatedPN && updatedPN.labeled_qty >= updatedPN.declared_qty) {
@@ -84,7 +90,12 @@ router.post('/', (req, res) => {
     broadcast('labels:created', mappedLabel);
     broadcast('part-numbers:updated', { id: partNumberId });
 
-    res.status(201).json(mappedLabel);
+    // Se cloud, retorna ZPL para download
+    if (isCloud) {
+      res.status(201).json({ ...mappedLabel, zplDownload: Buffer.from(zpl).toString('base64') });
+    } else {
+      res.status(201).json(mappedLabel);
+    }
   } catch (err) {
     logLabelError('POST /', err, { body: req.body });
     res.status(500).json({ error: 'Erro ao criar etiqueta', details: String(err) });
