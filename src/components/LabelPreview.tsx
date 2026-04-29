@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 export interface LabelData {
@@ -81,33 +82,3 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ label }) => {
 };
 
 export default LabelPreview;
-
-        {/* Right: small QR + Processo */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '6px 4px' }}>
-          <QRImg value={qrVal} size={48} onLoad={() => setQrLoaded(qrLoaded => qrLoaded + 1)} />
-          <div style={{ fontSize: 8, color: '#666', marginTop: 4 }}>Processo:</div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div style={{ padding: '3px 8px', fontSize: 9, color: '#333' }}>
-        {label.printedBy} - {fmtDate(label.printedAt)}
-      </div>
-
-      {/* Warning strip */}
-      <div style={{ background: '#FFE033', borderTop: '1px solid #e6c800', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 4, fontSize: 9, fontWeight: 600 }}>
-        <span>⚠</span>
-        <span>Etiqueta 100x50mm. QR code contém: código e quantidade.</span>
-      </div>
-    </div>
-  );
-}
-
-// ─── Seleção automática do modelo ─────────────────────────────────────────────
-export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
-  if (label.labelType === 'caixa') {
-    return <IndustrialLabelModelo2 label={label as any} onQrLoad={onQrLoad} />;
-  }
-  // Modelo 1 padrão
-  return <IndustrialLabelModelo1 label={label as any} onQrLoad={onQrLoad} />;
-}
