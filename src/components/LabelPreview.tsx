@@ -125,16 +125,17 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
               <span style={{ fontWeight: 700 }}>Data Venc</span>
               <span style={{ fontWeight: 700 }}>{label.expiryDate ? formatDate(label.expiryDate) : '-'}</span>
             </div>
-              // Função para formatar data dd/mm/aaaa
-              function formatDate(dateStr?: string) {
-                if (!dateStr) return '';
-                const d = new Date(dateStr);
-                if (isNaN(d.getTime())) return dateStr;
-                const dia = String(d.getDate()).padStart(2, '0');
-                const mes = String(d.getMonth() + 1).padStart(2, '0');
-                const ano = d.getFullYear();
-                return `${dia}/${mes}/${ano}`;
-              }
+
+            // Função para formatar data dd/mm/aaaa (fora do componente)
+            function formatDate(dateStr?: string) {
+              if (!dateStr) return '';
+              const d = new Date(dateStr);
+              if (isNaN(d.getTime())) return dateStr;
+              const dia = String(d.getDate()).padStart(2, '0');
+              const mes = String(d.getMonth() + 1).padStart(2, '0');
+              const ano = d.getFullYear();
+              return `${dia}/${mes}/${ano}`;
+            }
             <div style={{ border: '1px solid #111', borderRadius: 2, padding: '1.5px 3px', width: '80%', margin: '0 auto', background: '#f9f9f9', fontWeight: 700, textAlign: 'center', display: 'block', marginBottom: 2, fontSize: 7.5, lineHeight: 1.1 }}>MSL {label.msl || '-'}</div>
           </div>
         </div>
