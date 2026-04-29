@@ -1,10 +1,7 @@
 // API client centralizado para comunicação com o backend
 import { useAuthStore } from '../store/authStore';
 
-const getBaseUrl = () => {
-  // Sempre lê o serverUrl atual do Zustand
-  return useAuthStore.getState().serverUrl || '/api';
-};
+const getBaseUrl = () => import.meta.env.VITE_API_URL;
 
 async function request<T>(
   path: string,
