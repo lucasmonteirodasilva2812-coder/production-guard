@@ -40,19 +40,7 @@ export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?:
   // Modelo 1 padrão
   return <IndustrialLabelModelo1 label={label as any} onQrLoad={onQrLoad} />;
 }
-          ETIQUETA DE IDENTIFICAÇÃO DE PRODUTO
-        </span>
-        <span style={{ fontSize: 11, fontWeight: 900 }}>grupo<span style={{ fontStyle: 'italic' }}>Multilaser</span></span>
-      </div>
-
-      {/* Main row: QR | PN + Description | QR */}
-      <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px', gap: 6, padding: '8px 6px 6px', borderBottom: '1px solid #ccc' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-          <QRImg value={qrVal} size={72} onLoad={() => setQrLoaded(qrLoaded => qrLoaded + 1)} />
-        </div>
-        <div>
-          <div style={{ fontSize: 8, color: '#666', marginBottom: 1 }}>Part Number:</div>
-          <div style={{ fontWeight: 900, fontSize: 18, letterSpacing: 0.5, lineHeight: 1.1, wordBreak: 'break-all' }}>{label.partNumber}</div>
+// Removido texto solto e spans fora do JSX. Toda a renderização agora é feita apenas pelos componentes IndustrialLabelModelo1/2.
           <div style={{ fontSize: 9, color: '#333', marginTop: 3, lineHeight: 1.4 }}>{label.description}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
