@@ -138,45 +138,30 @@ export default function Workstation() {
     );
   };
 
-  // ── Box label print ───────────────────────────────────────────────────────
+  // ── Box label print (web) ────────────────────────────────────────────────
   const handleBoxPrint = () => {
     if (!boxPn.trim()) { toast.error('Informe o Part Number'); return; }
     const qty = parseInt(boxQty);
     if (isNaN(qty) || qty <= 0) { toast.error('Quantidade inválida'); return; }
 
-    getPrinters().then(printers => {
-      setAvailablePrinters(printers);
-      setSelectedPrinter(printers[0] || '');
-      setShowPrinterDialog(true);
-      setPendingPrint(() => (printerIp: string) => {
-        const now = new Date().toISOString();
-        const boxLabel: LabelData = {
-          partNumber: boxPn.trim(), description: boxDesc.trim(),
-          quantity: qty, printedBy: user?.name || 'Operador', printedAt: now,
-          msl: boxMsl || null, labelType: 'caixa',
-        };
-        setLastBoxLabel(boxLabel);
-        toast.success(`Etiqueta de caixa enviada para ${printerIp}`);
-      });
-    });
+    // Cria etiqueta de caixa localmente e abre página de impressão web
+    const now = new Date().toISOString();
+    const boxLabel: LabelData = {
+      partNumber: boxPn.trim(), description: boxDesc.trim(),
+      quantity: qty, printedBy: user?.name || 'Operador', printedAt: now,
+      msl: boxMsl || null, labelType: 'caixa',
+    };
+    setLastBoxLabel(boxLabel);
+    // Salva no estado e abre print
+    // Ideal: criar no backend e obter id, mas se não houver endpoint, pode serializar no localStorage/sessionStorage
+    // Aqui, exemplo simples:
+    const tempId = `caixa-${Date.now()}`;
+    window.localStorage.setItem(`box-label-${tempId}`, JSON.stringify(boxLabel));
+    window.open(`/print/label/${tempId}?box=1`, '_blank', 'width=420,height=620');
+    toast.success('Etiqueta de caixa pronta para impressão');
   };
 
-  const handlePrinterConfirm = () => {
-    setShowPrinterDialog(false);
-    if (pendingPrint) pendingPrint(selectedPrinter);
-    setPendingPrint(null);
-  };
-
-  const handleSupervisorAuth = () => {
-    if (supervisorPassword === 'super123') {
-      if (selectedPN) {
-        authorizeSurplus.mutate(
-          { id: selectedPN, extraQty: parseInt(printQty) || 1 },
-          { onSuccess: () => { toast.success('Excedente autorizado'); setShowSupervisorAuth(false); setSupervisorPassword(''); } }
-        );
-      }
-    } else { toast.error('Senha de Supervisor incorreta'); }
-  };
+  // Removido: handlePrinterConfirm, setShowPrinterDialog, setPendingPrint, impressora
 
   const handleFinalize = () => {
     if (!selectedPN) return;

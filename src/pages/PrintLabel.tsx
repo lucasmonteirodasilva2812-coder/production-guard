@@ -1,18 +1,28 @@
 import React, { useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import QRCode from 'qrcode.react';
 
 export default function PrintLabel() {
   const { id } = useParams();
+  const location = useLocation();
   const labelRef = useRef<HTMLDivElement>(null);
 
-  const { data: label, isLoading, error } = useQuery({
-    queryKey: ['label', id],
-    queryFn: () => api.getLabelById(id!),
-    enabled: !!id,
-  });
+  // Se for etiqueta de caixa (box=1), busca no localStorage
+  const isBox = new URLSearchParams(location.search).get('box') === '1';
+  const [label, setLabel] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  useEffect(() => {
+    if (isBox && id) {
+      const raw = window.localStorage.getItem(`box-label-${id}`);
+      if (raw) setLabel(JSON.parse(raw));
+      setLoading(false);
+    } else if (id) {
+      api.getLabelById(id).then(l => { setLabel(l); setLoading(false); }).catch(() => setLoading(false));
+    }
+  }, [id, isBox]);
 
   useEffect(() => {
     if (label) {
@@ -21,8 +31,8 @@ export default function PrintLabel() {
     window.onafterprint = () => window.close();
   }, [label]);
 
-  if (isLoading) return <div>Carregando...</div>;
-  if (error || !label) return <div>Etiqueta não encontrada.</div>;
+  if (loading) return <div>Carregando...</div>;
+  if (!label) return <div>Etiqueta não encontrada.</div>;
 
   return (
     <div
