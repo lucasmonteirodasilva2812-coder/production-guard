@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 export interface LabelData {
@@ -15,15 +16,21 @@ export interface LabelData {
   labelType?: 'normal' | 'caixa';
 }
 
-// QR Code real via API externa (sem dependência)
 export function QRImg({ value, size = 72, onLoad }: { value: string; size?: number; onLoad?: () => void }) {
   const url = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(value)}`;
-  return <img src={url} width={size} height={size} alt="QR Code" style={{ display: 'block', background: '#fff', border: '1px solid #000' }} onLoad={onLoad} />;
+  return (
+    <img
+      src={url}
+      width={size}
+      height={size}
+      alt="QR Code"
+      style={{ display: 'block', background: '#fff', border: '1px solid #000' }}
+      onLoad={onLoad}
+    />
+  );
 }
 
-// MODELO 1 — Etiqueta de Produto
 export function IndustrialLabelModelo1({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
-  // Exemplo simples, ajuste conforme layout real
   return (
     <div style={{ width: 420, height: 210, border: '2px solid #222', background: '#fff', color: '#000', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box', padding: 12 }}>
       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>ETIQUETA DE IDENTIFICAÇÃO DE PRODUTO</div>
@@ -43,7 +50,6 @@ export function IndustrialLabelModelo1({ label, onQrLoad }: { label: LabelData, 
   );
 }
 
-// MODELO 2 — Etiqueta de Caixa
 export function IndustrialLabelModelo2({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
   return (
     <div style={{ width: 420, height: 210, border: '2px solid #222', background: '#fff', color: '#000', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box', padding: 12 }}>
@@ -64,7 +70,6 @@ export function IndustrialLabelModelo2({ label, onQrLoad }: { label: LabelData, 
   );
 }
 
-// Seleção automática do modelo
 export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?: () => void }) {
   if (label.labelType === 'caixa') {
     return <IndustrialLabelModelo2 label={label} onQrLoad={onQrLoad} />;
