@@ -47,7 +47,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
-import { LabelPreview, BoxLabelPreview, LabelData } from '@/components/LabelPreview';
+import LabelPreview, { LabelData } from '@/components/LabelPreview';
 import { Printer, AlertTriangle, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -479,7 +479,7 @@ export default function Workstation() {
             <div className="flex flex-col items-center gap-2">
               <p className="text-xs text-muted-foreground self-start">Pré-visualização</p>
               {lastBoxLabel ? (
-                <BoxLabelPreview label={lastBoxLabel} />
+                <LabelPreview label={lastBoxLabel} />
               ) : (
                 <div className="border-2 border-dashed border-border rounded-lg w-full flex items-center justify-center" style={{ height: 160 }}>
                   <p className="text-xs text-muted-foreground">A etiqueta aparecerá aqui após impressão</p>
