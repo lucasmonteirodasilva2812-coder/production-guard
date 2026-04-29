@@ -77,7 +77,7 @@ router.post('/', async (req, res) => {
     }
 
     db.prepare("UPDATE reservations SET status = 'consumido' WHERE id = ?").run(reservationId);
-    db.prepare('UPDATE part_numbers SET labeled_qty = labeled_qty + ?, status = CASE WHEN status = "pendente" THEN "em_processo" ELSE status END WHERE id = ?').run(qty, partNumberId);
+    db.prepare("UPDATE part_numbers SET labeled_qty = labeled_qty + ?, status = CASE WHEN status = 'pendente' THEN 'em_processo' ELSE status END WHERE id = ?").run(qty, partNumberId);
 
     const updatedPN = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
     if (updatedPN && updatedPN.labeled_qty >= updatedPN.declared_qty) {
