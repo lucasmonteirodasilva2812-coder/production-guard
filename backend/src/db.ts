@@ -5,15 +5,11 @@ import fs from 'fs';
 import crypto from 'crypto';
 
 
-const DB_DIR = process.env.DB_PATH || path.join(os.homedir(), '.production-guard');
-if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
-let dbPath = path.join(DB_DIR, 'data.db');
-if (process.env.RENDER) {
-  // Render.com: usar disco persistente montado em /data
-  const renderDbDir = '/data';
-  if (!fs.existsSync(renderDbDir)) fs.mkdirSync(renderDbDir, { recursive: true });
-  dbPath = path.join(renderDbDir, 'data.db');
-}
+
+// Diretório de dados local (compatível com Render)
+const DATA_DIR = process.env.DB_PATH || path.join(process.cwd(), 'data');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+const dbPath = path.join(DATA_DIR, 'data.db');
 const db = new Database(dbPath);
 
 db.pragma('journal_mode = WAL');
