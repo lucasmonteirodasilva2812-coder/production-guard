@@ -75,19 +75,7 @@ export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?:
     return <IndustrialLabelModelo2 label={label} onQrLoad={onQrLoad} />;
   }
   return <IndustrialLabelModelo1 label={label} onQrLoad={onQrLoad} />;
-}
-          {label.msl && (
-            <div style={{ fontSize: 11, fontWeight: 900, marginTop: label.expiryDate ? 4 : 8 }}>{label.msl}</div>
-          )}
-        </div>
-        {/* Center: Quantity + ID */}
-        <div style={{ textAlign: 'center', padding: '6px 4px', borderRight: '1px solid #ccc' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Quantidade:</div>
-          <div style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.1 }}>{fmtQty(label.quantity)}</div>
-          {label.labelSeqId && (
-            <div style={{ fontSize: 10, color: '#444', marginTop: 2 }}>ID: {label.labelSeqId}</div>
-          )}
-        </div>
+
         {/* Right: small QR + Processo */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '6px 4px' }}>
           <QRImg value={qrVal} size={48} onLoad={() => setQrLoaded(qrLoaded => qrLoaded + 1)} />
