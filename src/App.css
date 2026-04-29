@@ -1,3 +1,29 @@
+/* Impressão profissional de etiqueta 100x50mm */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .label-preview-print, .label-preview-print * {
+    visibility: visible !important;
+  }
+  .label-preview-print {
+    position: absolute !important;
+    left: 0; top: 0; right: 0; bottom: 0;
+    margin: 0 auto !important;
+    width: 420px !important;
+    height: 210px !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #fff !important;
+    z-index: 9999 !important;
+    page-break-after: avoid;
+  }
+}
+
+@page {
+  size: 100mm 50mm;
+  margin: 0;
+}
 #root {
   max-width: 1280px;
   margin: 0 auto;

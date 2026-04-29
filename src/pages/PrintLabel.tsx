@@ -44,12 +44,7 @@ export default function PrintLabel() {
     }
   }, [id, isBox]);
 
-  useEffect(() => {
-    if (label) {
-      window.print();
-    }
-    window.onafterprint = () => window.close();
-  }, [label]);
+  // Não aciona print automático ao abrir, só via botão
 
   if (loading) return <div>Carregando...</div>;
   if (!label) return <div>Etiqueta não encontrada.</div>;

@@ -350,9 +350,7 @@ export default function Workstation() {
               )}
 
               <div className="flex gap-2">
-                <Button onClick={handlePrint} className="flex-1 gap-2" disabled={createLabel.isPending || createReservation.isPending}>
-                  <Printer className="w-4 h-4" />Imprimir
-                </Button>
+                {/* Botão principal de imprimir removido para evitar confusão */}
                 {selected && (
                   <Button variant="outline" onClick={handleFinalize} disabled={finalizePN.isPending}>
                     <CheckCircle className="w-4 h-4 mr-1" />Finalizar PN
@@ -393,15 +391,8 @@ export default function Workstation() {
                     <Button
                       className="mt-2"
                       onClick={() => {
-                        if (lastLabel?.id) {
-                          // Foca a janela já aberta ou abre nova, e aciona print nela
-                          const printWin = window.open(`/print/label/${lastLabel.id}`, '_blank', 'width=420,height=620');
-                          if (printWin) {
-                            printWin.focus();
-                            // Tenta acionar print na janela aberta
-                            printWin.onload = () => { printWin.print(); };
-                          }
-                        }
+                        // Aciona impressão da etiqueta preview na própria janela
+                        window.print();
                       }}
                     >Imprimir etiqueta</Button>
                   </div>
