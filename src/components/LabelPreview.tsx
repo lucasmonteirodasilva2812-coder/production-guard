@@ -50,27 +50,30 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
         userSelect: 'none',
       }}
     >
-      {/* Header */}
+      {/* Header refinado */}
       <div
         style={{
           height: '8mm',
           minHeight: 24,
           maxHeight: 32,
           borderBottom: '1px solid #111',
-          display: 'grid',
-          gridTemplateColumns: '1fr 2fr 1fr',
+          display: 'flex',
+          flexDirection: 'row',
           alignItems: 'center',
+          justifyContent: 'space-between',
           background: '#fff',
           overflow: 'hidden',
           boxSizing: 'border-box',
+          padding: '0 8px 0 10px',
+          gap: 8,
         }}
       >
-        <div style={{ textAlign: 'left', fontSize: 10, fontWeight: 700, paddingLeft: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} />
-        <div style={{ textAlign: 'center', fontWeight: 700, fontSize: 14, letterSpacing: 1, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden' }}>
-          ETIQUETA DE IDENTIFICAÇÃO
+        <div style={{ flex: 1 }} />
+        <div style={{ flex: 6, textAlign: 'left', fontWeight: 700, fontSize: 11.5, letterSpacing: 0.5, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', height: '100%' }}>
+          <span style={{ display: 'inline-block', verticalAlign: 'middle' }}>ETIQUETA DE IDENTIFICAÇÃO</span>
         </div>
-        <div style={{ textAlign: 'right', paddingRight: 8, fontWeight: 400, fontSize: 13, color: '#222', fontFamily: 'Arial, sans-serif', letterSpacing: 0.5, whiteSpace: 'nowrap', overflow: 'hidden' }}>
-          grupo<span style={{ fontWeight: 700, fontFamily: 'Arial Black, Arial, sans-serif' }}>Multilaser</span>
+        <div style={{ flex: 3, textAlign: 'right', fontWeight: 400, fontSize: 10, color: '#222', fontFamily: 'Arial, sans-serif', letterSpacing: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+          <span style={{ display: 'inline-block', verticalAlign: 'middle' }}>grupo<span style={{ fontWeight: 700, fontFamily: 'Arial Black, Arial, sans-serif', fontSize: 10 }}>Multilaser</span></span>
         </div>
       </div>
 
@@ -99,11 +102,14 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
             overflow: 'hidden',
           }}
         >
-          <QRImg value={label.partNumber} size={54} />
-          <div style={{ width: '100%', textAlign: 'center', fontSize: 8.5, marginTop: 2, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden' }}>
-            <div style={{ fontWeight: 700, borderBottom: '1px solid #111', marginBottom: 1, paddingBottom: 1 }}>Data Venc</div>
-            <div style={{ fontWeight: 700, marginBottom: 1 }}>{label.expiryDate || '-'}</div>
-            <div style={{ fontWeight: 700 }}>MSL {label.msl || '-'}</div>
+          <QRImg value={label.partNumber} size={60} />
+          {/* Data Venc + MSL refinados */}
+          <div style={{ width: '100%', textAlign: 'center', fontSize: 8, marginTop: 2, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <div style={{ border: '1px solid #111', borderRadius: 3, padding: '2px 2px', width: '90%', margin: '0 auto', background: '#f9f9f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontWeight: 700 }}>Data Venc</span>
+              <span style={{ fontWeight: 700 }}>{label.expiryDate || '-'}</span>
+            </div>
+            <div style={{ fontWeight: 700, marginTop: 4, marginBottom: 0, width: '90%', textAlign: 'center', display: 'block', position: 'relative', top: 2 }}>MSL {label.msl || '-'}</div>
           </div>
         </div>
 
@@ -122,42 +128,68 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           }}
         >
           <div style={{ width: '100%', textAlign: 'center', overflow: 'hidden' }}>
-            <div style={{ fontWeight: 700, fontSize: 10, marginBottom: 1, lineHeight: 1 }}>Part Number:</div>
-            <div style={{ fontWeight: 900, fontSize: 18, fontFamily: 'Arial Black, Arial, sans-serif', letterSpacing: 1, marginBottom: 1, lineHeight: 1.1, wordBreak: 'break-word', overflow: 'hidden' }}>{label.partNumber}</div>
-            <div style={{ fontWeight: 700, fontSize: 9, marginBottom: 1, whiteSpace: 'pre-line', wordBreak: 'break-word', lineHeight: 1.1, maxHeight: 28, overflow: 'hidden' }}>{label.description}</div>
-            <div style={{ borderTop: '1px solid #111', borderBottom: '1px solid #111', margin: '4px 0 3px 0', padding: '1.5px 0', fontWeight: 700, fontSize: 11, background: '#eaeaea', lineHeight: 1 }}>Quantidade:</div>
-            <div style={{ fontWeight: 900, fontSize: 22, fontFamily: 'Arial Black, Arial, sans-serif', marginBottom: 1, lineHeight: 1 }}>{label.quantity}</div>
+            <div style={{ fontWeight: 700, fontSize: 9, marginBottom: 1, lineHeight: 1 }}>Part Number:</div>
+            <div
+              style={{
+                fontWeight: 900,
+                fontSize: label.partNumber.length > 16 ? 13 : label.partNumber.length > 12 ? 15 : 17,
+                fontFamily: 'Arial Black, Arial, sans-serif',
+                letterSpacing: 0.5,
+                marginBottom: 1,
+                lineHeight: 1.1,
+                wordBreak: 'break-all',
+                overflow: 'hidden',
+                textAlign: 'center',
+                maxWidth: '100%',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+              }}
+              title={label.partNumber}
+            >
+              {label.partNumber}
+            </div>
+            <div style={{ fontWeight: 700, fontSize: label.description.length > 32 ? 8 : 9, marginBottom: 1, whiteSpace: 'pre-line', wordBreak: 'break-word', lineHeight: 1.1, maxHeight: 24, overflow: 'hidden', textAlign: 'center' }}>{label.description}</div>
+            <div style={{ borderTop: '1px solid #111', borderBottom: '1px solid #111', margin: '4px 0 3px 0', padding: '1.5px 0', fontWeight: 700, fontSize: 10, background: '#eaeaea', lineHeight: 1 }}>Quantidade:</div>
+            <div style={{ fontWeight: 900, fontSize: 18, fontFamily: 'Arial Black, Arial, sans-serif', marginBottom: 1, lineHeight: 1 }}>{label.quantity}</div>
           </div>
-          {/* Rodapé central */}
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: 8, marginTop: 1, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden' }}>
-            <div style={{ fontWeight: 700, color: '#222', marginBottom: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {/* Rodapé central refinado: ID e usuário/data/hora em células */}
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'row', alignItems: 'center', fontSize: 8, marginTop: 1, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden', gap: 2, justifyContent: 'center' }}>
+            <div style={{ border: '1px solid #111', borderRadius: 3, padding: '2px 4px', background: '#f9f9f9', fontWeight: 700, minWidth: 38, textAlign: 'center', marginRight: 2 }}>
               ID: <span style={{ fontWeight: 900 }}>{label.labelSeqId}</span>
             </div>
-            <div style={{ fontWeight: 400, color: '#222', marginBottom: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {label.printedBy} - {label.printedAt}
+            <div style={{ border: '1px solid #111', borderRadius: 3, padding: '2px 4px', background: '#f9f9f9', fontWeight: 400, minWidth: 70, textAlign: 'left', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 60 }}>{label.printedBy} - {label.printedAt?.split(' ')[0]}</span>
+              <span style={{ marginLeft: 'auto', fontWeight: 700 }}>{label.printedAt?.split(' ')[1]}</span>
             </div>
           </div>
         </div>
 
-        {/* Coluna direita QRs + processo */}
+        {/* Coluna direita QRs */}
         <div
           style={{
             borderLeft: '1px solid #111',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-start',
             padding: '4mm 0 3mm 0',
             height: '100%',
             boxSizing: 'border-box',
             overflow: 'hidden',
+            position: 'relative',
           }}
         >
-          <QRImg value={label.partNumber} size={44} />
-          <QRImg value={String(label.quantity)} size={44} />
-          <div style={{ width: '100%', textAlign: 'center', fontSize: 8.5, marginTop: 2, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden' }}>
-            <div style={{ fontWeight: 700, borderBottom: '1px solid #111', marginBottom: 1, paddingBottom: 1 }}>Processo:</div>
-            <div style={{ fontWeight: 900, fontSize: 10 }}>{label.compositeId || '-'}</div>
+          <div style={{ marginTop: 0, marginBottom: 6 }}>
+            <QRImg value={label.partNumber} size={66} />
+          </div>
+          <div style={{ marginTop: 0, marginBottom: 0 }}>
+            <QRImg value={String(label.quantity)} size={62} />
+          </div>
+          {/* Processo no canto inferior direito */}
+          <div style={{ position: 'absolute', bottom: 6, right: 0, width: '100%', textAlign: 'right', fontSize: 8.5, fontWeight: 700, color: '#222', paddingRight: 4, background: 'transparent', letterSpacing: 0.2 }}>
+            Processo:
           </div>
         </div>
       </div>
