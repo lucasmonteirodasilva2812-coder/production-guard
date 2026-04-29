@@ -79,13 +79,13 @@ export const api = {
   getDivergences: () => request<any[]>('/divergences'),
   finalizePartNumber: (id: number) => request<any>(`/divergences/finalize/${id}`, { method: 'POST' }),
 
-  // SSE (não usado diretamente, só para referência)
-  // sse: (workstationId?: number) => {
-  //   const baseUrl = getBaseUrl();
-  //   const token = useAuthStore.getState().token;
-  //   let url = `${baseUrl}/sse`;
-  //   if (workstationId) url += `?workstationId=${workstationId}`;
-  //   if (token) url += (url.includes('?') ? '&' : '?') + `_token=${token}`;
-  //   return new EventSource(url);
-  // },
+  // SSE URL helper
+  getSseUrl: (workstationId?: number) => {
+    const base = getBaseUrl();
+    const token = useAuthStore.getState().token;
+    const params = new URLSearchParams();
+    if (workstationId) params.set('workstationId', String(workstationId));
+    if (token) params.set('_token', token);
+    return `${base}/sse?${params.toString()}`;
+  },
 };
