@@ -394,7 +394,13 @@ export default function Workstation() {
                       className="mt-2"
                       onClick={() => {
                         if (lastLabel?.id) {
-                          window.open(`/print/label/${lastLabel.id}`, '_blank', 'width=420,height=620');
+                          // Foca a janela já aberta ou abre nova, e aciona print nela
+                          const printWin = window.open(`/print/label/${lastLabel.id}`, '_blank', 'width=420,height=620');
+                          if (printWin) {
+                            printWin.focus();
+                            // Tenta acionar print na janela aberta
+                            printWin.onload = () => { printWin.print(); };
+                          }
                         }
                       }}
                     >Imprimir etiqueta</Button>
