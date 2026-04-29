@@ -1,5 +1,8 @@
-  getLabelById: (id: string) => request<any>(`/labels?id=${id}`),
+
 import { useAuthStore } from '@/store/authStore';
+// ...existing code...
+export const api = {
+  getLabelById: (id: string) => request<any>(`/labels?id=${id}`),
 
 function getBase(): string {
   const stored = useAuthStore.getState().serverUrl;
