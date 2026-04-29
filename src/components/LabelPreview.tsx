@@ -3,14 +3,23 @@
 
 import React from 'react';
 
-// Função para formatar data dd/mm/aaaa (deve ficar fora de qualquer componente)
+
+// Função para formatar data dd/mm/aaaa (corrigida, topo do arquivo)
 function formatDate(dateStr?: string) {
   if (!dateStr) return '';
+
+  const parts = String(dateStr).split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
+
   const dia = String(d.getDate()).padStart(2, '0');
   const mes = String(d.getMonth() + 1).padStart(2, '0');
   const ano = d.getFullYear();
+
   return `${dia}/${mes}/${ano}`;
 }
 
