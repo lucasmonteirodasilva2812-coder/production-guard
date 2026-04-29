@@ -112,66 +112,10 @@ export function LabelPreview({ label, onQrLoad }: { label: LabelData, onQrLoad?:
 }
 
 // ─── Etiqueta de Caixa ────────────────────────────────────────────────────────
-export function BoxLabelPreview({ label }: { label: LabelData }) {
-  const qrVal = label.partNumber;
-  return (
-    <div style={{ width: 420, fontFamily: 'Arial, sans-serif', background: '#fff', color: '#000', border: '2px solid #222', userSelect: 'none', fontSize: 11 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #222', padding: '4px 8px', background: '#f5f5f5' }}>
+  // Seleção automática do modelo
+  if (label.labelType === 'caixa') {
+    return <IndustrialLabelModelo2 label={label as any} onQrLoad={onQrLoad} />;
+  }
+  // Modelo 1 padrão
+  return <IndustrialLabelModelo1 label={label as any} onQrLoad={onQrLoad} />;
         <span style={{ fontWeight: 700, fontSize: 9, letterSpacing: 0.5, textTransform: 'uppercase' }}>
-          ETIQUETA DE IDENTIFICAÇÃO | CAIXA
-        </span>
-        <span style={{ fontSize: 11, fontWeight: 900 }}>grupo<span style={{ fontStyle: 'italic' }}>Multilaser</span></span>
-      </div>
-
-      {/* Column headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 60px', borderBottom: '1px solid #ccc' }}>
-        <div style={{ borderRight: '1px solid #ccc', padding: '4px 6px', fontSize: 8, fontWeight: 700 }}>PRODUTO:</div>
-        <div style={{ borderRight: '1px solid #ccc', padding: '4px 6px', fontSize: 8 }}>Part Number:</div>
-        <div style={{ padding: '4px 6px', fontSize: 8, fontWeight: 700 }}>QTD:</div>
-      </div>
-
-      {/* Main content row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 60px', borderBottom: '1px solid #ccc' }}>
-        {/* Left: QR */}
-        <div style={{ borderRight: '1px solid #ccc', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <QRImg value={qrVal} size={64} />
-        </div>
-        {/* Center: PN + Description */}
-        <div style={{ borderRight: '1px solid #ccc', padding: '6px 8px' }}>
-          <div style={{ fontWeight: 900, fontSize: 15, letterSpacing: 0.5, wordBreak: 'break-all' }}>{label.partNumber}</div>
-          <div style={{ fontSize: 8, color: '#333', marginTop: 2, lineHeight: 1.4 }}>{label.description}</div>
-        </div>
-        {/* Right: QR */}
-        <div style={{ padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <QRImg value={qrVal + '_caixa'} size={48} />
-        </div>
-      </div>
-
-      {/* Quantity */}
-      <div style={{ textAlign: 'center', padding: '4px 8px', borderBottom: '1px solid #ccc' }}>
-        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>Quantidade:</div>
-        <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.1 }}>{fmtQty(label.quantity)}</div>
-      </div>
-
-      {/* MSL + PROCESSO row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid #ccc' }}>
-        <div style={{ borderRight: '1px solid #ccc', padding: '4px 8px', fontSize: 11, fontWeight: 900 }}>
-          {label.msl || ''}
-        </div>
-        <div style={{ padding: '4px 8px', fontSize: 8, color: '#666', textAlign: 'right' }}>PROCESSO:</div>
-      </div>
-
-      {/* Footer */}
-      <div style={{ padding: '3px 8px', fontSize: 8, color: '#333' }}>
-        {label.printedBy} - {fmtDate(label.printedAt)}
-      </div>
-
-      {/* Warning strip */}
-      <div style={{ background: '#FFE033', borderTop: '1px solid #e6c800', padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 4, fontSize: 8, fontWeight: 600 }}>
-        <span>⚠</span>
-        <span>Etiqueta de identificação para caixa dos produtos embalados.</span>
-      </div>
-    </div>
-  );
-}
