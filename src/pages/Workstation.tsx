@@ -51,6 +51,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
 import LabelPreview, { LabelData } from '@/components/LabelPreview';
+import MultipleLabelsModal from '@/components/MultipleLabelsModal';
+  // Impressão múltipla
+  const [showMultipleModal, setShowMultipleModal] = useState(false);
 import { Printer, AlertTriangle, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -402,14 +405,36 @@ export default function Workstation() {
                 </div>
               )}
 
+
               <div className="flex gap-2">
-                {/* Botão principal de imprimir removido para evitar confusão */}
                 {selected && (
-                  <Button variant="outline" onClick={handleFinalize} disabled={finalizePN.isPending}>
-                    <CheckCircle className="w-4 h-4 mr-1" />Finalizar PN
-                  </Button>
+                  <>
+                    <Button variant="primary" onClick={() => setShowMultipleModal(true)}>
+                      Impressão Múltipla
+                    </Button>
+                    <Button variant="outline" onClick={handleFinalize} disabled={finalizePN.isPending}>
+                      <CheckCircle className="w-4 h-4 mr-1" />Finalizar PN
+                    </Button>
+                  </>
                 )}
               </div>
+      {/* Modal de impressão múltipla */}
+      {selected && (
+        <MultipleLabelsModal
+          open={showMultipleModal}
+          onClose={() => setShowMultipleModal(false)}
+          baseLabel={{
+            partNumber: selected.partNumber,
+            description: selected.description,
+            quantity: parseInt(printQty) || 1,
+            printedBy: user?.name || 'Operador',
+            printedAt: new Date().toISOString(),
+            msl: msl || undefined,
+            expiryDate: expiryDate || undefined,
+            labelType: 'normal',
+          }}
+        />
+      )}
 
               {showSupervisorAuth && (
                 <div className="p-3 rounded-lg border border-warning/50 bg-warning/5 space-y-2">
