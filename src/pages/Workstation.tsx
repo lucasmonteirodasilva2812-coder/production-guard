@@ -5,9 +5,15 @@ function openLabelPrintPopup(label: any, onAfterPrint?: () => void) {
   const printWin = window.open('', '_blank', `width=${w},height=${h},left=200,top=200,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=0`);
   if (!printWin) return;
 
+  console.log("PRINT DISPARADO");
   import('@/components/LabelPreview').then(mod => {
     // Renderiza o componente como HTML string
     const html = renderToString(React.createElement(mod.default, { label }));
+    console.log("HTML GERADO:", html);
+    if (!html || html.trim() === "") {
+      alert("ERRO: HTML da etiqueta está vazio!");
+      return;
+    }
     const doc = printWin.document;
     doc.open();
     doc.write(`<!DOCTYPE html><html><head><title>Imprimir Etiqueta</title>
@@ -339,11 +345,19 @@ export default function Workstation() {
                     onChange={e => handlePnInputChange(e.target.value)}
                     placeholder="Ex: CPRE005A"
                     className={cn('font-mono', selectedPN && 'border-success/50 bg-success/5')}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const qtyInput = document.getElementById('qty-input');
+                        if (qtyInput) (qtyInput as HTMLInputElement).focus();
+                      }
+                    }}
                   />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Quantidade do Lote *</label>
                   <Input
+                    id="qty-input"
                     type="number"
                     min={1}
                     value={printQty}
