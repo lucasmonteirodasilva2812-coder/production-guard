@@ -5,7 +5,6 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // Necessário para Tauri: impede que o Vite obstrua o output
   clearScreen: false,
   envPrefix: ['VITE_', 'TAURI_'],
   server: {
@@ -22,5 +21,28 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
+  },
+  base: '/',
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: path.resolve(__dirname, 'index.html'),
+    },
+  },
+  // SPA fallback para Render/deploy estático
+  preview: {
+    port: 4173,
+    host: true,
+  },
+  // Corrige 404 ao atualizar ou acessar URL direta
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
+  },
+  // Adiciona fallback para SPA no deploy
+  esbuild: {
+    // Nenhuma alteração
   },
 }));
