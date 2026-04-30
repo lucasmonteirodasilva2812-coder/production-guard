@@ -1,41 +1,52 @@
-// Função utilitária para abrir popup limpo com etiqueta pronta
+// Função utilitária para abrir popup limpo com etiqueta pronta (corrigida)
 function openLabelPrintPopup(label: any, onAfterPrint?: () => void) {
   const w = 440, h = 240;
   const printWin = window.open('', '_blank', `width=${w},height=${h},left=200,top=200,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=0`);
   if (!printWin) return;
+
+  // HTML base com root
+  printWin.document.open();
   printWin.document.write(`<!DOCTYPE html><html><head><title>Imprimir Etiqueta</title>
-    <link rel=\"stylesheet\" href=\"/src/App.css\">
+    <link rel="stylesheet" href="/src/App.css">
     <style>
-      @media print { body { margin:0!important; } }
+      @media print { body { margin:0!important; }
+        .label-preview-print, .label-preview-print * { visibility: visible !important; }
+        .label-preview-print { position: absolute !important; left: 0; top: 0; right: 0; bottom: 0; margin: 0 auto !important; width: 420px !important; height: 210px !important; box-shadow: none !important; border: none !important; background: #fff !important; z-index: 9999 !important; page-break-after: avoid; }
+      }
+      @page { size: 100mm 50mm; margin: 0; }
       body { background:#fff; margin:0; padding:0; }
     </style>
-  </head><body></body></html>`);
-  printWin.document.body.innerHTML = `<div id='label-print-root'></div>`;
-  setTimeout(() => {
-    // @ts-ignore
-    import('@/components/LabelPreview').then(mod => {
-      const root = printWin.document.getElementById('label-print-root');
-      if (root) {
-        // @ts-ignore
-        import('react-dom/client').then(({ createRoot }) => {
-          // Renderiza LabelPreview e só imprime após QR carregar
-          createRoot(root).render(
-            React.createElement(mod.LabelPreview, {
-              label,
-              onQrLoad: () => {
-                setTimeout(() => {
-                  printWin.focus();
-                  printWin.print();
-                  printWin.close();
-                  if (onAfterPrint) onAfterPrint();
-                }, 100);
-              }
-            })
-          );
-        });
-      }
-    });
-  }, 100);
+  </head><body><div id="label-print-root"></div></body></html>`);
+  printWin.document.close();
+
+  // Aguarda a janela carregar e renderiza o componente
+  printWin.onload = () => {
+    setTimeout(() => {
+      // @ts-ignore
+      import('@/components/LabelPreview').then(mod => {
+        const root = printWin.document.getElementById('label-print-root');
+        if (root) {
+          // @ts-ignore
+          import('react-dom/client').then(({ createRoot }) => {
+            createRoot(root).render(
+              React.createElement(mod.default, {
+                label,
+                // callback para garantir que o QR carregou
+                onQrLoad: () => {
+                  setTimeout(() => {
+                    printWin.focus();
+                    printWin.print();
+                    printWin.close();
+                    if (onAfterPrint) onAfterPrint();
+                  }, 100);
+                }
+              })
+            );
+          });
+        }
+      });
+    }, 100);
+  };
 }
 import React, { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
