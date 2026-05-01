@@ -1,46 +1,5 @@
-// Função utilitária para abrir popup limpo com etiqueta pronta (corrigida renderToString)
-import { renderToString } from 'react-dom/server';
-function openLabelPrintPopup(label: any, onAfterPrint?: () => void) {
-  const w = 440, h = 240;
-  const printWin = window.open('', '_blank', `width=${w},height=${h},left=200,top=200,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=0`);
-  if (!printWin) return;
-
-  console.log("PRINT DISPARADO");
-  import('@/components/LabelPreview').then(mod => {
-    // Renderiza o componente como HTML string
-    const html = renderToString(React.createElement(mod.default, { label }));
-    console.log("HTML GERADO:", html);
-    if (!html || html.trim() === "") {
-      alert("ERRO: HTML da etiqueta está vazio!");
-      return;
-    }
-    const doc = printWin.document;
-    doc.open();
-    doc.write(`<!DOCTYPE html><html><head><title>Imprimir Etiqueta</title>
-      <link rel="stylesheet" href="/src/App.css">
-      <style>
-        @media print { body { margin:0!important; }
-          .label-preview-print, .label-preview-print * { visibility: visible !important; }
-          .label-preview-print { position: absolute !important; left: 0; top: 0; right: 0; bottom: 0; margin: 0 auto !important; width: 420px !important; height: 210px !important; box-shadow: none !important; border: none !important; background: #fff !important; z-index: 9999 !important; page-break-after: avoid; }
-        }
-        @page { size: 100mm 50mm; margin: 0; }
-        body { background:#fff; margin:0; padding:0; }
-      </style>
-    </head><body><div id="label-print-root">${html}</div></body></html>`);
-    doc.close();
-
-    // Aguarda o carregamento do conteúdo antes de imprimir
-    printWin.onload = () => {
-      setTimeout(() => {
-        printWin.focus();
-        printWin.print();
-        printWin.close();
-        if (onAfterPrint) onAfterPrint();
-      }, 200);
-    };
-  });
-}
 import React, { useState, useCallback, useEffect } from 'react';
+import { renderToString } from 'react-dom/server';
 import { useAuthStore } from '@/store/authStore';
 import { useWorkstationNavStore } from '@/store/workstationNavStore';
 import {
@@ -52,16 +11,44 @@ import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
 import LabelPreview, { LabelData } from '@/components/LabelPreview';
 import MultipleLabelsModal from '@/components/MultipleLabelsModal';
-  // Impressão múltipla
-  const [showMultipleModal, setShowMultipleModal] = useState(false);
 import { Printer, AlertTriangle, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Label } from '@/types/production';
 
-// Impressora/modal removidos: impressão 100% web
+// ── Função utilitária para abrir popup de impressão ────────────────────────
+function openLabelPrintPopup(label: any, onAfterPrint?: () => void) {
+  const w = 440, h = 240;
+  const printWin = window.open('', '_blank', `width=${w},height=${h},left=200,top=200,toolbar=0,location=0,menubar=0,status=0,scrollbars=0,resizable=0`);
+  if (!printWin) return;
 
-// ── Workstation tabs ──────────────────────────────────────────────────────────
+  const html = renderToString(<LabelPreview label={label} />);
+  if (!html || html.trim() === '') {
+    alert('ERRO: HTML da etiqueta está vazio!');
+    return;
+  }
+  const doc = printWin.document;
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head><title>Imprimir Etiqueta</title>
+    <style>
+      @media print { body { margin:0!important; } }
+      @page { size: 100mm 50mm; margin: 0; }
+      body { background:#fff; margin:0; padding:0; }
+    </style>
+  </head><body><div id="label-print-root">${html}</div></body></html>`);
+  doc.close();
+
+  printWin.onload = () => {
+    setTimeout(() => {
+      printWin.focus();
+      printWin.print();
+      printWin.close();
+      if (onAfterPrint) onAfterPrint();
+    }, 200);
+  };
+}
+
+// ── Workstation tabs ───────────────────────────────────────────────────────
 type TabType = 'normal' | 'caixa';
 
 export default function Workstation() {
@@ -106,10 +93,9 @@ export default function Workstation() {
   // Auth flow
   const [supervisorPassword, setSupervisorPassword] = useState('');
   const [showSupervisorAuth, setShowSupervisorAuth] = useState(false);
-  const [showPrinterDialog, setShowPrinterDialog] = useState(false);
-  const [availablePrinters, setAvailablePrinters] = useState<string[]>([]);
-  const [selectedPrinter, setSelectedPrinter] = useState('');
-  const [pendingPrint, setPendingPrint] = useState<(() => void) | null>(null);
+
+  // Impressão múltipla
+  const [showMultipleModal, setShowMultipleModal] = useState(false);
 
   const currentWS = workstations.find(w => w.id === workstationId);
   const selectedShipmentData = shipments.find(s => s.id === selectedShipment);
@@ -145,8 +131,6 @@ export default function Workstation() {
       if (pn) setPnInput(pn.partNumber);
     }
   }, [selectedPN, partNumbers]);
-
-  // Impressora/modal removidos
 
   // ── Normal label print ────────────────────────────────────────────────────
   const handlePrint = () => {
@@ -209,7 +193,21 @@ export default function Workstation() {
     toast.success('Etiqueta de caixa pronta para impressão');
   };
 
-  // Removido: handlePrinterConfirm, setShowPrinterDialog, setPendingPrint, impressora
+  const handleSupervisorAuth = () => {
+    if (!supervisorPassword.trim()) { toast.error('Informe a senha do supervisor'); return; }
+    if (!selectedPN) return;
+    authorizeSurplus.mutate(
+      { partNumberId: selectedPN, supervisorPassword },
+      {
+        onSuccess: () => {
+          toast.success('Excedente autorizado pelo supervisor');
+          setShowSupervisorAuth(false);
+          setSupervisorPassword('');
+        },
+        onError: (e: any) => toast.error(`Autorização falhou: ${e.message}`),
+      }
+    );
+  };
 
   const handleFinalize = () => {
     if (!selectedPN) return;
@@ -294,20 +292,8 @@ export default function Workstation() {
   }
 
   // ── Main work view ────────────────────────────────────────────────────────
-  const tabLabel = activeTab === 'normal' ? lastLabel : lastBoxLabel ? { ...lastBoxLabel } : null;
-
   return (
     <div className="space-y-4">
-      {showPrinterDialog && (
-        <PrinterDialog
-          printers={availablePrinters}
-          selected={selectedPrinter}
-          onSelect={setSelectedPrinter}
-          onConfirm={handlePrinterConfirm}
-          onCancel={() => setShowPrinterDialog(false)}
-        />
-      )}
-
       {/* Header */}
       <div className="flex items-center gap-3">
         <button onClick={() => { setSelectedShipment(null); setSelectedPN(null); setPnInput(''); resetNav(); }}
@@ -407,9 +393,12 @@ export default function Workstation() {
 
 
               <div className="flex gap-2">
+                <Button onClick={handlePrint} disabled={createLabel.isPending || createReservation.isPending}>
+                  <Printer className="w-4 h-4 mr-1" />Imprimir
+                </Button>
                 {selected && (
                   <>
-                    <Button variant="primary" onClick={() => setShowMultipleModal(true)}>
+                    <Button variant="outline" onClick={() => setShowMultipleModal(true)}>
                       Impressão Múltipla
                     </Button>
                     <Button variant="outline" onClick={handleFinalize} disabled={finalizePN.isPending}>
