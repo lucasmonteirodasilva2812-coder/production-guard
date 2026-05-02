@@ -59,15 +59,13 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <LoginPage
         onLoggedIn={() => {
-          const { user: u, workstationId: wsId } = useAuthStore.getState();
+          const { user: u } = useAuthStore.getState();
           if (u?.role === 'operador') {
             useAuthStore.getState().setMode('operador');
-            if (!wsId) setScreen('workstation-select');
-            else setScreen('app');
           } else {
             useAuthStore.getState().setMode('admin');
-            setScreen('app');
           }
+          setScreen('app');
         }}
         onBack={() => setScreen('login')}
       />

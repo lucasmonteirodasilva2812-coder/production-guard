@@ -24,7 +24,7 @@ export function AppSidebar() {
 
   const adminNav = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/workstation', icon: Factory, label: 'Bancada' },
+    { to: '/workstation', icon: Factory, label: "Workflow's" },
     { to: '/import', icon: FileUp, label: 'Importar' },
     { to: '/supervisor', icon: ShieldCheck, label: 'Supervisor' },
     { to: '/admin', icon: Settings, label: 'Admin' },
@@ -32,12 +32,12 @@ export function AppSidebar() {
 
   const operatorNav = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/workstation', icon: Factory, label: 'Bancada' },
+    { to: '/workstation', icon: Factory, label: "Workflow's" },
   ];
 
   const supervisorNav = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/workstation', icon: Factory, label: 'Bancada' },
+    { to: '/workstation', icon: Factory, label: "Workflow's" },
     { to: '/import', icon: FileUp, label: 'Importar' },
     { to: '/supervisor', icon: ShieldCheck, label: 'Supervisor' },
   ];
