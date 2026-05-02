@@ -75,7 +75,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
   const LIGHT_BG = '#f5f5f5';
 
   return (
-    <div style={{
+    <div className="print-label-area" style={{
       width: '100mm', height: '50mm',
       border: `1.5px solid ${BO}`,
       background: '#fff', color: '#111',
@@ -92,6 +92,11 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '0 8px', background: '#fff', position: 'relative',
       }}>
+        <svg width="16" height="16" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+          style={{ position: 'absolute', left: 4, top: '50%', transform: 'translateY(-50%)' }}>
+          <rect width="100" height="100" rx="18" fill="#0060D0"/>
+          <path d="M 15,76 L 15,52 C 15,30 20,16 33,16 C 46,16 50,38 50,52 C 50,38 54,16 67,16 C 80,16 85,30 85,52 L 85,76" fill="none" stroke="white" strokeWidth="13" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
         <div style={{ flex: 1, textAlign: 'center', fontWeight: 900, fontSize: 9, color: '#222', letterSpacing: 1, textTransform: 'uppercase' }}>
           ETIQUETA DE IDENTIFICAÇÃO
         </div>
@@ -105,10 +110,10 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '23% 51% 26%', minHeight: 0, overflow: 'hidden' }}>
 
         {/* ── LEFT COLUMN ── */}
-        <div style={{ borderRight: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '2px 2px' }}>
+        <div style={{ borderRight: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 2px 2px 2px' }}>
           {/* QR box — size 60, label ID;PartNumber;Qtd */}
           <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', marginBottom: 3, flexShrink: 0 }}>
-            <div style={{ background: '#222', color: '#fff', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 1px', width: '100%', boxSizing: 'border-box', letterSpacing: 0.1 }}>
+            <div style={{ background: '#000', color: '#fff', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 1px', width: '100%', boxSizing: 'border-box', letterSpacing: 0.1 }}>
               ID;PartNumber;Qtd
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1px 0' }}>
@@ -203,7 +208,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           {/* PART NUMBER QR */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3px 3px 1px 3px' }}>
             <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
-              <div style={{ background: '#333', color: '#fff', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 6px', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>
+              <div style={{ background: '#000', color: '#fff', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 6px', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>
                 PART NUMBER
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2px 3px' }}>
@@ -214,7 +219,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           {/* QUANTIDADE QR */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1px 3px 3px 3px', borderTop: `1px solid ${BI}` }}>
             <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
-              <div style={{ background: '#333', color: '#fff', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 6px', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>
+              <div style={{ background: '#000', color: '#fff', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 6px', letterSpacing: 0.3, whiteSpace: 'nowrap' }}>
                 QUANTIDADE
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2px 3px' }}>
