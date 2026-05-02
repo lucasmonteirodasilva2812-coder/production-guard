@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { useAuthStore } from '@/store/authStore';
 import { useWorkstationNavStore } from '@/store/workstationNavStore';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
 import LabelPreview, { LabelData } from '@/components/LabelPreview';
-import { Printer, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search } from 'lucide-react';
+import { Printer, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search, ChevronsDown, ChevronsUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Label } from '@/types/production';
@@ -73,6 +73,8 @@ export default function Workstation() {
   const setSelectedPN = useWorkstationNavStore(s => s.setSelectedPN);
   const resetNav = useWorkstationNavStore(s => s.reset);
   const [shipmentSearch, setShipmentSearch] = useState('');
+  const topRef = useRef<HTMLDivElement>(null);
+  const labelsRef = useRef<HTMLDivElement>(null);
 
   // Form state (normal label)
   const [pnInput, setPnInput] = useState('');
@@ -280,7 +282,7 @@ export default function Workstation() {
 
   // ── Main work view ────────────────────────────────────────────────────────
   return (
-    <div className="space-y-4">
+    <div ref={topRef} className="space-y-4">
       {/* Header */}
       <div className="flex items-start gap-3">
         <button onClick={() => { setSelectedShipment(null); setSelectedPN(null); setPnInput(''); resetNav(); }}
@@ -318,6 +320,15 @@ export default function Workstation() {
           <button onClick={() => setActiveTab('caixa')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', activeTab === 'caixa' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground')}>
             <Box className="w-3.5 h-3.5 inline mr-1.5" />Caixa
           </button>
+          {recentLabels.length > 0 && (
+            <button
+              onClick={() => labelsRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Ir para reimpressões"
+            >
+              <ChevronsDown className="w-3.5 h-3.5 inline mr-1" />Reimpressões
+            </button>
+          )}
         </div>
       </div>
 
@@ -527,7 +538,7 @@ export default function Workstation() {
 
       {/* ── Labels list + preview ── */}
       {recentLabels.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div ref={labelsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 industrial-panel p-4">
             <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Etiquetas Geradas — Workflow {workstationId}</h3>
             <div className="space-y-1 max-h-60 overflow-y-auto">
@@ -550,7 +561,16 @@ export default function Workstation() {
             </div>
           </div>
           <div className="industrial-panel p-4 flex flex-col items-center overflow-auto">
-            <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3 self-start">Última Etiqueta</h3>
+            <div className="flex items-center justify-between w-full mb-3">
+              <h3 className="text-xs text-muted-foreground uppercase tracking-wider">Última Etiqueta</h3>
+              <button
+                onClick={() => topRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md bg-muted/50 hover:bg-muted"
+                title="Voltar ao topo"
+              >
+                <ChevronsUp className="w-3.5 h-3.5" />Topo
+              </button>
+            </div>
             {lastLabel ? (
               <div style={{ width: '150mm', height: '75mm', overflow: 'hidden', position: 'relative', margin: '0 auto' }}>
                 <div style={{ transform: 'scale(1.5)', transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
