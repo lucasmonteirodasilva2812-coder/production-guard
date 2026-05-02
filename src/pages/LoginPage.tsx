@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Activity, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Activity, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLogin } from '@/hooks/useProductionData';
@@ -32,13 +32,6 @@ export default function LoginPage({ onLoggedIn, onBack }: Props) {
     <div className="fixed inset-0 bg-background flex items-center justify-center">
       <div className="industrial-panel p-8 w-full max-w-sm mx-4 space-y-6">
         <div className="relative text-center">
-          <button
-            onClick={onBack}
-            className="absolute left-0 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            title="Voltar"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
           <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-3">
             <Activity className="w-6 h-6 text-primary" />
           </div>

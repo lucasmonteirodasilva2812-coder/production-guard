@@ -9,8 +9,6 @@ import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
 
 import SplashScreen from './pages/SplashScreen';
-import ModeSelect from './pages/ModeSelect';
-import OperatorSetup from './pages/OperatorSetup';
 import LoginPage from './pages/LoginPage';
 import WorkstationSelect from './pages/WorkstationSelect';
 import Dashboard from './pages/Dashboard';
@@ -27,8 +25,6 @@ const queryClient = new QueryClient({
 
 type Screen =
   | 'splash'
-  | 'mode-select'
-  | 'operator-setup'
   | 'login'
   | 'workstation-select'
   | 'app';
@@ -43,36 +39,22 @@ export default function App() {
     useAuthStore.getState().setMode(null);
   }, []);
 
-  // After splash, determine where to go
-  const handleSplashDone = () => {
-    setScreen('mode-select');
-  };
-
-  if (screen === 'splash') return <SplashScreen onDone={handleSplashDone} />;
-  if (screen === 'mode-select') return (
-    <ModeSelect onSelect={() => {
-      const { mode: m } = useAuthStore.getState();
-      setScreen(m === 'operador' ? 'operator-setup' : 'login');
-    }} />
-  );
-  if (screen === 'operator-setup') return (
-    <OperatorSetup
-      onDone={() => setScreen('login')}
-      onBack={() => { useAuthStore.getState().setMode(null); setScreen('mode-select'); }}
-    />
-  );
+  if (screen === 'splash') return <SplashScreen onDone={() => setScreen('login')} />;
   if (screen === 'login') return (
     <QueryClientProvider client={queryClient}>
       <LoginPage
         onLoggedIn={() => {
-          const { mode: m, workstationId: wsId } = useAuthStore.getState();
-          if (m === 'operador' && !wsId) setScreen('workstation-select');
-          else setScreen('app');
+          const { user: u, workstationId: wsId } = useAuthStore.getState();
+          if (u?.role === 'operador') {
+            useAuthStore.getState().setMode('operador');
+            if (!wsId) setScreen('workstation-select');
+            else setScreen('app');
+          } else {
+            useAuthStore.getState().setMode('admin');
+            setScreen('app');
+          }
         }}
-        onBack={() => {
-          const { mode: m } = useAuthStore.getState();
-          setScreen(m === 'operador' ? 'operator-setup' : 'mode-select');
-        }}
+        onBack={() => setScreen('login')}
       />
     </QueryClientProvider>
   );
@@ -86,8 +68,8 @@ export default function App() {
   );
 
   // Main app
-  const isAdmin = mode === 'admin';
-  const isOperator = mode === 'operador';
+  const isAdmin = user?.role === 'admin';
+  const isOperator = user?.role === 'operador';
 
   return (
     <QueryClientProvider client={queryClient}>
