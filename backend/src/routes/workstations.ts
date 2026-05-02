@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db from '../db';
-import { broadcast } from '../sse';
+import { broadcast, getConnectedClients } from '../sse';
 
 const router = Router();
 
@@ -35,6 +35,15 @@ router.patch('/:id', (req, res) => {
   }
   const row = db.prepare('SELECT * FROM workstations WHERE id = ?').get(req.params.id);
   res.json(mapWS(row));
+});
+
+// Usuários ativos em uma bancada (SSE clients)
+router.get('/:id/active-users', (req, res) => {
+  const wsId = Number(req.params.id);
+  const users = getConnectedClients()
+    .filter(c => c.workstationId === wsId)
+    .map(c => c.userName);
+  res.json(users);
 });
 
 // Remover bancada

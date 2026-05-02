@@ -45,13 +45,15 @@ router.post('/', async (req, res) => {
     const qty = reservation.quantity;
     const seqId = nextLabelSeqId();
 
-    // Composite ID: YYYYMMDDWWSSSS
+    // Composite ID: YYMMDDHHmmss (12 chars, timestamp-based)
     const now = new Date();
-    const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-    const seqRow = db.prepare(`SELECT COUNT(*) as c FROM labels WHERE workstation_id = ? AND printed_at LIKE ?`)
-      .get(workstationId, `${date}%`) as any;
-    const seq = seqRow.c + 1;
-    const compositeId = `${date}${String(workstationId).padStart(2, '0')}${String(seq).padStart(4, '0')}`;
+    const yy = String(now.getFullYear()).slice(-2);
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mi = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    const compositeId = `${yy}${mo}${dd}${hh}${mi}${ss}`;
 
     // Geração ZPL (simulado)
     const zpl = `^XA^FO50,50^A0N,40,40^FD${pn.part_number}^FS^FO50,100^A0N,30,30^FD${pn.description}^FS^FO50,150^A0N,25,25^FDQTD: ${qty}^FS^FO50,190^A0N,25,25^FDID: ${seqId}^FS^FO50,230^BQN,2,6^FDQA,${seqId}|${pn.part_number}|${qty}^FS^XZ`;

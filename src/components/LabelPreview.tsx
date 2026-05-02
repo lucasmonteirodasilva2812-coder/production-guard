@@ -201,7 +201,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           </div>
           {/* ID igual usuário/data/hora */}
           <div style={{ width: '100%', fontSize: 8, marginTop: 2, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderTop: '1px solid #eee', padding: '2px 4px 0 4px', background: 'transparent' }}>
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center', width: '100%' }}>ID: <span style={{ fontWeight: 900 }}>{label.labelSeqId}</span></span>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center', width: '100%' }}>ID: <span style={{ fontWeight: 900 }}>{label.compositeId || label.labelSeqId}</span></span>
           </div>
           {/* Usuário/data/hora na última linha, largura total, formatado pt-BR */}
           <div style={{ width: '100%', fontSize: 8, marginTop: 0, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderTop: '1px solid #eee', padding: '2px 4px 0 4px', background: 'transparent' }}>

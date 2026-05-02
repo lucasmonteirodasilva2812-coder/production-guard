@@ -204,6 +204,15 @@ export function useDeleteWorkstation() {
   });
 }
 
+export function useWorkstationActiveUsers(wsId: number) {
+  return useQuery({
+    queryKey: ['workstation-active-users', wsId],
+    queryFn: () => api.getWorkstationActiveUsers(wsId),
+    refetchInterval: 15_000,
+    enabled: !!wsId,
+  });
+}
+
 // ── Divergences ──────────────────────────────────────────────────────────────
 export function useDivergences() {
   return useQuery({ queryKey: ['divergences'], queryFn: api.getDivergences });

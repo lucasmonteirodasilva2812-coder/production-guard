@@ -80,6 +80,9 @@ export const api = {
   // Workstations
   getWorkstations: () => request<any[]>('/workstations'),
   updateWorkstation: (id: number, data: any) => request<any>(`/workstations/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  getWorkstationActiveUsers: (id: number) => request<string[]>(`/workstations/${id}/active-users`),
+  createWorkstation: (name: string) => request<any>('/workstations', { method: 'POST', body: JSON.stringify({ name }) }),
+  deleteWorkstation: (id: number) => request<any>(`/workstations/${id}`, { method: 'DELETE' }),
 
   // Divergences
   getDivergences: () => request<any[]>('/divergences'),

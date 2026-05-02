@@ -18,9 +18,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
   },
   base: '/',
   build: {
@@ -28,6 +28,8 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html'),
     },
+    minify: false,
+    sourcemap: true,
   },
   // SPA fallback para Render/deploy estático
   preview: {
@@ -35,12 +37,6 @@ export default defineConfig(({ mode }) => ({
     host: true,
   },
   // Corrige 404 ao atualizar ou acessar URL direta
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-    dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
-  },
   // Adiciona fallback para SPA no deploy
   esbuild: {
     // Nenhuma alteração

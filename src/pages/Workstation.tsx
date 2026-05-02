@@ -1,17 +1,16 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { renderToString } from 'react-dom/server';
 import { useAuthStore } from '@/store/authStore';
 import { useWorkstationNavStore } from '@/store/workstationNavStore';
 import {
   useShipments, usePartNumbers, useLabels, useReservations, useWorkstations,
-  useCreateReservation, useCreateLabel, useReprintLabel, useFinalizePartNumber,
+  useCreateReservation, useCreateLabel, useReprintLabel, useWorkstationActiveUsers,
 } from '@/hooks/useProductionData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
 import LabelPreview, { LabelData } from '@/components/LabelPreview';
-import MultipleLabelsModal from '@/components/MultipleLabelsModal';
-import { Printer, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search, Database } from 'lucide-react';
+import { Printer, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Label } from '@/types/production';
@@ -48,32 +47,6 @@ function openLabelPrintPopup(label: any, onAfterPrint?: () => void) {
   };
 }
 
-// ── Parser Base - Part Number ──────────────────────────────────────────────
-async function parsePnBaseFile(file: File): Promise<{ partNumber: string; description: string; msl: string }[]> {
-  if (file.name.match(/\.csv$/i)) {
-    const text = await file.text();
-    return text.split('\n').filter(l => l.trim()).map(line => {
-      const cols = line.split(/[;,\t]/).map(c => c.trim());
-      return { partNumber: cols[0] || '', description: cols[1] || '', msl: cols[2] || '' };
-    }).filter(i => i.partNumber && i.partNumber.toLowerCase() !== 'part number');
-  }
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const XLSX = await import('xlsx');
-  const buf = await file.arrayBuffer();
-  const wb = XLSX.read(buf, { type: 'array' });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-  return rows
-    .filter(r => Array.isArray(r) && r.length >= 1)
-    .map(r => ({
-      partNumber: String(r[0] || '').trim(),
-      description: String(r[1] || '').trim(),
-      msl: String(r[2] || '').trim(),
-    }))
-    .filter(i => i.partNumber && i.partNumber.toLowerCase() !== 'part number');
-}
-
 // ── Workstation tabs ───────────────────────────────────────────────────────
 type TabType = 'normal' | 'caixa';
 
@@ -86,10 +59,10 @@ export default function Workstation() {
   const { data: labels = [] } = useLabels();
   const { data: reservations = [] } = useReservations();
   const { data: workstations = [] } = useWorkstations();
+  const { data: activeUsers = [] } = useWorkstationActiveUsers(workstationId);
   const createReservation = useCreateReservation();
   const createLabel = useCreateLabel();
   const reprintLabel = useReprintLabel();
-  const finalizePN = useFinalizePartNumber();
 
   // Persisted navigation state
   const selectedShipment = useWorkstationNavStore(s => s.selectedShipment);
@@ -115,30 +88,6 @@ export default function Workstation() {
   const [boxMsl, setBoxMsl] = useState('');
   const [lastBoxLabel, setLastBoxLabel] = useState<LabelData | null>(null);
 
-  // Impressão múltipla
-  const [showMultipleModal, setShowMultipleModal] = useState(false);
-
-  // Base - Part Number import
-  const [importingBase, setImportingBase] = useState(false);
-  const pnBaseFileRef = useRef<HTMLInputElement>(null);
-
-  const handleImportBase = async (file: File) => {
-    if (!file.name.match(/\.(xlsx|xls|csv)$/i)) { toast.error('Formato inválido. Use .xlsx, .xls ou .csv'); return; }
-    try {
-      setImportingBase(true);
-      const items = await parsePnBaseFile(file);
-      if (items.length === 0) { toast.error('Nenhum dado encontrado no arquivo'); return; }
-      const { api } = await import('@/lib/api');
-      await api.importPnBase(items);
-      toast.success(`Base atualizada: ${items.length} Part Numbers importados`);
-    } catch (e: any) {
-      toast.error(`Erro ao importar base: ${e.message}`);
-    } finally {
-      setImportingBase(false);
-      if (pnBaseFileRef.current) pnBaseFileRef.current.value = '';
-    }
-  };
-
   const currentWS = workstations.find(w => w.id === workstationId);
   const selectedShipmentData = shipments.find(s => s.id === selectedShipment);
   const shipmentPNs = partNumbers.filter(pn => pn.shipmentId === selectedShipment);
@@ -152,6 +101,13 @@ export default function Workstation() {
     .filter(l => l.workstationId === workstationId)
     .sort((a, b) => b.printedAt.localeCompare(a.printedAt))
     .slice(0, 30);
+
+  // Mini dashboard stats
+  const shipmentName = selectedShipmentData?.fileName?.replace(/\.[^/.]+$/, '') || '';
+  const totalItems = shipmentPNs.length;
+  const conferidos = shipmentPNs.filter(pn => pn.status === 'concluido' || pn.status === 'divergente').length;
+  const sobras = shipmentPNs.filter(pn => pn.labeledQty > pn.declaredQty).length;
+  const faltas = shipmentPNs.filter(pn => pn.labeledQty < pn.declaredQty && pn.labeledQty > 0).length;
 
   // Select PN by clicking table row or typing in input
   const selectPnById = useCallback((id: string) => {
@@ -253,21 +209,6 @@ export default function Workstation() {
     toast.success('Etiqueta de caixa pronta para impressão');
   };
 
-
-
-  const handleFinalize = () => {
-    if (!selectedPN) return;
-    finalizePN.mutate(selectedPN, {
-      onSuccess: (data) => {
-        if (data.divergence) {
-          toast.warning(`Divergência: ${data.divergence.type === 'falta' ? '-' : '+'}${Math.abs(data.divergence.difference)} un`);
-        } else { toast.success('Part Number finalizado!'); }
-        setSelectedPN(null); setPnInput('');
-      },
-      onError: (e: any) => toast.error(`Erro ao finalizar: ${e.message}`),
-    });
-  };
-
   // ── Remessa selection ─────────────────────────────────────────────────────
   if (!selectedShipment) {
     const filteredShipments = shipments.filter(s =>
@@ -275,7 +216,6 @@ export default function Workstation() {
     );
 
     return (
-      <>
       <div className="space-y-4">
         <div>
           <h1 className="text-2xl font-bold">Workflow {workstationId}</h1>
@@ -335,18 +275,6 @@ export default function Workstation() {
           </table>
         </div>
       </div>
-
-      {/* Floating: importar base */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <input ref={pnBaseFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
-          onChange={e => { const f = e.target.files?.[0]; if (f) handleImportBase(f); }} />
-        <Button variant="outline" size="sm" className="shadow-lg gap-2 bg-background"
-          disabled={importingBase} onClick={() => pnBaseFileRef.current?.click()}>
-          <Database className="w-4 h-4" />
-          {importingBase ? 'Importando...' : 'Importar Base Atualizada'}
-        </Button>
-      </div>
-      </>
     );
   }
 
@@ -354,19 +282,41 @@ export default function Workstation() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <button onClick={() => { setSelectedShipment(null); setSelectedPN(null); setPnInput(''); resetNav(); }}
-          className="text-muted-foreground hover:text-foreground">
+          className="text-muted-foreground hover:text-foreground mt-1">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <div>
-          <h1 className="text-2xl font-bold">Bancada {workstationId}</h1>
-          <p className="text-sm text-muted-foreground">
-            Remessa: <span className="text-foreground font-medium font-mono">{selectedShipmentData?.fileName}</span>
-          </p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl font-bold truncate">{shipmentName}</h1>
+            <div className="flex gap-1.5 flex-wrap">
+              <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">
+                TOTAL: {totalItems}
+              </span>
+              <span className="text-[10px] bg-success/15 text-success px-2 py-0.5 rounded-full font-medium">
+                CONF: {conferidos}
+              </span>
+              {sobras > 0 && (
+                <span className="text-[10px] bg-warning/15 text-warning px-2 py-0.5 rounded-full font-medium">
+                  SOBRAS: {sobras}
+                </span>
+              )}
+              {faltas > 0 && (
+                <span className="text-[10px] bg-destructive/15 text-destructive px-2 py-0.5 rounded-full font-medium">
+                  FALTAS: {faltas}
+                </span>
+              )}
+            </div>
+          </div>
+          {activeUsers.length > 0 && (
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Usuários atuando: {activeUsers.join(', ')}
+            </p>
+          )}
         </div>
         {/* Tabs */}
-        <div className="ml-auto flex gap-2">
+        <div className="flex gap-2 shrink-0">
           <button onClick={() => setActiveTab('normal')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', activeTab === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground')}>
             <Printer className="w-3.5 h-3.5 inline mr-1.5" />Etiqueta
           </button>
@@ -424,10 +374,6 @@ export default function Workstation() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">MSL</label>
-                  <Input value={msl} onChange={e => setMsl(e.target.value)} placeholder="Ex: MSL3" />
-                </div>
-                <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Data de Validade <span className="text-muted-foreground/50">(opcional)</span></label>
                   <Input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} />
                 </div>
@@ -455,35 +401,7 @@ export default function Workstation() {
                 <Button onClick={() => handleLookupAndPrint()} disabled={createLabel.isPending || createReservation.isPending}>
                   <Printer className="w-4 h-4 mr-1" />Imprimir
                 </Button>
-                {selected && (
-                  <>
-                    <Button variant="outline" onClick={() => setShowMultipleModal(true)}>
-                      Impressão Múltipla
-                    </Button>
-                    <Button variant="outline" onClick={handleFinalize} disabled={finalizePN.isPending}>
-                      <CheckCircle className="w-4 h-4 mr-1" />Finalizar PN
-                    </Button>
-                  </>
-                )}
               </div>
-      {/* Modal de impressão múltipla */}
-      {selected && (
-        <MultipleLabelsModal
-          open={showMultipleModal}
-          onClose={() => setShowMultipleModal(false)}
-          baseLabel={{
-            partNumber: selected.partNumber,
-            description: selected.description,
-            quantity: parseInt(printQty) || 1,
-            printedBy: user?.name || 'Operador',
-            printedAt: new Date().toISOString(),
-            msl: msl || undefined,
-            expiryDate: expiryDate || undefined,
-            labelType: 'normal',
-          }}
-        />
-      )}
-
 
             </div>
 
@@ -493,8 +411,10 @@ export default function Workstation() {
               {lastLabel ? (
                 <>
                   <div className="w-full flex flex-col items-center">
-                    <LabelPreview label={{
-                      labelSeqId: lastLabel.labelSeqId,
+                    <div style={{ width: '150mm', height: '75mm', overflow: 'hidden', position: 'relative', margin: '0 auto' }}>
+                      <div style={{ transform: 'scale(1.5)', transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
+                        <LabelPreview label={{
+                          labelSeqId: lastLabel.labelSeqId,
                       compositeId: lastLabel.compositeId,
                       partNumber: lastLabel.partNumber,
                       description: lastLabel.description,
@@ -503,8 +423,10 @@ export default function Workstation() {
                       printedAt: lastLabel.printedAt,
                       msl: lastLabel.msl,
                       expiryDate: lastLabel.expiryDate,
-                      qrValidated: lastLabel.qrValidated,
-                    }} />
+                          qrValidated: lastLabel.qrValidated,
+                        }} />
+                      </div>
+                    </div>
                     <Button
                       className="mt-2"
                       onClick={() => {
@@ -640,34 +562,27 @@ export default function Workstation() {
           <div className="industrial-panel p-4 flex flex-col items-center overflow-auto">
             <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3 self-start">Última Etiqueta</h3>
             {lastLabel ? (
-              <LabelPreview label={{
-                labelSeqId: lastLabel.labelSeqId,
-                compositeId: lastLabel.compositeId,
-                partNumber: lastLabel.partNumber,
-                description: lastLabel.description,
-                quantity: lastLabel.quantity,
-                printedBy: lastLabel.printedBy,
-                printedAt: lastLabel.printedAt,
-                msl: lastLabel.msl,
-                expiryDate: lastLabel.expiryDate,
-              }} />
+              <div style={{ width: '150mm', height: '75mm', overflow: 'hidden', position: 'relative', margin: '0 auto' }}>
+                <div style={{ transform: 'scale(1.5)', transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
+                  <LabelPreview label={{
+                    labelSeqId: lastLabel.labelSeqId,
+                    compositeId: lastLabel.compositeId,
+                    partNumber: lastLabel.partNumber,
+                    description: lastLabel.description,
+                    quantity: lastLabel.quantity,
+                    printedBy: lastLabel.printedBy,
+                    printedAt: lastLabel.printedAt,
+                    msl: lastLabel.msl,
+                    expiryDate: lastLabel.expiryDate,
+                  }} />
+                </div>
+              </div>
             ) : (
               <p className="text-xs text-muted-foreground text-center mt-4">Clique em uma etiqueta para visualizar</p>
             )}
           </div>
         </div>
       )}
-
-      {/* Floating: importar base */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <input ref={pnBaseFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
-          onChange={e => { const f = e.target.files?.[0]; if (f) handleImportBase(f); }} />
-        <Button variant="outline" size="sm" className="shadow-lg gap-2 bg-background"
-          disabled={importingBase} onClick={() => pnBaseFileRef.current?.click()}>
-          <Database className="w-4 h-4" />
-          {importingBase ? 'Importando...' : 'Importar Base Atualizada'}
-        </Button>
-      </div>
     </div>
   );
 }
