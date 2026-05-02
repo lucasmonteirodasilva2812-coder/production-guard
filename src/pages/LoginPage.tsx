@@ -48,12 +48,6 @@ export default function LoginPage({ onLoggedIn, onBack }: Props) {
           </p>
         </div>
 
-        {mode === 'operador' && serverUrl && (
-          <div className="bg-info/10 border border-info/30 rounded-lg px-3 py-2 text-xs text-info">
-            Servidor: <span className="font-mono">{serverUrl.replace('/api', '')}</span>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Usuário</label>
@@ -90,11 +84,7 @@ export default function LoginPage({ onLoggedIn, onBack }: Props) {
           </Button>
         </form>
 
-        {mode === 'admin' && (
-          <p className="text-xs text-muted-foreground/60 text-center">
-            Primeiro acesso: <span className="font-mono">admin / admin123</span>
-          </p>
-        )}
+
       </div>
     </div>
   );
