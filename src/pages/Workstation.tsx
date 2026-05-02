@@ -193,12 +193,14 @@ export default function Workstation() {
     if (isNaN(qty) || qty <= 0) { toast.error('Quantidade inválida'); return; }
 
     let descVal = '';
+    let mslVal: string | null = null;
     try {
       const { api } = await import('@/lib/api');
       const base = await api.lookupPnBase(boxPn.trim());
       if (base.description) descVal = base.description;
+      if (base.msl) mslVal = base.msl;
     } catch {
-      // PN não cadastrado na base — prossegue sem descrição
+      // PN não cadastrado na base — prossegue sem dados
     }
 
     const now = new Date().toISOString();
@@ -208,8 +210,9 @@ export default function Workstation() {
       quantity: qty,
       printedBy: user?.name || 'Operador',
       printedAt: now,
-      msl: null,
+      msl: mslVal,
       labelType: 'caixa',
+      shipmentName,
     };
     setLastBoxLabel(boxLabel);
     openLabelPrintPopup(boxLabel);

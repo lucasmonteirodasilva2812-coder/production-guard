@@ -262,16 +262,40 @@ function IndustrialLabelModelo2({ label }: { label: LabelData }) {
       </div>
 
       {/* ── BODY ── */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '22% 44% 34%', minHeight: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '22% 56% 22%', minHeight: 0, overflow: 'hidden' }}>
 
-        {/* ── LEFT COLUMN — QR Part Number ── */}
+        {/* ── LEFT COLUMN ── */}
         <div style={{ borderRight: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 2px 2px 2px' }}>
-          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', flexShrink: 0 }}>
+          {/* QR Part Number */}
+          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', marginBottom: 3, flexShrink: 0 }}>
             <div style={{ background: '#fff', color: '#000', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 1px', width: '100%', boxSizing: 'border-box', letterSpacing: 0.1, borderBottom: `1px solid ${BB}` }}>
-              Part Number
+              ID;PartNumber;Qtd
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1px 0' }}>
-              <QRImg value={label.partNumber} size={60} />
+              <QRImg value={`${label.partNumber};${label.quantity}`} size={60} />
+            </div>
+          </div>
+          {/* Info boxes */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 2, width: '100%' }}>
+            <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
+              <ClipboardList size={10} color='#444' style={{ flexShrink: 0 }} />
+              <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Processo</div>
+                <div style={{ fontSize: 8, fontWeight: 900, color: '#111', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label.shipmentName || '-'}</div>
+              </div>
+            </div>
+            <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
+              <Calendar size={10} color='#444' style={{ flexShrink: 0 }} />
+              <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Data Venc.</div>
+                <div style={{ fontSize: 8, fontWeight: 800, color: '#333', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label.expiryDate ? formatDate(label.expiryDate) : '-'}</div>
+              </div>
+            </div>
+            <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
+              <div style={{ minWidth: 0, textAlign: 'center' }}>
+                <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>MSL</div>
+                <div style={{ fontSize: 9, fontWeight: 900, color: '#111', lineHeight: 1.1 }}>{label.msl || '-'}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -279,7 +303,6 @@ function IndustrialLabelModelo2({ label }: { label: LabelData }) {
         {/* ── CENTER COLUMN ── */}
         <div style={{ display: 'flex', flexDirection: 'column', padding: '3px 6px 2px 6px', overflow: 'hidden' }}>
           <div style={{ flex: 1 }} />
-          {/* Part Number block */}
           <div style={{ textAlign: 'center', width: '100%', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ fontSize: 7, fontWeight: 700, color: '#222', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Part Number:</div>
             <div style={{
@@ -292,10 +315,13 @@ function IndustrialLabelModelo2({ label }: { label: LabelData }) {
             }}>
               {label.partNumber}
             </div>
+            {label.description && (
+              <div style={{ borderTop: `1px solid ${BB}`, marginTop: 1, paddingTop: 1, fontSize: 8, color: '#222', fontWeight: 700, lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'break-word', textAlign: 'center', width: '100%' }}>
+                {label.description}
+              </div>
+            )}
           </div>
-          {/* Divisor */}
           <div style={{ width: '85%', alignSelf: 'center', borderTop: `1px solid ${BI}`, margin: '4px 0' }} />
-          {/* Quantidade */}
           <div style={{ background: LIGHT_BG, border: `1px solid ${BB}`, borderRadius: 3, padding: '4px 4px', textAlign: 'center', width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
             <div style={{ fontSize: 7, fontWeight: 700, color: '#222', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Quantidade:</div>
             <div style={{ fontWeight: 900, fontSize: 17, fontFamily: 'Arial Black, Arial, sans-serif', color: '#111', lineHeight: 1.1 }}>
@@ -303,7 +329,6 @@ function IndustrialLabelModelo2({ label }: { label: LabelData }) {
             </div>
           </div>
           <div style={{ flex: 1 }} />
-          {/* User + Date row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${BB}`, paddingTop: 1.5, width: '100%', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, flex: 1 }}>
               <User size={9} color='#444' style={{ flexShrink: 0 }} />
@@ -316,10 +341,10 @@ function IndustrialLabelModelo2({ label }: { label: LabelData }) {
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN — QR Quantidade (único, tamanho 60) ── */}
-        <div style={{ borderLeft: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', overflow: 'hidden', padding: '3px 0px 3px 2px' }}>
+        {/* ── RIGHT COLUMN — QR Quantidade centralizado ── */}
+        <div style={{ borderLeft: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '3px 2px' }}>
           <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
-            <div style={{ background: '#fff', color: '#000', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 6px', letterSpacing: 0.3, whiteSpace: 'nowrap', borderBottom: `1px solid ${BB}` }}>
+            <div style={{ background: '#fff', color: '#000', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 4px', letterSpacing: 0.3, whiteSpace: 'nowrap', borderBottom: `1px solid ${BB}` }}>
               QUANTIDADE
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2px 2px' }}>
