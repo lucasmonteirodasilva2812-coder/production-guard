@@ -4,14 +4,14 @@ import { useAuthStore } from '@/store/authStore';
 import { useWorkstationNavStore } from '@/store/workstationNavStore';
 import {
   useShipments, usePartNumbers, useLabels, useReservations, useWorkstations,
-  useCreateReservation, useCreateLabel, useReprintLabel, useFinalizePartNumber, useAuthorizeSurplus,
+  useCreateReservation, useCreateLabel, useReprintLabel, useFinalizePartNumber,
 } from '@/hooks/useProductionData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
 import LabelPreview, { LabelData } from '@/components/LabelPreview';
 import MultipleLabelsModal from '@/components/MultipleLabelsModal';
-import { Printer, AlertTriangle, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search } from 'lucide-react';
+import { Printer, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Label } from '@/types/production';
@@ -64,7 +64,6 @@ export default function Workstation() {
   const createLabel = useCreateLabel();
   const reprintLabel = useReprintLabel();
   const finalizePN = useFinalizePartNumber();
-  const authorizeSurplus = useAuthorizeSurplus();
 
   // Persisted navigation state
   const selectedShipment = useWorkstationNavStore(s => s.selectedShipment);
@@ -89,10 +88,6 @@ export default function Workstation() {
   const [boxQty, setBoxQty] = useState('');
   const [boxMsl, setBoxMsl] = useState('');
   const [lastBoxLabel, setLastBoxLabel] = useState<LabelData | null>(null);
-
-  // Auth flow
-  const [supervisorPassword, setSupervisorPassword] = useState('');
-  const [showSupervisorAuth, setShowSupervisorAuth] = useState(false);
 
   // Impressão múltipla
   const [showMultipleModal, setShowMultipleModal] = useState(false);
@@ -137,11 +132,7 @@ export default function Workstation() {
     if (!selectedPN || !selected) { toast.error('Selecione um Part Number'); return; }
     const qty = parseInt(printQty);
     if (isNaN(qty) || qty <= 0) { toast.error('Quantidade inválida'); return; }
-    if (qty > available) {
-      if (available <= 0) { setShowSupervisorAuth(true); toast.warning('Saldo zerado! Necessária autorização de Supervisor.'); return; }
-      toast.error(`Quantidade excede o disponível (${available.toLocaleString('pt-BR')})`);
-      return;
-    }
+    const excess = qty - available;
     createReservation.mutate(
       { partNumberId: selectedPN, workstationId, quantity: qty },
       {
@@ -155,7 +146,11 @@ export default function Workstation() {
             {
               onSuccess: (label) => {
                 setLastLabel(label);
-                toast.success(`Etiqueta gerada!`, { description: `${selected.partNumber} — ${qty.toLocaleString('pt-BR')} un` });
+                if (excess > 0) {
+                  toast.warning(`Sobra registrada: +${excess.toLocaleString('pt-BR')} un`, { description: `${selected.partNumber}` });
+                } else {
+                  toast.success(`Etiqueta gerada!`, { description: `${selected.partNumber} — ${qty.toLocaleString('pt-BR')} un` });
+                }
                 openLabelPrintPopup(label, () => {
                   const pnInputEl = document.getElementById('pn-input');
                   if (pnInputEl) (pnInputEl as HTMLInputElement).focus();
@@ -193,21 +188,7 @@ export default function Workstation() {
     toast.success('Etiqueta de caixa pronta para impressão');
   };
 
-  const handleSupervisorAuth = () => {
-    if (!supervisorPassword.trim()) { toast.error('Informe a senha do supervisor'); return; }
-    if (!selectedPN) return;
-    authorizeSurplus.mutate(
-      { id: selectedPN, extraQty: 0 },
-      {
-        onSuccess: () => {
-          toast.success('Excedente autorizado pelo supervisor');
-          setShowSupervisorAuth(false);
-          setSupervisorPassword('');
-        },
-        onError: (e: any) => toast.error(`Autorização falhou: ${e.message}`),
-      }
-    );
-  };
+
 
   const handleFinalize = () => {
     if (!selectedPN) return;
@@ -425,16 +406,7 @@ export default function Workstation() {
         />
       )}
 
-              {showSupervisorAuth && (
-                <div className="p-3 rounded-lg border border-warning/50 bg-warning/5 space-y-2">
-                  <p className="text-xs font-medium text-warning flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />Autorização de Supervisor necessária</p>
-                  <div className="flex gap-2">
-                    <Input type="password" value={supervisorPassword} onChange={e => setSupervisorPassword(e.target.value)} placeholder="Senha" className="flex-1" />
-                    <Button variant="outline" size="sm" onClick={handleSupervisorAuth}>Autorizar</Button>
-                    <Button variant="ghost" size="sm" onClick={() => setShowSupervisorAuth(false)}>×</Button>
-                  </div>
-                </div>
-              )}
+
             </div>
 
             {/* Right: label preview */}

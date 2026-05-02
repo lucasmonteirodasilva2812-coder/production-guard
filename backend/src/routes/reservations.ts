@@ -19,16 +19,6 @@ router.post('/', (req, res) => {
   const pn = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
   if (!pn) return res.status(404).json({ error: 'Part number não encontrado' });
 
-  const reserved = (db.prepare(`
-    SELECT COALESCE(SUM(quantity), 0) as total FROM reservations
-    WHERE part_number_id = ? AND status = 'pendente'
-  `).get(partNumberId) as any).total;
-
-  const available = pn.declared_qty - pn.labeled_qty - reserved;
-  if (quantity > available) {
-    return res.status(400).json({ error: 'Quantidade excede o disponível', available });
-  }
-
   const id = uuid();
   db.prepare(`
     INSERT INTO reservations (id, part_number_id, workstation_id, quantity, status, created_at)
