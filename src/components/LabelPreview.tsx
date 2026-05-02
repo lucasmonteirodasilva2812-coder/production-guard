@@ -265,13 +265,13 @@ function IndustrialLabelModelo2({ label }: { label: LabelData }) {
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '22% 56% 22%', minHeight: 0, overflow: 'hidden' }}>
 
         {/* ── LEFT COLUMN ── */}
-        <div style={{ borderRight: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 2px 2px 2px' }}>
+        <div style={{ borderRight: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 4px 2px 4px' }}>
           {/* QR Part Number */}
-          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', marginBottom: 3, flexShrink: 0 }}>
-            <div style={{ background: '#fff', color: '#000', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 1px', width: '100%', boxSizing: 'border-box', letterSpacing: 0.1, borderBottom: `1px solid ${BB}` }}>
+          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: 'fit-content', marginBottom: 3, flexShrink: 0 }}>
+            <div style={{ background: '#fff', color: '#000', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 4px', width: '100%', boxSizing: 'border-box', letterSpacing: 0.1, borderBottom: `1px solid ${BB}` }}>
               ID;PartNumber;Qtd
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2px 2px' }}>
               <QRImg value={`${label.partNumber};${label.quantity}`} size={60} />
             </div>
           </div>
@@ -342,7 +342,7 @@ function IndustrialLabelModelo2({ label }: { label: LabelData }) {
         </div>
 
         {/* ── RIGHT COLUMN — QR Quantidade centralizado ── */}
-        <div style={{ borderLeft: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '3px 2px' }}>
+        <div style={{ borderLeft: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '3px 4px' }}>
           <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
             <div style={{ background: '#fff', color: '#000', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 4px', letterSpacing: 0.3, whiteSpace: 'nowrap', borderBottom: `1px solid ${BB}` }}>
               QUANTIDADE
