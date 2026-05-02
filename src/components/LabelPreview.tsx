@@ -108,7 +108,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
         <div style={{ borderRight: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '2px 2px' }}>
           {/* QR box — size 60, label ID;PartNumber;Qtd */}
           <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', marginBottom: 3, flexShrink: 0 }}>
-            <div style={{ background: '#333', color: '#fff', fontSize: 4.5, fontWeight: 700, textAlign: 'center', padding: '1.5px 1px', width: '100%', boxSizing: 'border-box', letterSpacing: 0.1 }}>
+            <div style={{ background: '#222', color: '#fff', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 1px', width: '100%', boxSizing: 'border-box', letterSpacing: 0.1 }}>
               ID;PartNumber;Qtd
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1px 0' }}>
@@ -146,13 +146,23 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
 
         {/* ── CENTER COLUMN — PN no topo (alinhado com QR), Qtd embaixo (alinhada com info boxes) ── */}
         <div style={{ display: 'flex', flexDirection: 'column', padding: '3px 6px 2px 6px', overflow: 'hidden' }}>
-          {/* Part Number — topo, mesma altura do QR esquerdo */}
-          <div style={{ textAlign: 'center', width: '100%', flexShrink: 0 }}>
-            <div style={{ fontSize: 7, fontWeight: 700, color: '#444', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Part Number:</div>
-            <div style={{ fontWeight: 900, fontSize: label.partNumber.length > 16 ? 13 : label.partNumber.length > 12 ? 15 : 18, fontFamily: 'Arial Black, Arial, sans-serif', color: '#111', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {/* Part Number — topo, centralizado, texto adapta ao tamanho */}
+          <div style={{ textAlign: 'center', width: '100%', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontSize: 7, fontWeight: 700, color: '#222', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Part Number:</div>
+            <div style={{
+              fontWeight: 900,
+              fontSize: label.partNumber.length > 20 ? 11 : label.partNumber.length > 16 ? 13 : label.partNumber.length > 12 ? 15 : 18,
+              fontFamily: 'Arial Black, Arial, sans-serif',
+              color: '#111',
+              lineHeight: 1.15,
+              wordBreak: 'break-all',
+              overflowWrap: 'break-word',
+              textAlign: 'center',
+              width: '100%',
+            }}>
               {label.partNumber}
             </div>
-            <div style={{ borderTop: `1px solid ${BB}`, marginTop: 1, paddingTop: 1, fontSize: 7, color: '#666', fontWeight: 500, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ borderTop: `1px solid ${BB}`, marginTop: 1, paddingTop: 1, fontSize: 7, color: '#333', fontWeight: 500, lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'break-word', textAlign: 'center', width: '100%' }}>
               {label.description}
             </div>
           </div>
@@ -162,14 +172,14 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           <div style={{ width: '85%', alignSelf: 'center', borderTop: `1px solid ${BI}`, marginBottom: 3 }} />
           {/* Quantidade — mesma altura que info boxes (Processo/Data/MSL) */}
           <div style={{ background: LIGHT_BG, border: `1px solid ${BB}`, borderRadius: 3, padding: '4px 4px', textAlign: 'center', marginBottom: 2, width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
-            <div style={{ fontSize: 7, fontWeight: 700, color: '#444', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Quantidade:</div>
+            <div style={{ fontSize: 7, fontWeight: 700, color: '#222', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Quantidade:</div>
             <div style={{ fontWeight: 900, fontSize: 17, fontFamily: 'Arial Black, Arial, sans-serif', color: '#111', lineHeight: 1.1 }}>
               {label.quantity.toLocaleString('pt-BR')}
             </div>
           </div>
           {/* ID row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 3, borderTop: `1px solid ${BB}`, paddingTop: 1.5, width: '100%', flexShrink: 0 }}>
-            <FileText size={9} color='#666' style={{ flexShrink: 0 }} />
+            <FileText size={9} color='#333' style={{ flexShrink: 0 }} />
             <span style={{ fontSize: 8, fontWeight: 900, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               ID: {label.compositeId || label.labelSeqId}
             </span>
@@ -177,12 +187,12 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           {/* User + Date row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${BB}`, paddingTop: 1.5, marginTop: 1, width: '100%', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, flex: 1 }}>
-              <User size={9} color='#777' style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: 7, fontWeight: 700, color: '#444', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label.printedBy}</span>
+              <User size={9} color='#444' style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 7, fontWeight: 700, color: '#222', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label.printedBy}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0, marginLeft: 4 }}>
-              <Calendar size={9} color='#777' style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: 7, fontWeight: 700, color: '#444', whiteSpace: 'nowrap' }}>{formatDateTime(label.printedAt)}</span>
+              <Calendar size={9} color='#444' style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 7, fontWeight: 700, color: '#222', whiteSpace: 'nowrap' }}>{formatDateTime(label.printedAt)}</span>
             </div>
           </div>
         </div>
