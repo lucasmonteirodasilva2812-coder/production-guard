@@ -85,9 +85,7 @@ export default function Workstation() {
 
   // Form state (box label)
   const [boxPn, setBoxPn] = useState('');
-  const [boxDesc, setBoxDesc] = useState('');
   const [boxQty, setBoxQty] = useState('');
-  const [boxMsl, setBoxMsl] = useState('');
   const [lastBoxLabel, setLastBoxLabel] = useState<LabelData | null>(null);
 
   const currentWS = workstations.find(w => w.id === workstationId);
@@ -189,24 +187,31 @@ export default function Workstation() {
   };
 
   // ── Box label print (web) ────────────────────────────────────────────────
-  const handleBoxPrint = () => {
+  const handleBoxPrint = async () => {
     if (!boxPn.trim()) { toast.error('Informe o Part Number'); return; }
     const qty = parseInt(boxQty);
     if (isNaN(qty) || qty <= 0) { toast.error('Quantidade inválida'); return; }
 
-    // Cria etiqueta de caixa localmente e abre página de impressão web
+    let descVal = '';
+    try {
+      const { api } = await import('@/lib/api');
+      const base = await api.lookupPnBase(boxPn.trim());
+      if (base.description) descVal = base.description;
+    } catch {
+      // PN não cadastrado na base — prossegue sem descrição
+    }
+
     const now = new Date().toISOString();
     const boxLabel: LabelData = {
-      partNumber: boxPn.trim(), description: boxDesc.trim(),
-      quantity: qty, printedBy: user?.name || 'Operador', printedAt: now,
-      msl: boxMsl || null, labelType: 'caixa',
+      partNumber: boxPn.trim(),
+      description: descVal,
+      quantity: qty,
+      printedBy: user?.name || 'Operador',
+      printedAt: now,
+      msl: null,
+      labelType: 'caixa',
     };
     setLastBoxLabel(boxLabel);
-    // Salva no estado e abre print
-    // Ideal: criar no backend e obter id, mas se não houver endpoint, pode serializar no localStorage/sessionStorage
-    // Aqui, exemplo simples:
-    const tempId = `caixa-${Date.now()}`;
-    window.localStorage.setItem(`box-label-${tempId}`, JSON.stringify(boxLabel));
     openLabelPrintPopup(boxLabel);
     toast.success('Etiqueta de caixa pronta para impressão');
   };
@@ -455,19 +460,39 @@ export default function Workstation() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Part Number *</label>
-                  <Input value={boxPn} onChange={e => setBoxPn(e.target.value)} placeholder="Ex: CPRE005A" className="font-mono" />
+                  <Input
+                    id="box-pn-input"
+                    value={boxPn}
+                    onChange={e => setBoxPn(e.target.value)}
+                    placeholder="Ex: CPRE005A"
+                    className="font-mono"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('box-qty-input')?.focus();
+                      }
+                    }}
+                  />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Quantidade *</label>
-                  <Input type="number" min={1} value={boxQty} onChange={e => setBoxQty(e.target.value)} placeholder="Ex: 10000" className="font-mono" />
-                </div>
-                <div className="col-span-2">
-                  <label className="text-xs text-muted-foreground mb-1 block">Descrição</label>
-                  <Input value={boxDesc} onChange={e => setBoxDesc(e.target.value)} placeholder="Descrição do produto" />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">MSL</label>
-                  <Input value={boxMsl} onChange={e => setBoxMsl(e.target.value)} placeholder="Ex: MSL3" />
+                  <Input
+                    id="box-qty-input"
+                    type="number"
+                    min={1}
+                    value={boxQty}
+                    onChange={e => setBoxQty(e.target.value)}
+                    placeholder="Ex: 10000"
+                    className="font-mono"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleBoxPrint();
+                        setBoxQty('');
+                        document.getElementById('box-pn-input')?.focus();
+                      }
+                    }}
+                  />
                 </div>
               </div>
               <Button onClick={handleBoxPrint} className="gap-2">
@@ -477,7 +502,11 @@ export default function Workstation() {
             <div className="flex flex-col items-center gap-2">
               <p className="text-xs text-muted-foreground self-start">Pré-visualização</p>
               {lastBoxLabel ? (
-                <LabelPreview label={lastBoxLabel} />
+                <div style={{ width: '150mm', height: '75mm', overflow: 'hidden', position: 'relative', margin: '0 auto' }}>
+                  <div style={{ transform: 'scale(1.5)', transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
+                    <LabelPreview label={lastBoxLabel} />
+                  </div>
+                </div>
               ) : (
                 <div className="border-2 border-dashed border-border rounded-lg w-full flex items-center justify-center" style={{ height: 160 }}>
                   <p className="text-xs text-muted-foreground">A etiqueta aparecerá aqui após impressão</p>
@@ -537,7 +566,7 @@ export default function Workstation() {
       )}
 
       {/* ── Labels list + preview ── */}
-      {recentLabels.length > 0 && (
+      {activeTab === 'normal' && recentLabels.length > 0 && (
         <div ref={labelsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 industrial-panel p-4">
             <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Etiquetas Geradas — Workflow {workstationId}</h3>
