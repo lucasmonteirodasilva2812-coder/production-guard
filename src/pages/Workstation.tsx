@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import { useAuthStore } from '@/store/authStore';
 import { useWorkstationNavStore } from '@/store/workstationNavStore';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
 import LabelPreview, { LabelData } from '@/components/LabelPreview';
 import MultipleLabelsModal from '@/components/MultipleLabelsModal';
-import { Printer, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search } from 'lucide-react';
+import { Printer, CheckCircle, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Label } from '@/types/production';
@@ -46,6 +46,32 @@ function openLabelPrintPopup(label: any, onAfterPrint?: () => void) {
       if (onAfterPrint) onAfterPrint();
     }, 200);
   };
+}
+
+// ── Parser Base - Part Number ──────────────────────────────────────────────
+async function parsePnBaseFile(file: File): Promise<{ partNumber: string; description: string; msl: string }[]> {
+  if (file.name.match(/\.csv$/i)) {
+    const text = await file.text();
+    return text.split('\n').filter(l => l.trim()).map(line => {
+      const cols = line.split(/[;,\t]/).map(c => c.trim());
+      return { partNumber: cols[0] || '', description: cols[1] || '', msl: cols[2] || '' };
+    }).filter(i => i.partNumber && i.partNumber.toLowerCase() !== 'part number');
+  }
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const XLSX = await import('xlsx');
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: 'array' });
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+  return rows
+    .filter(r => Array.isArray(r) && r.length >= 1)
+    .map(r => ({
+      partNumber: String(r[0] || '').trim(),
+      description: String(r[1] || '').trim(),
+      msl: String(r[2] || '').trim(),
+    }))
+    .filter(i => i.partNumber && i.partNumber.toLowerCase() !== 'part number');
 }
 
 // ── Workstation tabs ───────────────────────────────────────────────────────
@@ -92,6 +118,27 @@ export default function Workstation() {
   // Impressão múltipla
   const [showMultipleModal, setShowMultipleModal] = useState(false);
 
+  // Base - Part Number import
+  const [importingBase, setImportingBase] = useState(false);
+  const pnBaseFileRef = useRef<HTMLInputElement>(null);
+
+  const handleImportBase = async (file: File) => {
+    if (!file.name.match(/\.(xlsx|xls|csv)$/i)) { toast.error('Formato inválido. Use .xlsx, .xls ou .csv'); return; }
+    try {
+      setImportingBase(true);
+      const items = await parsePnBaseFile(file);
+      if (items.length === 0) { toast.error('Nenhum dado encontrado no arquivo'); return; }
+      const { api } = await import('@/lib/api');
+      await api.importPnBase(items);
+      toast.success(`Base atualizada: ${items.length} Part Numbers importados`);
+    } catch (e: any) {
+      toast.error(`Erro ao importar base: ${e.message}`);
+    } finally {
+      setImportingBase(false);
+      if (pnBaseFileRef.current) pnBaseFileRef.current.value = '';
+    }
+  };
+
   const currentWS = workstations.find(w => w.id === workstationId);
   const selectedShipmentData = shipments.find(s => s.id === selectedShipment);
   const shipmentPNs = partNumbers.filter(pn => pn.shipmentId === selectedShipment);
@@ -128,11 +175,12 @@ export default function Workstation() {
   }, [selectedPN, partNumbers]);
 
   // ── Normal label print ────────────────────────────────────────────────────
-  const handlePrint = () => {
+  const handlePrint = (mslOverride?: string, descOverride?: string | null) => {
     if (!selectedPN || !selected) { toast.error('Selecione um Part Number'); return; }
     const qty = parseInt(printQty);
     if (isNaN(qty) || qty <= 0) { toast.error('Quantidade inválida'); return; }
     const excess = qty - available;
+    const mslVal = mslOverride !== undefined ? mslOverride : msl;
     createReservation.mutate(
       { partNumberId: selectedPN, workstationId, quantity: qty },
       {
@@ -141,7 +189,8 @@ export default function Workstation() {
             {
               partNumberId: selectedPN, reservationId: reservation.id,
               workstationId, printedBy: user?.name || 'Operador',
-              msl: msl || undefined, expiryDate: expiryDate || undefined, labelType: 'normal',
+              msl: mslVal || undefined, expiryDate: expiryDate || undefined, labelType: 'normal',
+              description: descOverride || undefined,
             },
             {
               onSuccess: (label) => {
@@ -163,6 +212,22 @@ export default function Workstation() {
         onError: (e: any) => toast.error(`Erro ao criar reserva: ${e.message}`),
       }
     );
+  };
+
+  const handleLookupAndPrint = async () => {
+    let mslVal: string | undefined;
+    let descVal: string | null = null;
+    if (pnInput) {
+      try {
+        const { api } = await import('@/lib/api');
+        const base = await api.lookupPnBase(pnInput);
+        if (base.msl) { mslVal = base.msl; setMsl(base.msl); }
+        if (base.description) descVal = base.description;
+      } catch {
+        // PN não cadastrado na base — prossegue com dados da remessa
+      }
+    }
+    handlePrint(mslVal, descVal);
   };
 
   // ── Box label print (web) ────────────────────────────────────────────────
@@ -210,6 +275,7 @@ export default function Workstation() {
     );
 
     return (
+      <>
       <div className="space-y-4">
         <div>
           <h1 className="text-2xl font-bold">Workflow {workstationId}</h1>
@@ -269,6 +335,18 @@ export default function Workstation() {
           </table>
         </div>
       </div>
+
+      {/* Floating: importar base */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <input ref={pnBaseFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) handleImportBase(f); }} />
+        <Button variant="outline" size="sm" className="shadow-lg gap-2 bg-background"
+          disabled={importingBase} onClick={() => pnBaseFileRef.current?.click()}>
+          <Database className="w-4 h-4" />
+          {importingBase ? 'Importando...' : 'Importar Base Atualizada'}
+        </Button>
+      </div>
+      </>
     );
   }
 
@@ -337,7 +415,7 @@ export default function Workstation() {
                     onKeyDown={e => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
-                        handlePrint();
+                        handleLookupAndPrint();
                         setPrintQty('');
                         const pnInputEl = document.getElementById('pn-input');
                         if (pnInputEl) (pnInputEl as HTMLInputElement).focus();
@@ -374,7 +452,7 @@ export default function Workstation() {
 
 
               <div className="flex gap-2">
-                <Button onClick={handlePrint} disabled={createLabel.isPending || createReservation.isPending}>
+                <Button onClick={() => handleLookupAndPrint()} disabled={createLabel.isPending || createReservation.isPending}>
                   <Printer className="w-4 h-4 mr-1" />Imprimir
                 </Button>
                 {selected && (
@@ -579,6 +657,17 @@ export default function Workstation() {
           </div>
         </div>
       )}
+
+      {/* Floating: importar base */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <input ref={pnBaseFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) handleImportBase(f); }} />
+        <Button variant="outline" size="sm" className="shadow-lg gap-2 bg-background"
+          disabled={importingBase} onClick={() => pnBaseFileRef.current?.click()}>
+          <Database className="w-4 h-4" />
+          {importingBase ? 'Importando...' : 'Importar Base Atualizada'}
+        </Button>
+      </div>
     </div>
   );
 }

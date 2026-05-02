@@ -125,6 +125,13 @@ db.exec(`
     checked_at TEXT NOT NULL,
     checked_by TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS pn_base (
+    part_number TEXT PRIMARY KEY,
+    description TEXT NOT NULL DEFAULT '',
+    msl TEXT,
+    updated_at TEXT NOT NULL
+  );
 `);
 
 // ── Migrations (safe column additions for existing DBs) ───────────────────────

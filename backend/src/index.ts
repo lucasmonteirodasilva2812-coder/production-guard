@@ -11,6 +11,7 @@ import reservationsRouter from './routes/reservations';
 import labelsRouter from './routes/labels';
 import workstationsRouter from './routes/workstations';
 import divergencesRouter from './routes/divergences';
+import pnBaseRouter from './routes/pnBase';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -87,6 +88,7 @@ app.use('/api/reservations', reservationsRouter);
 app.use('/api/labels', labelsRouter);
 app.use('/api/workstations', workstationsRouter);
 app.use('/api/divergences', divergencesRouter);
+app.use('/api/pn-base', pnBaseRouter);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, timestamp: new Date().toISOString() }));
 

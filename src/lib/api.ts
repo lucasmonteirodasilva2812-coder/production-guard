@@ -85,6 +85,12 @@ export const api = {
   getDivergences: () => request<any[]>('/divergences'),
   finalizePartNumber: (id: number) => request<any>(`/divergences/finalize/${id}`, { method: 'POST' }),
 
+  // Base - Part Number
+  getPnBase: () => request<any[]>('/pn-base'),
+  lookupPnBase: (partNumber: string) => request<any>(`/pn-base/lookup/${encodeURIComponent(partNumber)}`),
+  importPnBase: (items: { partNumber: string; description: string; msl: string }[]) =>
+    request<any>('/pn-base/import', { method: 'POST', body: JSON.stringify({ items }) }),
+
   // SSE URL helper
   getSseUrl: (workstationId?: number) => {
     const base = getBaseUrl();

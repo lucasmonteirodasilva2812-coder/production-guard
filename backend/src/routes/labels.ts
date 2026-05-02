@@ -22,7 +22,7 @@ router.get('/', (_req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { partNumberId, reservationId, workstationId, printedBy, msl, expiryDate, labelType = 'normal' } = req.body as {
+    const { partNumberId, reservationId, workstationId, printedBy, msl, expiryDate, labelType = 'normal', description: descriptionOverride } = req.body as {
       partNumberId: string;
       reservationId: string;
       workstationId: number;
@@ -30,6 +30,7 @@ router.post('/', async (req, res) => {
       msl?: string;
       expiryDate?: string;
       labelType?: string;
+      description?: string;
     };
 
     if (!partNumberId || !reservationId || !workstationId || !printedBy) {
@@ -63,7 +64,7 @@ router.post('/', async (req, res) => {
       INSERT INTO labels (id, label_seq_id, composite_id, part_number_id, part_number, description, quantity,
         workstation_id, printed_at, printed_by, zpl_command, qr_validated, print_job_id, msl, expiry_date, label_type)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
-    `).run(labelId, seqId, compositeId, partNumberId, pn.part_number, pn.description, qty,
+    `).run(labelId, seqId, compositeId, partNumberId, pn.part_number, descriptionOverride || pn.description, qty,
       workstationId, printedAt, printedBy, zpl, jobId, msl || null, expiryDate || null, labelType);
 
     // Em ambiente cloud, não imprime — retorna ZPL para download
