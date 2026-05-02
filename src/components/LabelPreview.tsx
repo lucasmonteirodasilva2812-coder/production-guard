@@ -89,13 +89,13 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
       <div style={{
         height: '7mm', flexShrink: 0,
         borderBottom: `1.5px solid ${BO}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 8px', background: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 8px', background: '#fff', position: 'relative',
       }}>
         <div style={{ flex: 1, textAlign: 'center', fontWeight: 900, fontSize: 9, color: '#222', letterSpacing: 1, textTransform: 'uppercase' }}>
           ETIQUETA DE IDENTIFICAÇÃO
         </div>
-        <div style={{ fontSize: 8.5, flexShrink: 0 }}>
+        <div style={{ fontSize: 8.5, position: 'absolute', right: 8 }}>
           <span style={{ fontWeight: 400, color: '#555' }}>grupo</span>
           <span style={{ fontWeight: 900, color: '#111', fontFamily: 'Arial Black, Arial, sans-serif' }}>Multilaser</span>
         </div>
@@ -121,24 +121,23 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
             <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
               <ClipboardList size={10} color='#444' style={{ flexShrink: 0 }} />
               <div style={{ overflow: 'hidden', minWidth: 0 }}>
-                <div style={{ fontSize: 5.5, color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Processo</div>
-                <div style={{ fontSize: 7, fontWeight: 900, color: '#111', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label.shipmentName || '-'}</div>
+                <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Processo</div>
+                <div style={{ fontSize: 8, fontWeight: 900, color: '#111', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label.shipmentName || '-'}</div>
               </div>
             </div>
             {/* DATA VENC */}
             <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
               <Calendar size={10} color='#444' style={{ flexShrink: 0 }} />
               <div style={{ overflow: 'hidden', minWidth: 0 }}>
-                <div style={{ fontSize: 5.5, color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Data Venc.</div>
-                <div style={{ fontSize: 7, fontWeight: 700, color: '#333', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label.expiryDate ? formatDate(label.expiryDate) : '-'}</div>
+                <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Data Venc.</div>
+                <div style={{ fontSize: 8, fontWeight: 800, color: '#333', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label.expiryDate ? formatDate(label.expiryDate) : '-'}</div>
               </div>
             </div>
             {/* MSL */}
             <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
-              <Package size={10} color='#444' style={{ flexShrink: 0 }} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 5.5, color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>MSL</div>
-                <div style={{ fontSize: 8, fontWeight: 900, color: '#333', lineHeight: 1.1 }}>{label.msl || '-'}</div>
+              <div style={{ minWidth: 0, textAlign: 'center' }}>
+                <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>MSL</div>
+                <div style={{ fontSize: 9, fontWeight: 900, color: '#111', lineHeight: 1.1 }}>{label.msl || '-'}</div>
               </div>
             </div>
           </div>
@@ -162,7 +161,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
             }}>
               {label.partNumber}
             </div>
-            <div style={{ borderTop: `1px solid ${BB}`, marginTop: 1, paddingTop: 1, fontSize: 7, color: '#333', fontWeight: 500, lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'break-word', textAlign: 'center', width: '100%' }}>
+            <div style={{ borderTop: `1px solid ${BB}`, marginTop: 1, paddingTop: 1, fontSize: 8, color: '#222', fontWeight: 700, lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'break-word', textAlign: 'center', width: '100%' }}>
               {label.description}
             </div>
           </div>
