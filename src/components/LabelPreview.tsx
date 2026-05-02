@@ -69,14 +69,13 @@ function QRImg({ value, size = 72, onLoad }: { value: string; size?: number; onL
 }
 
 function IndustrialLabelModelo1({ label }: { label: LabelData }) {
-  const DARK_BLUE = '#1a3560';
-  const LIGHT_BLUE_BG = '#eef4ff';
-  const BORDER = '#c8d8ee';
+  const BLACK = '#000';
+  const LIGHT_BG = '#f5f5f5';
 
   return (
     <div style={{
       width: '100mm', height: '50mm',
-      border: `1.5px solid ${DARK_BLUE}`,
+      border: '2px solid #000',
       background: '#fff', color: '#111',
       fontFamily: 'Arial, Arial Black, sans-serif',
       boxSizing: 'border-box', padding: 0,
@@ -87,21 +86,24 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
       {/* ── HEADER ── */}
       <div style={{
         height: '10mm', flexShrink: 0,
-        borderBottom: `1.5px solid ${DARK_BLUE}`,
+        borderBottom: '2px solid #000',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 8px 0 6px', background: '#fff',
       }}>
-        {/* Shield logo */}
-        <div style={{
-          width: 26, height: 26, flexShrink: 0,
-          background: DARK_BLUE,
-          clipPath: 'polygon(50% 0%, 100% 18%, 100% 58%, 50% 100%, 0% 58%, 0% 18%)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
-        }}>
-          <span style={{ color: '#fff', fontSize: 11, fontWeight: 900, position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>✦</span>
-        </div>
+        {/* Multilaser M logo */}
+        <svg width="26" height="26" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
+          <rect width="100" height="100" rx="18" fill="#1565c0"/>
+          <path
+            d="M 12 80 L 12 38 Q 12 12 31 12 Q 50 12 50 38 Q 50 12 69 12 Q 88 12 88 38 L 88 80"
+            fill="none"
+            stroke="#000"
+            strokeWidth="18"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
         {/* Title */}
-        <div style={{ flex: 1, textAlign: 'center', fontWeight: 900, fontSize: 11, color: DARK_BLUE, letterSpacing: 1.5, textTransform: 'uppercase' }}>
+        <div style={{ flex: 1, textAlign: 'center', fontWeight: 900, fontSize: 11, color: BLACK, letterSpacing: 1.5, textTransform: 'uppercase' }}>
           ETIQUETA DE IDENTIFICAÇÃO
         </div>
         {/* Brand */}
@@ -112,75 +114,72 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
       </div>
 
       {/* ── BODY ── */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '21% 54% 25%', minHeight: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '22% 52% 26%', minHeight: 0, overflow: 'hidden' }}>
 
         {/* ── LEFT COLUMN ── */}
-        <div style={{ borderRight: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* QR label */}
-          <div style={{ background: DARK_BLUE, color: '#fff', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 1px', letterSpacing: 0.2, flexShrink: 0 }}>
-            ID; PARTNUMBER; QTD
+        <div style={{ borderRight: '1.5px solid #000', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '2px 1px' }}>
+          {/* QR box com label no topo */}
+          <div style={{ border: '1.5px solid #000', borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', marginBottom: 2 }}>
+            <div style={{ background: BLACK, color: '#fff', fontSize: 5, fontWeight: 700, textAlign: 'center', padding: '2px 1px', letterSpacing: 0.2, width: '100%', boxSizing: 'border-box' }}>
+              ID;PARTNUMBER;QTD
+            </div>
+            <div style={{ padding: '2px 0' }}>
+              <QRImg value={`${label.compositeId || label.labelSeqId};${label.partNumber};${label.quantity}`} size={60} />
+            </div>
           </div>
-          {/* QR code */}
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 0', flexShrink: 0 }}>
-            <QRImg value={`${label.compositeId || label.labelSeqId};${label.partNumber};${label.quantity}`} size={60} />
-          </div>
-          {/* Info boxes */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 2px 2px 2px', gap: 1.5 }}>
+          {/* Info boxes — centralizados */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 1.5, width: '100%' }}>
             {/* PROCESSO */}
-            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 2, padding: '1.5px 2px', display: 'flex', alignItems: 'center', gap: 2, background: '#fafbff' }}>
-              <ClipboardList size={10} color={DARK_BLUE} />
-              <div style={{ overflow: 'hidden', minWidth: 0 }}>
-                <div style={{ fontSize: 5, color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3, lineHeight: 1 }}>Processo</div>
-                <div style={{ fontSize: 7, fontWeight: 900, color: DARK_BLUE, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label.shipmentName || '-'}</div>
-              </div>
+            <div style={{ border: '1px solid #000', borderRadius: 2, padding: '2px 1px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fafafa' }}>
+              <ClipboardList size={9} color={BLACK} />
+              <div style={{ fontSize: 4.5, color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1, textAlign: 'center' }}>Processo</div>
+              <div style={{ fontSize: 6, fontWeight: 900, color: BLACK, lineHeight: 1.1, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', paddingLeft: 2, paddingRight: 2, boxSizing: 'border-box' }}>{label.shipmentName || '-'}</div>
             </div>
             {/* DATA VENC */}
-            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 2, padding: '1.5px 2px', display: 'flex', alignItems: 'center', gap: 2, background: '#fafbff' }}>
-              <Calendar size={10} color={DARK_BLUE} />
-              <div>
-                <div style={{ fontSize: 5, color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3, lineHeight: 1 }}>Data Venc.</div>
-                <div style={{ fontSize: 7, fontWeight: 700, color: '#333', lineHeight: 1.1 }}>{label.expiryDate ? formatDate(label.expiryDate) : '-'}</div>
-              </div>
+            <div style={{ border: '1px solid #000', borderRadius: 2, padding: '2px 1px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fafafa' }}>
+              <Calendar size={9} color={BLACK} />
+              <div style={{ fontSize: 4.5, color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1, textAlign: 'center' }}>Data Venc.</div>
+              <div style={{ fontSize: 6, fontWeight: 700, color: '#333', lineHeight: 1.1, textAlign: 'center' }}>{label.expiryDate ? formatDate(label.expiryDate) : '-'}</div>
             </div>
             {/* MSL */}
-            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 2, padding: '1.5px 2px', display: 'flex', alignItems: 'center', gap: 2, background: '#fafbff' }}>
-              <Package size={10} color={DARK_BLUE} />
-              <div>
-                <div style={{ fontSize: 5, color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3, lineHeight: 1 }}>MSL</div>
-                <div style={{ fontSize: 8, fontWeight: 900, color: '#333', lineHeight: 1.1 }}>{label.msl || '-'}</div>
-              </div>
+            <div style={{ border: '1px solid #000', borderRadius: 2, padding: '2px 1px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fafafa' }}>
+              <Package size={9} color={BLACK} />
+              <div style={{ fontSize: 4.5, color: '#555', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1, textAlign: 'center' }}>MSL</div>
+              <div style={{ fontSize: 7, fontWeight: 900, color: '#333', lineHeight: 1.1, textAlign: 'center' }}>{label.msl || '-'}</div>
             </div>
           </div>
         </div>
 
         {/* ── CENTER COLUMN ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', padding: '3px 6px 2px 6px', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3px 6px 2px 6px', overflow: 'hidden' }}>
           {/* Part Number */}
-          <div style={{ textAlign: 'center', marginBottom: 2 }}>
-            <div style={{ fontSize: 7, fontWeight: 700, color: DARK_BLUE, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Part Number:</div>
+          <div style={{ textAlign: 'center', width: '100%', marginBottom: 4 }}>
+            <div style={{ fontSize: 7, fontWeight: 700, color: BLACK, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Part Number:</div>
             <div style={{ fontWeight: 900, fontSize: label.partNumber.length > 16 ? 13 : label.partNumber.length > 12 ? 15 : 18, fontFamily: 'Arial Black, Arial, sans-serif', color: '#111', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {label.partNumber}
             </div>
-            <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 1, paddingTop: 1, fontSize: 7, color: '#555', fontWeight: 500, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ borderTop: '1px solid #ccc', marginTop: 1, paddingTop: 1, fontSize: 7, color: '#555', fontWeight: 500, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {label.description}
             </div>
           </div>
+          {/* Divisor */}
+          <div style={{ width: '85%', borderTop: '1.5px solid #000', marginBottom: 4 }} />
           {/* Quantidade */}
-          <div style={{ background: LIGHT_BLUE_BG, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '1px 4px', textAlign: 'center', marginBottom: 2 }}>
-            <div style={{ fontSize: 7, fontWeight: 700, color: DARK_BLUE, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Quantidade:</div>
+          <div style={{ background: LIGHT_BG, border: '1px solid #000', borderRadius: 3, padding: '1px 4px', textAlign: 'center', marginBottom: 2, width: '100%', boxSizing: 'border-box' }}>
+            <div style={{ fontSize: 7, fontWeight: 700, color: BLACK, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Quantidade:</div>
             <div style={{ fontWeight: 900, fontSize: 17, fontFamily: 'Arial Black, Arial, sans-serif', color: '#111', lineHeight: 1.1 }}>
               {label.quantity.toLocaleString('pt-BR')}
             </div>
           </div>
           {/* ID row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 'auto', borderTop: `1px solid ${BORDER}`, paddingTop: 1.5 }}>
-            <FileText size={9} color={DARK_BLUE} style={{ flexShrink: 0 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 'auto', borderTop: '1px solid #ccc', paddingTop: 1.5, width: '100%' }}>
+            <FileText size={9} color={BLACK} style={{ flexShrink: 0 }} />
             <span style={{ fontSize: 8, fontWeight: 900, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               ID: {label.compositeId || label.labelSeqId}
             </span>
           </div>
           {/* User + Date row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${BORDER}`, paddingTop: 1.5, marginTop: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #ccc', paddingTop: 1.5, marginTop: 1, width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, flex: 1 }}>
               <User size={9} color='#555' style={{ flexShrink: 0 }} />
               <span style={{ fontSize: 7, fontWeight: 700, color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label.printedBy}</span>
@@ -193,23 +192,27 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
         </div>
 
         {/* ── RIGHT COLUMN ── */}
-        <div style={{ borderLeft: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ borderLeft: '1.5px solid #000', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* PART NUMBER QR */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ background: DARK_BLUE, color: '#fff', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 2px', letterSpacing: 0.3, flexShrink: 0 }}>
-              PART NUMBER
-            </div>
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-              <QRImg value={label.partNumber} size={65} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2px 2px 1px 2px' }}>
+            <div style={{ border: '1.5px solid #000', borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
+              <div style={{ background: BLACK, color: '#fff', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px', width: '100%', boxSizing: 'border-box', letterSpacing: 0.3 }}>
+                PART NUMBER
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 0' }}>
+                <QRImg value={label.partNumber} size={50} />
+              </div>
             </div>
           </div>
           {/* QUANTIDADE QR */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderTop: `1px solid ${BORDER}` }}>
-            <div style={{ background: DARK_BLUE, color: '#fff', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 2px', letterSpacing: 0.3, flexShrink: 0 }}>
-              QUANTIDADE
-            </div>
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-              <QRImg value={String(label.quantity)} size={65} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1px 2px 2px 2px', borderTop: '1.5px solid #000' }}>
+            <div style={{ border: '1.5px solid #000', borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
+              <div style={{ background: BLACK, color: '#fff', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px', width: '100%', boxSizing: 'border-box', letterSpacing: 0.3 }}>
+                QUANTIDADE
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 0' }}>
+                <QRImg value={String(label.quantity)} size={50} />
+              </div>
             </div>
           </div>
         </div>
