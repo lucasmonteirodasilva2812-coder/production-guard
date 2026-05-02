@@ -143,7 +143,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           }}
         >
           <div style={{ marginTop: 2, marginBottom: 0 }}>
-            <QRImg value={`${label.compositeId || label.labelSeqId},${label.partNumber},${label.quantity}`} size={50} />
+            <QRImg value={`${label.compositeId || label.labelSeqId};${label.partNumber};${label.quantity}`} size={60} />
           </div>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, justifyContent: 'flex-end', flex: 1 }}>
             <div style={{ border: '1px solid #111', borderRadius: 2, padding: '1.5px 3px', width: '80%', margin: '0 auto', background: '#f9f9f9', marginBottom: 2, marginTop: 'auto', fontSize: 7.5, lineHeight: 1.1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -226,14 +226,16 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           }}
         >
           {/* QRs empilhados */}
-          <div style={{ marginBottom: 4 }}>
-            <QRImg value={label.partNumber} size={44} />
+          <div style={{ marginBottom: 14 }}>
+            <QRImg value={label.partNumber} size={50} />
           </div>
-          <div style={{ marginBottom: 4 }}>
-            <QRImg value={String(label.quantity)} size={44} />
+          <div style={{ marginBottom: 0 }}>
+            <QRImg value={String(label.quantity)} size={50} />
           </div>
-          {/* Processo: logo abaixo dos QRs */}
-          <div style={{ width: 54, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 4px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+          {/* Espaço flexível para alinhar Processo na altura do MSL */}
+          <div style={{ flex: 1 }} />
+          {/* Processo: alinhado ao fundo (mesma altura que MSL na coluna esquerda) */}
+          <div style={{ width: 58, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 4px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
             <span style={{ width: '100%', textAlign: 'center', display: 'block' }}>Processo:</span>
             {label.shipmentName && (
               <div style={{ fontSize: 6.5, fontWeight: 700, wordBreak: 'break-all', lineHeight: 1.1, padding: '1px 2px 0 2px', maxWidth: '100%', overflow: 'hidden', textAlign: 'center' }}>
