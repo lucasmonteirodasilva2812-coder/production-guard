@@ -155,6 +155,17 @@ if (userCount === 0) {
 // Garantir que o admin nunca fique bloqueado
 db.prepare('UPDATE users SET is_blocked = 0 WHERE username = ? AND role = ?').run('admin', 'admin');
 
+// Garantir usuário Lucsilva sempre existe como admin
+const lucsilvaHash = crypto.createHash('sha256').update('Coletor123').digest('hex');
+const lucsilvaExists = (db.prepare('SELECT COUNT(*) as c FROM users WHERE username = ?').get('Lucsilva') as { c: number }).c;
+if (lucsilvaExists === 0) {
+  db.prepare('INSERT INTO users (id, username, password, name, role, is_blocked, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)')
+    .run(crypto.randomUUID(), 'Lucsilva', lucsilvaHash, 'Lucas Monteiro', 'admin', new Date().toISOString());
+} else {
+  db.prepare('UPDATE users SET password = ?, name = ?, role = ?, is_blocked = 0 WHERE username = ?')
+    .run(lucsilvaHash, 'Lucas Monteiro', 'admin', 'Lucsilva');
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 export function nextLabelSeqId(): string {
   const row = db.prepare('UPDATE label_sequence SET last_value = last_value + 1 WHERE id = 1 RETURNING last_value').get() as { last_value: number };
