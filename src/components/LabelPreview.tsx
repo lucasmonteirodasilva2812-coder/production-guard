@@ -201,24 +201,24 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
         {/* ── RIGHT COLUMN ── */}
         <div style={{ borderLeft: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* PART NUMBER QR */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3px 3px 1px 3px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', padding: '3px 0px 1px 2px' }}>
             <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
               <div style={{ background: '#fff', color: '#000', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 6px', letterSpacing: 0.3, whiteSpace: 'nowrap', borderBottom: '1px solid #ccc' }}>
                 PART NUMBER
               </div>
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2px 3px' }}>
-                <QRImg value={label.partNumber} size={50} />
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2px 2px 2px 2px' }}>
+                <QRImg value={label.partNumber} size={52} />
               </div>
             </div>
           </div>
           {/* QUANTIDADE QR */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1px 3px 3px 3px', borderTop: `1px solid ${BI}` }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', padding: '1px 0px 3px 2px', borderTop: `1px solid ${BI}` }}>
             <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
               <div style={{ background: '#fff', color: '#000', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 6px', letterSpacing: 0.3, whiteSpace: 'nowrap', borderBottom: '1px solid #ccc' }}>
                 QUANTIDADE
               </div>
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2px 3px' }}>
-                <QRImg value={String(label.quantity)} size={50} />
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2px 2px 2px 2px' }}>
+                <QRImg value={String(label.quantity)} size={52} />
               </div>
             </div>
           </div>

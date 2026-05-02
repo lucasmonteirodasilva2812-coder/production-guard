@@ -551,7 +551,13 @@ export default function Workstation() {
                   <span className="font-mono shrink-0">{label.quantity?.toLocaleString('pt-BR')} un</span>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {label.qrValidated && <QrCode className="w-3 h-3 text-success" />}
-                    <button onClick={e => { e.stopPropagation(); reprintLabel.mutate({ id: label.id, printerIp: '' }); toast.info(`Reimpressão: ${label.labelSeqId}`); }}
+                    <button onClick={e => {
+                        e.stopPropagation();
+                        setLastLabel(label);
+                        openLabelPrintPopup({ ...label, shipmentName });
+                        reprintLabel.mutate({ id: label.id, printerIp: '' });
+                        toast.info(`Reimprimindo: ${label.labelSeqId || label.compositeId}`);
+                      }}
                       className="text-muted-foreground hover:text-foreground" title="Reimprimir">
                       <RotateCcw className="w-3 h-3" />
                     </button>
