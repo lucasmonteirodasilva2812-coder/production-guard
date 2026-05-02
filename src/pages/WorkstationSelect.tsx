@@ -52,8 +52,8 @@ export default function WorkstationSelect({ onSelected, onBack }: Props) {
             <Factory className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-lg font-bold">Selecionar Bancada</h1>
-            <p className="text-xs text-muted-foreground">Qual bancada você está operando?</p>
+            <h1 className="text-lg font-bold">Selecionar Workflow</h1>
+            <p className="text-xs text-muted-foreground">Qual workflow você está operando?</p>
           </div>
         </div>
 
@@ -64,7 +64,7 @@ export default function WorkstationSelect({ onSelected, onBack }: Props) {
           )}
           {!isLoading && workstations.length === 0 && !showCreate && (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Nenhuma bancada registrada ainda.
+              Nenhum workflow registrado ainda.
             </p>
           )}
           {workstations.map(ws => (
@@ -96,7 +96,7 @@ export default function WorkstationSelect({ onSelected, onBack }: Props) {
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full justify-center py-1"
             >
               <Plus className="w-3.5 h-3.5" />
-              Registrar nova bancada
+              Registrar novo workflow
             </button>
           ) : (
             <div className="flex gap-2">
@@ -104,7 +104,7 @@ export default function WorkstationSelect({ onSelected, onBack }: Props) {
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleCreate()}
-                placeholder="Nome da bancada (ex: Bancada 1)"
+                placeholder="Nome do workflow (ex: Workflow, Conferência)"
                 className="flex-1"
                 autoFocus
               />

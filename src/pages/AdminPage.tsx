@@ -22,7 +22,7 @@ export default function AdminPage() {
   const tabs: { id: AdminTab; label: string; icon: React.ElementType }[] = [
     { id: 'users', label: 'Usuários', icon: Users },
     { id: 'network', label: 'Rede & Clientes', icon: Network },
-    { id: 'workstations', label: 'Bancadas', icon: Monitor },
+    { id: 'workstations', label: 'Workflows', icon: Monitor },
     { id: 'backup', label: 'Backup & Exportar', icon: HardDrive },
   ];
 
@@ -222,7 +222,7 @@ function NetworkTab() {
                 <div className="flex-1">
                   <p className="text-sm font-medium">{c.userName}</p>
                   <p className="text-xs text-muted-foreground capitalize">
-                    {c.userRole}{c.workstationId ? ` — Bancada ${c.workstationId}` : ''}
+                    {c.userRole}{c.workstationId ? ` — Workflow ${c.workstationId}` : ''}
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground">
@@ -245,13 +245,13 @@ function WorkstationsTab() {
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">
-        As bancadas aparecem automaticamente quando os operadores se conectam. O status é atualizado em tempo real via SSE.
+        Os workflows aparecem automaticamente quando os operadores se conectam. O status é atualizado em tempo real via SSE.
       </p>
       <div className="industrial-panel overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="p-3 text-xs text-muted-foreground font-medium text-left">Bancada</th>
+              <th className="p-3 text-xs text-muted-foreground font-medium text-left">Workflow</th>
               <th className="p-3 text-xs text-muted-foreground font-medium text-left">Status</th>
               <th className="p-3 text-xs text-muted-foreground font-medium text-center">Remover</th>
             </tr>
@@ -260,7 +260,7 @@ function WorkstationsTab() {
             {workstations.length === 0 && (
               <tr>
                 <td colSpan={3} className="p-8 text-center text-sm text-muted-foreground">
-                  Nenhuma bancada registrada ainda
+                  Nenhum workflow registrado ainda
                 </td>
               </tr>
             )}

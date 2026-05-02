@@ -14,6 +14,16 @@ router.post('/login', (req, res) => {
   if (!user) return res.status(401).json({ error: 'Usuário ou senha inválidos' });
   if (user.is_blocked) return res.status(403).json({ error: 'Usuário bloqueado. Contate o administrador.' });
 
+  // Verificar se já existe sessão ativa para este usuário (exceto admin)
+  if (user.role !== 'admin') {
+    const activeSession = db.prepare(
+      'SELECT id FROM sessions WHERE user_id = ? AND expires_at > ?'
+    ).get(user.id, new Date().toISOString()) as any;
+    if (activeSession) {
+      return res.status(409).json({ error: 'Login aberto em outro computador!' });
+    }
+  }
+
   const token = uuid();
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
   db.prepare('INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)')

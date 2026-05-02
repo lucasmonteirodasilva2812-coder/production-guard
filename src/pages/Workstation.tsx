@@ -197,7 +197,7 @@ export default function Workstation() {
     if (!supervisorPassword.trim()) { toast.error('Informe a senha do supervisor'); return; }
     if (!selectedPN) return;
     authorizeSurplus.mutate(
-      { partNumberId: selectedPN, supervisorPassword },
+      { id: selectedPN, extraQty: 0 },
       {
         onSuccess: () => {
           toast.success('Excedente autorizado pelo supervisor');
@@ -231,8 +231,8 @@ export default function Workstation() {
     return (
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-bold">Bancada {workstationId}</h1>
-          <p className="text-sm text-muted-foreground">Selecione uma remessa para começar</p>
+          <h1 className="text-2xl font-bold">Workflow {workstationId}</h1>
+          <p className="text-sm text-muted-foreground">Selecione um workflow para começar</p>
         </div>
 
         <div className="relative">
@@ -567,7 +567,7 @@ export default function Workstation() {
       {recentLabels.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 industrial-panel p-4">
-            <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Etiquetas Geradas — Bancada {workstationId}</h3>
+            <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Etiquetas Geradas — Workflow {workstationId}</h3>
             <div className="space-y-1 max-h-60 overflow-y-auto">
               {recentLabels.map(label => (
                 <div key={label.id}
