@@ -39,6 +39,21 @@ export default function App() {
     useAuthStore.getState().setMode(null);
   }, []);
 
+  // Detecta sessão invalidada por novo login em outro computador
+  useEffect(() => {
+    const handler = () => {
+      setScreen('login');
+      // Pequeno delay para o toast aparecer após a tela de login renderizar
+      setTimeout(() => {
+        import('sonner').then(({ toast }) => {
+          toast.warning('Sua sessão foi encerrada — login aberto em outro computador.');
+        });
+      }, 300);
+    };
+    window.addEventListener('session-expired', handler);
+    return () => window.removeEventListener('session-expired', handler);
+  }, []);
+
   if (screen === 'splash') return <SplashScreen onDone={() => setScreen('login')} />;
   if (screen === 'login') return (
     <QueryClientProvider client={queryClient}>

@@ -18,6 +18,12 @@ async function request<T>(
   const res = await fetch(url, { ...options, headers });
   if (!res.ok) {
     const text = await res.text();
+    // Se sessão foi invalidada por novo login em outro computador, deslogar e notificar
+    if (res.status === 401 && useAuthStore.getState().token) {
+      useAuthStore.getState().logout();
+      // Dispara evento para o App redirecionar ao login com mensagem
+      window.dispatchEvent(new CustomEvent('session-expired', { detail: { reason: 'outro-computador' } }));
+    }
     throw new Error(text || `Erro HTTP ${res.status}`);
   }
   return res.json();

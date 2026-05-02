@@ -14,14 +14,10 @@ router.post('/login', (req, res) => {
   if (!user) return res.status(401).json({ error: 'Usuário ou senha inválidos' });
   if (user.is_blocked) return res.status(403).json({ error: 'Usuário bloqueado. Contate o administrador.' });
 
-  // Verificar se já existe sessão ativa para este usuário (exceto admin)
+  // Sessão única por usuário: remove sessões anteriores antes de criar nova
+  // (o computador anterior será desconectado na próxima requisição)
   if (user.role !== 'admin') {
-    const activeSession = db.prepare(
-      'SELECT id FROM sessions WHERE user_id = ? AND expires_at > ?'
-    ).get(user.id, new Date().toISOString()) as any;
-    if (activeSession) {
-      return res.status(409).json({ error: 'Login aberto em outro computador!' });
-    }
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(user.id);
   }
 
   const token = uuid();
