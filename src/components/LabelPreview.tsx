@@ -145,7 +145,9 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
 
         {/* ── CENTER COLUMN — PN no topo (alinhado com QR), Qtd embaixo (alinhada com info boxes) ── */}
         <div style={{ display: 'flex', flexDirection: 'column', padding: '3px 6px 2px 6px', overflow: 'hidden' }}>
-          {/* Part Number — topo, centralizado, texto adapta ao tamanho */}
+          {/* Espaçador superior — empurra bloco PN+Qtd para o centro */}
+          <div style={{ flex: 1 }} />
+          {/* Part Number + Quantidade — bloco central */}
           <div style={{ textAlign: 'center', width: '100%', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ fontSize: 7, fontWeight: 700, color: '#222', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Part Number:</div>
             <div style={{
@@ -165,17 +167,17 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
               {label.description}
             </div>
           </div>
-          {/* Espaçador que empurra Quantidade para baixo */}
-          <div style={{ flex: 1 }} />
           {/* Divisor */}
-          <div style={{ width: '85%', alignSelf: 'center', borderTop: `1px solid ${BI}`, marginBottom: 3 }} />
-          {/* Quantidade — mesma altura que info boxes (Processo/Data/MSL) */}
-          <div style={{ background: LIGHT_BG, border: `1px solid ${BB}`, borderRadius: 3, padding: '4px 4px', textAlign: 'center', marginBottom: 2, width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
+          <div style={{ width: '85%', alignSelf: 'center', borderTop: `1px solid ${BI}`, margin: '4px 0' }} />
+          {/* Quantidade */}
+          <div style={{ background: LIGHT_BG, border: `1px solid ${BB}`, borderRadius: 3, padding: '4px 4px', textAlign: 'center', width: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
             <div style={{ fontSize: 7, fontWeight: 700, color: '#222', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Quantidade:</div>
             <div style={{ fontWeight: 900, fontSize: 17, fontFamily: 'Arial Black, Arial, sans-serif', color: '#111', lineHeight: 1.1 }}>
               {label.quantity.toLocaleString('pt-BR')}
             </div>
           </div>
+          {/* Espaçador inferior */}
+          <div style={{ flex: 1 }} />
           {/* ID row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 3, borderTop: `1px solid ${BB}`, paddingTop: 1.5, width: '100%', flexShrink: 0 }}>
             <FileText size={9} color='#333' style={{ flexShrink: 0 }} />
