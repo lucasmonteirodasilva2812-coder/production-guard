@@ -17,6 +17,7 @@ function formatDateTime(dateStr?: string) {
 
 
 import React from 'react';
+import { ClipboardList, Calendar, Package, FileText, User } from 'lucide-react';
 
 
 // Função para formatar data dd/mm/aaaa (corrigida, topo do arquivo)
@@ -68,187 +69,155 @@ function QRImg({ value, size = 72, onLoad }: { value: string; size?: number; onL
 }
 
 function IndustrialLabelModelo1({ label }: { label: LabelData }) {
-  // Layout industrial 100x50mm, grid 3 colunas, tudo dentro da área
+  const DARK_BLUE = '#1a3560';
+  const LIGHT_BLUE_BG = '#eef4ff';
+  const BORDER = '#c8d8ee';
+
   return (
-    <div
-      style={{
-        width: '100mm',
-        height: '50mm',
-        border: '1.2px solid #111',
-        background: '#fff',
-        color: '#111',
-        fontFamily: 'Arial, Arial Black, sans-serif',
-        boxSizing: 'border-box',
-        padding: 0,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        userSelect: 'none',
-      }}
-    >
-      {/* Header refinado centralizado, sem sobreposição */}
-      <div
-        style={{
-          height: '8mm',
-          minHeight: 24,
-          maxHeight: 32,
-          borderBottom: '1px solid #111',
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#fff',
-          overflow: 'hidden',
-          boxSizing: 'border-box',
-          padding: '0 8px 0 10px',
-          gap: 0,
-          position: 'relative',
-        }}
-      >
-        <div style={{ position: 'absolute', left: 10, top: 0, bottom: 0, display: 'flex', alignItems: 'center', height: '100%' }} />
-        <div style={{ flex: 1, textAlign: 'center', fontWeight: 700, fontSize: 11, letterSpacing: 0.5, lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
-          <span style={{ display: 'inline-block', verticalAlign: 'middle' }}>ETIQUETA DE IDENTIFICAÇÃO</span>
+    <div style={{
+      width: '100mm', height: '50mm',
+      border: `1.5px solid ${DARK_BLUE}`,
+      background: '#fff', color: '#111',
+      fontFamily: 'Arial, Arial Black, sans-serif',
+      boxSizing: 'border-box', padding: 0,
+      overflow: 'hidden', display: 'flex', flexDirection: 'column',
+      userSelect: 'none',
+    }}>
+
+      {/* ── HEADER ── */}
+      <div style={{
+        height: '10mm', flexShrink: 0,
+        borderBottom: `1.5px solid ${DARK_BLUE}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 8px 0 6px', background: '#fff',
+      }}>
+        {/* Shield logo */}
+        <div style={{
+          width: 26, height: 26, flexShrink: 0,
+          background: DARK_BLUE,
+          clipPath: 'polygon(50% 0%, 100% 18%, 100% 58%, 50% 100%, 0% 58%, 0% 18%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+        }}>
+          <span style={{ color: '#fff', fontSize: 11, fontWeight: 900, position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>✦</span>
         </div>
-        <div style={{ position: 'absolute', right: 8, top: 0, bottom: 0, display: 'flex', alignItems: 'center', height: '100%' }}>
-          <span style={{ fontWeight: 400, fontSize: 9, color: '#222', fontFamily: 'Arial, sans-serif', letterSpacing: 0.5, whiteSpace: 'nowrap', overflow: 'hidden', display: 'inline-block', verticalAlign: 'middle', maxWidth: 90 }}>
-            grupo<span style={{ fontWeight: 700, fontFamily: 'Arial Black, Arial, sans-serif', fontSize: 9 }}>Multilaser</span>
-          </span>
+        {/* Title */}
+        <div style={{ flex: 1, textAlign: 'center', fontWeight: 900, fontSize: 11, color: DARK_BLUE, letterSpacing: 1.5, textTransform: 'uppercase' }}>
+          ETIQUETA DE IDENTIFICAÇÃO
+        </div>
+        {/* Brand */}
+        <div style={{ fontSize: 9, flexShrink: 0 }}>
+          <span style={{ fontWeight: 400, color: '#333' }}>grupo</span>
+          <span style={{ fontWeight: 900, color: '#111', fontFamily: 'Arial Black, Arial, sans-serif' }}>Multilaser</span>
         </div>
       </div>
 
-      {/* Corpo principal - Grid 3 colunas */}
-      <div
-        style={{
-          flex: 1,
-          display: 'grid',
-          gridTemplateColumns: '18% 64% 18%',
-          height: 'calc(50mm - 8mm)',
-          minHeight: 0,
-          overflow: 'hidden',
-        }}
-      >
-        {/* Coluna esquerda QR + info */}
-        <div
-          style={{
-            borderRight: '1px solid #111',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '4mm 0 3mm 0',
-            height: '100%',
-            boxSizing: 'border-box',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ marginTop: 2, marginBottom: 0 }}>
+      {/* ── BODY ── */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '21% 54% 25%', minHeight: 0, overflow: 'hidden' }}>
+
+        {/* ── LEFT COLUMN ── */}
+        <div style={{ borderRight: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* QR label */}
+          <div style={{ background: DARK_BLUE, color: '#fff', fontSize: 5.5, fontWeight: 700, textAlign: 'center', padding: '2px 1px', letterSpacing: 0.2, flexShrink: 0 }}>
+            ID; PARTNUMBER; QTD
+          </div>
+          {/* QR code */}
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 0', flexShrink: 0 }}>
             <QRImg value={`${label.compositeId || label.labelSeqId};${label.partNumber};${label.quantity}`} size={60} />
           </div>
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, justifyContent: 'flex-end', flex: 1 }}>
-            <div style={{ border: '1px solid #111', borderRadius: 2, padding: '1.5px 3px', width: '80%', margin: '0 auto', background: '#f9f9f9', marginBottom: 2, marginTop: 'auto', fontSize: 7.5, lineHeight: 1.1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontWeight: 700 }}>Data Venc</span>
-              <span style={{ fontWeight: 700 }}>{label.expiryDate ? formatDate(label.expiryDate) : '-'}</span>
+          {/* Info boxes */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 2px 2px 2px', gap: 1.5 }}>
+            {/* PROCESSO */}
+            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 2, padding: '1.5px 2px', display: 'flex', alignItems: 'center', gap: 2, background: '#fafbff' }}>
+              <ClipboardList size={10} color={DARK_BLUE} />
+              <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                <div style={{ fontSize: 5, color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3, lineHeight: 1 }}>Processo</div>
+                <div style={{ fontSize: 7, fontWeight: 900, color: DARK_BLUE, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label.shipmentName || '-'}</div>
+              </div>
             </div>
-
-            <div style={{ border: '1px solid #111', borderRadius: 2, padding: '1.5px 3px', width: '80%', margin: '0 auto', background: '#f9f9f9', fontWeight: 700, textAlign: 'center', display: 'block', marginBottom: 2, fontSize: 7.5, lineHeight: 1.1 }}>MSL {label.msl || '-'}</div>
+            {/* DATA VENC */}
+            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 2, padding: '1.5px 2px', display: 'flex', alignItems: 'center', gap: 2, background: '#fafbff' }}>
+              <Calendar size={10} color={DARK_BLUE} />
+              <div>
+                <div style={{ fontSize: 5, color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3, lineHeight: 1 }}>Data Venc.</div>
+                <div style={{ fontSize: 7, fontWeight: 700, color: '#333', lineHeight: 1.1 }}>{label.expiryDate ? formatDate(label.expiryDate) : '-'}</div>
+              </div>
+            </div>
+            {/* MSL */}
+            <div style={{ border: `1px solid ${BORDER}`, borderRadius: 2, padding: '1.5px 2px', display: 'flex', alignItems: 'center', gap: 2, background: '#fafbff' }}>
+              <Package size={10} color={DARK_BLUE} />
+              <div>
+                <div style={{ fontSize: 5, color: '#777', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3, lineHeight: 1 }}>MSL</div>
+                <div style={{ fontSize: 8, fontWeight: 900, color: '#333', lineHeight: 1.1 }}>{label.msl || '-'}</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Coluna central */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '3mm 0 2mm 0',
-            background: '#f7f7f7',
-            height: '100%',
-            boxSizing: 'border-box',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Bloco superior: Part Number, código, descrição em célula Excel mais compacta e estreita */}
-          <div style={{ width: '85%', margin: '0 auto', textAlign: 'center', overflow: 'hidden', border: '1px solid #111', borderRadius: 3, background: '#fff', marginBottom: 2, padding: '2px 2px 1px 2px', boxSizing: 'border-box' }}>
-            <div style={{ fontWeight: 700, fontSize: 8, marginBottom: 1, lineHeight: 1 }}>Part Number:</div>
-            <div
-              style={{
-                fontWeight: 900,
-                fontSize: label.partNumber.length > 16 ? 12 : label.partNumber.length > 12 ? 13 : 15,
-                fontFamily: 'Arial Black, Arial, sans-serif',
-                letterSpacing: 0.5,
-                marginBottom: 1,
-                lineHeight: 1.1,
-                wordBreak: 'break-all',
-                overflow: 'hidden',
-                textAlign: 'center',
-                maxWidth: '100%',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                marginLeft: 'auto',
-                marginRight: 'auto',
-              }}
-              title={label.partNumber}
-            >
+        {/* ── CENTER COLUMN ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', padding: '3px 6px 2px 6px', overflow: 'hidden' }}>
+          {/* Part Number */}
+          <div style={{ textAlign: 'center', marginBottom: 2 }}>
+            <div style={{ fontSize: 7, fontWeight: 700, color: DARK_BLUE, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Part Number:</div>
+            <div style={{ fontWeight: 900, fontSize: label.partNumber.length > 16 ? 13 : label.partNumber.length > 12 ? 15 : 18, fontFamily: 'Arial Black, Arial, sans-serif', color: '#111', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {label.partNumber}
             </div>
-            <div style={{ fontWeight: 700, fontSize: label.description.length > 32 ? 7 : 8, marginBottom: 1, whiteSpace: 'pre-line', wordBreak: 'break-word', lineHeight: 1.1, maxHeight: 18, overflow: 'hidden', textAlign: 'center' }}>{label.description}</div>
+            <div style={{ borderTop: `1px solid ${BORDER}`, marginTop: 1, paddingTop: 1, fontSize: 7, color: '#555', fontWeight: 500, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {label.description}
+            </div>
           </div>
-          {/* Bloco meio: Quantidade em célula Excel mais compacta e estreita */}
-          <div style={{ width: '85%', margin: '0 auto', border: '1px solid #111', borderRadius: 3, background: '#eaeaea', marginBottom: 2, padding: '1px 0', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontWeight: 700, fontSize: 8, lineHeight: 1 }}>Quantidade:</div>
-            <div style={{ fontWeight: 900, fontSize: 15, fontFamily: 'Arial Black, Arial, sans-serif', lineHeight: 1 }}>{label.quantity}</div>
+          {/* Quantidade */}
+          <div style={{ background: LIGHT_BLUE_BG, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '1px 4px', textAlign: 'center', marginBottom: 2 }}>
+            <div style={{ fontSize: 7, fontWeight: 700, color: DARK_BLUE, textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 1 }}>Quantidade:</div>
+            <div style={{ fontWeight: 900, fontSize: 17, fontFamily: 'Arial Black, Arial, sans-serif', color: '#111', lineHeight: 1.1 }}>
+              {label.quantity.toLocaleString('pt-BR')}
+            </div>
           </div>
-          {/* ID igual usuário/data/hora */}
-          <div style={{ width: '100%', fontSize: 8, marginTop: 2, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderTop: '1px solid #eee', padding: '2px 4px 0 4px', background: 'transparent' }}>
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center', width: '100%' }}>ID: <span style={{ fontWeight: 900 }}>{label.compositeId || label.labelSeqId}</span></span>
+          {/* ID row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 'auto', borderTop: `1px solid ${BORDER}`, paddingTop: 1.5 }}>
+            <FileText size={9} color={DARK_BLUE} style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: 8, fontWeight: 900, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              ID: {label.compositeId || label.labelSeqId}
+            </span>
           </div>
-          {/* Usuário/data/hora na última linha, largura total, formatado pt-BR */}
-          <div style={{ width: '100%', fontSize: 8, marginTop: 0, wordBreak: 'break-word', lineHeight: 1.1, overflow: 'hidden', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderTop: '1px solid #eee', padding: '2px 4px 0 4px', background: 'transparent' }}>
-            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', textAlign: 'center', width: '100%' }}>{label.printedBy} - {formatDateTime(label.printedAt)}</span>
+          {/* User + Date row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${BORDER}`, paddingTop: 1.5, marginTop: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, flex: 1 }}>
+              <User size={9} color='#555' style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 7, fontWeight: 700, color: '#333', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label.printedBy}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0, marginLeft: 4 }}>
+              <Calendar size={9} color='#555' style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 7, fontWeight: 700, color: '#333', whiteSpace: 'nowrap' }}>{formatDateTime(label.printedAt)}</span>
+            </div>
           </div>
         </div>
 
-        {/* Coluna direita QRs e Processo em células Excel */}
-        <div
-          style={{
-            borderLeft: '1px solid #111',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            padding: '2mm 0 0 0',
-            height: '100%',
-            boxSizing: 'border-box',
-            overflow: 'hidden',
-            position: 'relative',
-          }}
-        >
-          {/* QRs empilhados */}
-          <div style={{ marginBottom: 14 }}>
-            <QRImg value={label.partNumber} size={50} />
+        {/* ── RIGHT COLUMN ── */}
+        <div style={{ borderLeft: `1px solid ${BORDER}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* PART NUMBER QR */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ background: DARK_BLUE, color: '#fff', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 2px', letterSpacing: 0.3, flexShrink: 0 }}>
+              PART NUMBER
+            </div>
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+              <QRImg value={label.partNumber} size={65} />
+            </div>
           </div>
-          <div style={{ marginBottom: 0 }}>
-            <QRImg value={String(label.quantity)} size={50} />
-          </div>
-          {/* Espaço flexível para alinhar Processo na altura do MSL */}
-          <div style={{ flex: 1 }} />
-          {/* Processo: alinhado ao fundo (mesma altura que MSL na coluna esquerda) */}
-          <div style={{ width: 58, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 4px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
-            <span style={{ width: '100%', textAlign: 'center', display: 'block' }}>Processo:</span>
-            {label.shipmentName && (
-              <div style={{ fontSize: 6.5, fontWeight: 700, wordBreak: 'break-all', lineHeight: 1.1, padding: '1px 2px 0 2px', maxWidth: '100%', overflow: 'hidden', textAlign: 'center' }}>
-                {label.shipmentName}
-              </div>
-            )}
+          {/* QUANTIDADE QR */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderTop: `1px solid ${BORDER}` }}>
+            <div style={{ background: DARK_BLUE, color: '#fff', fontSize: 6, fontWeight: 700, textAlign: 'center', padding: '2px 2px', letterSpacing: 0.3, flexShrink: 0 }}>
+              QUANTIDADE
+            </div>
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+              <QRImg value={String(label.quantity)} size={65} />
+            </div>
           </div>
         </div>
+
       </div>
     </div>
   );
 }
-
 function IndustrialLabelModelo2({ label }: { label: LabelData }) {
   // Layout 100x50mm (420x210px), máxima fidelidade macro Excel (caixa)
   // Layout caixa: coluna esquerda com QRs, centro com dados, Processo abaixo, estilo igual Modelo1
