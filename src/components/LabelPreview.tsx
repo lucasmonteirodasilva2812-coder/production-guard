@@ -50,6 +50,7 @@ export interface LabelData {
   msl?: string | null;
   expiryDate?: string | null;
   labelType?: 'normal' | 'caixa';
+  shipmentName?: string;
 }
 
 function QRImg({ value, size = 72, onLoad }: { value: string; size?: number; onLoad?: () => void }) {
@@ -60,7 +61,7 @@ function QRImg({ value, size = 72, onLoad }: { value: string; size?: number; onL
       width={size}
       height={size}
       alt="QR Code"
-      style={{ display: 'block', background: '#fff', border: '1px solid #000' }}
+      style={{ display: 'block', background: '#fff' }}
       onLoad={onLoad}
     />
   );
@@ -142,7 +143,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           }}
         >
           <div style={{ marginTop: 2, marginBottom: 0 }}>
-            <QRImg value={label.partNumber} size={63} />
+            <QRImg value={`${label.compositeId || label.labelSeqId},${label.partNumber},${label.quantity}`} size={50} />
           </div>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, justifyContent: 'flex-end', flex: 1 }}>
             <div style={{ border: '1px solid #111', borderRadius: 2, padding: '1.5px 3px', width: '80%', margin: '0 auto', background: '#f9f9f9', marginBottom: 2, marginTop: 'auto', fontSize: 7.5, lineHeight: 1.1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -224,20 +225,21 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
             position: 'relative',
           }}
         >
-          {/* QRs empilhados, bem para cima */}
-          <div style={{ marginTop: 0, marginBottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 54, height: 54, marginBottom: 8 }}>
-              <QRImg value={label.partNumber} size={54} />
-            </div>
-            <div style={{ border: '1px solid #111', borderRadius: 3, background: '#fff', padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 54, height: 54, marginBottom: 0 }}>
-              <QRImg value={String(label.quantity)} size={54} />
-            </div>
+          {/* QRs empilhados */}
+          <div style={{ marginBottom: 4 }}>
+            <QRImg value={label.partNumber} size={44} />
           </div>
-          {/* Espaço flexível para empurrar Processo para baixo */}
-          <div style={{ flex: 1 }} />
-          {/* Processo: canto inferior direito, totalmente visível, sem encostar nos QRs */}
-          <div style={{ width: 54, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 8px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginBottom: 6, marginTop: 0, alignSelf: 'flex-end' }}>
-            <span style={{ width: '100%', textAlign: 'center', display: 'block', margin: 0, padding: 0 }}>Processo:</span>
+          <div style={{ marginBottom: 4 }}>
+            <QRImg value={String(label.quantity)} size={44} />
+          </div>
+          {/* Processo: logo abaixo dos QRs */}
+          <div style={{ width: 54, border: '1px solid #111', borderRadius: 3, background: '#f9f9f9', padding: '2px 0 4px 0', fontSize: 8.5, fontWeight: 700, color: '#222', textAlign: 'center', letterSpacing: 0.2, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 4 }}>
+            <span style={{ width: '100%', textAlign: 'center', display: 'block' }}>Processo:</span>
+            {label.shipmentName && (
+              <div style={{ fontSize: 6.5, fontWeight: 700, wordBreak: 'break-all', lineHeight: 1.1, padding: '1px 2px 0 2px', maxWidth: '100%', overflow: 'hidden', textAlign: 'center' }}>
+                {label.shipmentName}
+              </div>
+            )}
           </div>
         </div>
       </div>

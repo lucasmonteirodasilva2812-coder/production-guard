@@ -156,7 +156,7 @@ export default function Workstation() {
                 } else {
                   toast.success(`Etiqueta gerada!`, { description: `${selected.partNumber} — ${qty.toLocaleString('pt-BR')} un` });
                 }
-                openLabelPrintPopup(label, () => {
+                openLabelPrintPopup({ ...label, shipmentName }, () => {
                   const pnInputEl = document.getElementById('pn-input');
                   if (pnInputEl) (pnInputEl as HTMLInputElement).focus();
                 });
@@ -289,22 +289,17 @@ export default function Workstation() {
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold truncate">{shipmentName}</h1>
+            <h1 className="text-2xl font-black truncate">{shipmentName}</h1>
             <div className="flex gap-1.5 flex-wrap">
-              <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">
+              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">
                 TOTAL: {totalItems}
               </span>
-              <span className="text-[10px] bg-success/15 text-success px-2 py-0.5 rounded-full font-medium">
+              <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded-full font-medium">
                 CONF: {conferidos}
               </span>
               {sobras > 0 && (
-                <span className="text-[10px] bg-warning/15 text-warning px-2 py-0.5 rounded-full font-medium">
+                <span className="text-xs bg-warning/15 text-warning px-2 py-0.5 rounded-full font-medium">
                   SOBRAS: {sobras}
-                </span>
-              )}
-              {faltas > 0 && (
-                <span className="text-[10px] bg-destructive/15 text-destructive px-2 py-0.5 rounded-full font-medium">
-                  FALTAS: {faltas}
                 </span>
               )}
             </div>
@@ -385,12 +380,12 @@ export default function Workstation() {
                     <p className="text-[10px] text-muted-foreground uppercase">Remessa</p>
                     <p className="text-lg font-mono font-bold">{selected.declaredQty.toLocaleString('pt-BR')}</p>
                   </div>
-                  <div className="bg-primary/5 p-2 rounded text-center border border-primary/20">
-                    <p className="text-[10px] text-primary uppercase">Disponível</p>
-                    <p className="text-lg font-mono font-bold text-primary">{available.toLocaleString('pt-BR')}</p>
+                  <div className="bg-destructive/5 p-2 rounded text-center border border-destructive/20">
+                    <p className="text-[10px] text-destructive uppercase">Pendente</p>
+                    <p className="text-lg font-mono font-bold text-destructive">{available.toLocaleString('pt-BR')}</p>
                   </div>
                   <div className="bg-success/5 p-2 rounded text-center border border-success/20">
-                    <p className="text-[10px] text-success uppercase">Físico</p>
+                    <p className="text-[10px] text-success uppercase">Conferido</p>
                     <p className="text-lg font-mono font-bold text-success">{selected.labeledQty.toLocaleString('pt-BR')}</p>
                   </div>
                 </div>
@@ -424,15 +419,10 @@ export default function Workstation() {
                       msl: lastLabel.msl,
                       expiryDate: lastLabel.expiryDate,
                           qrValidated: lastLabel.qrValidated,
+                          shipmentName,
                         }} />
                       </div>
                     </div>
-                    <Button
-                      className="mt-2"
-                      onClick={() => {
-                        if (lastLabel) openLabelPrintPopup(lastLabel);
-                      }}
-                    >Imprimir etiqueta</Button>
                   </div>
                 </>
               ) : (
@@ -574,6 +564,7 @@ export default function Workstation() {
                     printedAt: lastLabel.printedAt,
                     msl: lastLabel.msl,
                     expiryDate: lastLabel.expiryDate,
+                    shipmentName,
                   }} />
                 </div>
               </div>

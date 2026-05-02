@@ -213,6 +213,10 @@ export function useWorkstationActiveUsers(wsId: number) {
   });
 }
 
+export function usePnBase() {
+  return useQuery({ queryKey: ['pn-base'], queryFn: api.getPnBase });
+}
+
 // ── Divergences ──────────────────────────────────────────────────────────────
 export function useDivergences() {
   return useQuery({ queryKey: ['divergences'], queryFn: api.getDivergences });

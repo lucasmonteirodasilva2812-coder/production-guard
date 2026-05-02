@@ -16,6 +16,7 @@ import Workstation from './pages/Workstation';
 import ImportPage from './pages/ImportPage';
 import Supervisor from './pages/Supervisor';
 import AdminPage from './pages/AdminPage';
+import BasePage from './pages/BasePage';
 import NotFound from './pages/NotFound';
 import PrintLabel from './pages/PrintLabel';
 
@@ -97,6 +98,7 @@ export default function App() {
               {(isAdmin || user?.role === 'supervisor') && (
                 <>
                   <Route path="/import" element={<ImportPage />} />
+                  <Route path="/base" element={<BasePage />} />
                   <Route path="/supervisor" element={<Supervisor />} />
                   {/* <Route path="/print/label/:id" element={<PrintLabel />} /> */}
                 </>

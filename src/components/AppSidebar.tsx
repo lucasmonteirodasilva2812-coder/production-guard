@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Factory, FileUp, ShieldCheck, Settings, Monitor,
@@ -8,31 +8,6 @@ import { useAuthStore } from '@/store/authStore';
 import { useLogout } from '@/hooks/useProductionData';
 import { useWorkstations } from '@/hooks/useProductionData';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-
-async function parsePnBaseFile(file: File): Promise<{ partNumber: string; description: string; msl: string }[]> {
-  if (file.name.match(/\.csv$/i)) {
-    const text = await file.text();
-    return text.split('\n').filter(l => l.trim()).map(line => {
-      const cols = line.split(/[;,\t]/).map(c => c.trim());
-      return { partNumber: cols[0] || '', description: cols[1] || '', msl: cols[2] || '' };
-    }).filter(i => i.partNumber && i.partNumber.toLowerCase() !== 'part number');
-  }
-  // @ts-ignore
-  const XLSX = await import('xlsx');
-  const buf = await file.arrayBuffer();
-  const wb = XLSX.read(buf, { type: 'array' });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
-  return rows
-    .filter(r => Array.isArray(r) && r.length >= 1)
-    .map(r => ({
-      partNumber: String(r[0] || '').trim(),
-      description: String(r[1] || '').trim(),
-      msl: String(r[2] || '').trim(),
-    }))
-    .filter(i => i.partNumber && i.partNumber.toLowerCase() !== 'part number');
-}
 
 export function AppSidebar() {
   const location = useLocation();
@@ -41,25 +16,6 @@ export function AppSidebar() {
   const logoutMutation = useLogout();
   const { data: workstations = [] } = useWorkstations();
   const [showServerUrl, setShowServerUrl] = useState(false);
-  const [importingBase, setImportingBase] = useState(false);
-  const pnBaseFileRef = useRef<HTMLInputElement>(null);
-
-  const handleImportBase = async (file: File) => {
-    if (!file.name.match(/\.(xlsx|xls|csv)$/i)) { toast.error('Formato inválido. Use .xlsx, .xls ou .csv'); return; }
-    try {
-      setImportingBase(true);
-      const items = await parsePnBaseFile(file);
-      if (items.length === 0) { toast.error('Nenhum dado encontrado no arquivo'); return; }
-      const { api } = await import('@/lib/api');
-      await api.importPnBase(items);
-      toast.success(`Base atualizada: ${items.length} Part Numbers importados`);
-    } catch (e: any) {
-      toast.error(`Erro ao importar base: ${e.message}`);
-    } finally {
-      setImportingBase(false);
-      if (pnBaseFileRef.current) pnBaseFileRef.current.value = '';
-    }
-  };
 
   const ws = workstations.find(w => w.id === workstationId);
   const isAdmin = mode === 'admin';
@@ -70,6 +26,7 @@ export function AppSidebar() {
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/workstation', icon: Factory, label: "Workflow's" },
     { to: '/import', icon: FileUp, label: 'Importar' },
+    { to: '/base', icon: Database, label: 'Base' },
     { to: '/supervisor', icon: ShieldCheck, label: 'Supervisor' },
     { to: '/admin', icon: Settings, label: 'Admin' },
   ];
@@ -83,6 +40,7 @@ export function AppSidebar() {
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/workstation', icon: Factory, label: "Workflow's" },
     { to: '/import', icon: FileUp, label: 'Importar' },
+    { to: '/base', icon: Database, label: 'Base' },
     { to: '/supervisor', icon: ShieldCheck, label: 'Supervisor' },
   ];
 
@@ -116,19 +74,12 @@ export function AppSidebar() {
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-0.5">
-        <input
-          ref={pnBaseFileRef}
-          type="file"
-          accept=".xlsx,.xls,.csv"
-          className="hidden"
-          onChange={e => { const f = e.target.files?.[0]; if (f) handleImportBase(f); }}
-        />
         {navItems.map(item => (
-          <React.Fragment key={item.to}>
-            <NavLink
-              to={item.to}
-              end={item.to === '/'}
-              className={cn(
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/'}
+            className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
               location.pathname === item.to
                 ? 'bg-sidebar-accent text-sidebar-primary font-medium'
@@ -138,17 +89,6 @@ export function AppSidebar() {
             <item.icon className="w-4 h-4" />
             {item.label}
           </NavLink>
-          {item.to === '/import' && (
-            <button
-              onClick={() => pnBaseFileRef.current?.click()}
-              disabled={importingBase}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 w-full pl-7 disabled:opacity-50"
-            >
-              <Database className="w-4 h-4" />
-              {importingBase ? 'Importando...' : 'Base'}
-            </button>
-          )}
-          </React.Fragment>
         ))}
       </nav>
 
