@@ -278,13 +278,6 @@ function IndustrialLabelModelo2({ label }: { label: LabelData }) {
           {/* Info boxes */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 2, width: '100%' }}>
             <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
-              <ClipboardList size={10} color='#444' style={{ flexShrink: 0 }} />
-              <div style={{ overflow: 'hidden', minWidth: 0 }}>
-                <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Processo</div>
-                <div style={{ fontSize: 8, fontWeight: 900, color: '#111', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label.shipmentName || '-'}</div>
-              </div>
-            </div>
-            <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
               <Calendar size={10} color='#444' style={{ flexShrink: 0 }} />
               <div style={{ overflow: 'hidden', minWidth: 0 }}>
                 <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Data Venc.</div>
