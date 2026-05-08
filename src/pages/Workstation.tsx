@@ -264,34 +264,12 @@ export default function Workstation() {
   return (
     <div ref={topRef} className="space-y-4">
       {/* Header */}
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         <button onClick={() => { setSelectedShipment(null); setSelectedPN(null); setPnInput(''); resetNav(); }}
-          className="text-muted-foreground hover:text-foreground mt-1">
+          className="text-muted-foreground hover:text-foreground shrink-0">
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-black truncate">{shipmentName}</h1>
-            <div className="flex gap-2 flex-wrap items-center">
-              <span className="flex items-center gap-1.5 text-xs bg-muted/60 border border-border px-2.5 py-1 rounded-full font-semibold">
-                <Package2 className="w-3 h-3 text-info" />{totalItems}
-              </span>
-              <span className="flex items-center gap-1.5 text-xs bg-success/10 border border-success/20 text-success px-2.5 py-1 rounded-full font-semibold">
-                <CheckCircle className="w-3 h-3" />{conferidos}
-              </span>
-              {sobras > 0 && (
-                <span className="flex items-center gap-1.5 text-xs bg-warning/10 border border-warning/20 text-warning px-2.5 py-1 rounded-full font-semibold">
-                  <Tag className="w-3 h-3" />{sobras}
-                </span>
-              )}
-              {pendentePNs > 0 && (
-                <span className="flex items-center gap-1.5 text-xs bg-destructive/10 border border-destructive/20 text-destructive px-2.5 py-1 rounded-full font-semibold">
-                  <Clock className="w-3 h-3" />{pendentePNs}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+        <h1 className="text-2xl font-black truncate flex-1 min-w-0">{shipmentName}</h1>
         {/* Direita: usuários online + reimpressões */}
         <div className="flex items-center gap-2 shrink-0">
           {activeUsers.length > 0 && (
@@ -311,6 +289,46 @@ export default function Workstation() {
         </div>
       </div>
 
+      {/* ── Stat cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="industrial-panel p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-info/15 flex items-center justify-center shrink-0">
+            <Package2 className="w-5 h-5 text-info" />
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Total de Itens</p>
+            <p className="text-2xl font-black font-mono">{totalItems}</p>
+          </div>
+        </div>
+        <div className="industrial-panel p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
+            <CheckCircle className="w-5 h-5 text-success" />
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Confirmados</p>
+            <p className="text-2xl font-black font-mono text-success">{conferidos}</p>
+          </div>
+        </div>
+        <div className="industrial-panel p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+            <Tag className="w-5 h-5 text-warning" />
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Sobras</p>
+            <p className="text-2xl font-black font-mono text-warning">{sobras}</p>
+          </div>
+        </div>
+        <div className="industrial-panel p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-destructive/15 flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5 text-destructive" />
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Pendentes</p>
+            <p className="text-2xl font-black font-mono text-destructive">{pendentePNs}</p>
+          </div>
+        </div>
+      </div>
+  
       {/* ── Form ── */}
       <div className="industrial-panel p-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -367,33 +385,18 @@ export default function Workstation() {
               </div>
 
               {selected && (
-                <div className="grid grid-cols-3 gap-2 mt-1">
-                  <div className="bg-info/10 p-3 rounded-lg border border-info/20 flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-md bg-info/20 flex items-center justify-center shrink-0">
-                      <Package2 className="w-4 h-4 text-info" />
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-info/80 uppercase font-semibold tracking-wide">Remessa</p>
-                      <p className="text-base font-mono font-bold text-info">{selected.declaredQty.toLocaleString('pt-BR')}</p>
-                    </div>
+                <div className="flex gap-2 mt-1">
+                  <div className="flex-1 bg-info/10 px-3 py-2 rounded-lg border border-info/20">
+                    <p className="text-[9px] text-info/70 uppercase font-semibold tracking-wide">Remessa</p>
+                    <p className="text-sm font-mono font-bold text-info leading-tight">{selected.declaredQty.toLocaleString('pt-BR')}</p>
                   </div>
-                  <div className="bg-destructive/10 p-3 rounded-lg border border-destructive/20 flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-md bg-destructive/20 flex items-center justify-center shrink-0">
-                      <Clock className="w-4 h-4 text-destructive" />
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-destructive/80 uppercase font-semibold tracking-wide">Pendente</p>
-                      <p className="text-base font-mono font-bold text-destructive">{available.toLocaleString('pt-BR')}</p>
-                    </div>
+                  <div className="flex-1 bg-destructive/10 px-3 py-2 rounded-lg border border-destructive/20">
+                    <p className="text-[9px] text-destructive/70 uppercase font-semibold tracking-wide">Pendente</p>
+                    <p className="text-sm font-mono font-bold text-destructive leading-tight">{available.toLocaleString('pt-BR')}</p>
                   </div>
-                  <div className="bg-success/10 p-3 rounded-lg border border-success/20 flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-md bg-success/20 flex items-center justify-center shrink-0">
-                      <CheckCircle className="w-4 h-4 text-success" />
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-success/80 uppercase font-semibold tracking-wide">Conferido</p>
-                      <p className="text-base font-mono font-bold text-success">{selected.labeledQty.toLocaleString('pt-BR')}</p>
-                    </div>
+                  <div className="flex-1 bg-success/10 px-3 py-2 rounded-lg border border-success/20">
+                    <p className="text-[9px] text-success/70 uppercase font-semibold tracking-wide">Conferido</p>
+                    <p className="text-sm font-mono font-bold text-success leading-tight">{selected.labeledQty.toLocaleString('pt-BR')}</p>
                   </div>
                 </div>
               )}
@@ -496,48 +499,6 @@ export default function Workstation() {
             </table>
           </div>
         </div>
-
-      {/* ── Bottom stat cards ── */}
-      {selectedShipment && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="industrial-panel p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-info/15 flex items-center justify-center shrink-0">
-              <Package2 className="w-5 h-5 text-info" />
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Total de Itens</p>
-              <p className="text-2xl font-black font-mono">{totalItems}</p>
-            </div>
-          </div>
-          <div className="industrial-panel p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
-              <CheckCircle className="w-5 h-5 text-success" />
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Confirmados</p>
-              <p className="text-2xl font-black font-mono text-success">{conferidos}</p>
-            </div>
-          </div>
-          <div className="industrial-panel p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
-              <Tag className="w-5 h-5 text-warning" />
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Sobras</p>
-              <p className="text-2xl font-black font-mono text-warning">{sobras}</p>
-            </div>
-          </div>
-          <div className="industrial-panel p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-destructive/15 flex items-center justify-center shrink-0">
-              <Clock className="w-5 h-5 text-destructive" />
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Pendentes</p>
-              <p className="text-2xl font-black font-mono text-destructive">{pendentePNs}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Labels list + preview ── */}
       {recentLabels.length > 0 && (
