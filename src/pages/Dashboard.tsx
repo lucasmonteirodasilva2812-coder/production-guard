@@ -70,7 +70,41 @@ function KpiCard({ label, value, icon: Icon, color, trend, trendValue, delay }: 
         <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</p>
         <div style={{ width: 38, height: 38, borderRadius: 12, background: `${color}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={18} color={color} strokeWidth={2} />
-        </div>
+
+        {/* Telinha lateral de divergências */}
+        {divergences.length > 0 && (
+          <motion.div
+            initial={{ x: 320, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: 'absolute', top: 0, right: -370, width: 340, height: '100%',
+              background: 'rgba(15,23,42,0.92)',
+              border: '1px solid rgba(248,113,113,0.18)',
+              borderRadius: 18, boxShadow: '0 8px 32px rgba(248,113,113,0.13)',
+              padding: '24px 22px', zIndex: 10, overflowY: 'auto',
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <AlertTriangle size={18} color={AMBER} />
+              <span style={{ fontSize: 15, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.01em' }}>Divergências</span>
+            </div>
+            {divergences.map((d, idx) => (
+              <div key={d.id || idx} style={{
+                background: 'rgba(248,113,113,0.07)',
+                border: '1px solid rgba(248,113,113,0.13)',
+                borderRadius: 10, padding: '10px 14px', marginBottom: 6,
+                display: 'flex', flexDirection: 'column', gap: 2,
+              }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#e0e7ef' }}>{d.partNumber || d.part_number || 'N/A'}</span>
+                <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)' }}>{d.type === 'sobra' ? 'Sobra' : d.type === 'falta' ? 'Falta' : d.type || 'Divergência'}</span>
+                <span style={{ fontSize: 11, color: AMBER, fontWeight: 600 }}>Diferença: {(d.difference ?? 'N/A')}</span>
+                <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.6)' }}>Status: {d.status || 'N/A'}</span>
+              </div>
+            ))}
+          </motion.div>
+        )}
       </div>
       <p style={{ fontSize: 38, fontWeight: 800, color: '#f1f5f9', lineHeight: 1, fontVariantNumeric: 'tabular-nums', marginBottom: 8 }}>{value}</p>
       {trendValue && (
@@ -130,20 +164,21 @@ export default function Dashboard() {
     online: ws.isOnline,
   })), [workstations, labelsAll]);
 
-  const donutData = [
-    { name: 'Concluidos', value: pnConcluido, color: GREEN },
-    { name: 'Divergencias', value: divergences.length, color: RED },
-    { name: 'Pendentes', value: pnPendente, color: AMBER },
-    { name: 'Em Processo', value: pnEmProcesso, color: BLUE_LT },
-  ].filter(d => d.value > 0);
-  const donutTotal = donutData.reduce((a, b) => a + b.value, 0) || 1;
+  // Só processos finalizados
+  const pnFinalizados = partNumbers.filter(p => p.status === 'concluido');
+  const donutData = pnFinalizados.map(p => ({
+    name: p.part_number || p.partNumber || 'Processo',
+    value: 1,
+    color: GREEN,
+  }));
+  const donutTotal = donutData.length || 1;
   const avgLabelsPerPn = totalPn > 1 ? (labelsAll.length / totalPn).toFixed(1) : '0';
   const recentDivergences = divergences.slice(0, 5);
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0F172A 0%, #1E3A5F 50%, #0F172A 100%)',
+      background: 'linear-gradient(135deg, #0B1120 0%, #17203A 50%, #0B1120 100%)',
       padding: '28px 28px 48px',
       color: '#e2e8f0',
       fontFamily: "'Inter', system-ui, sans-serif",
@@ -152,24 +187,40 @@ export default function Dashboard() {
     }}>
       {/* Marca dagua */}
       <div aria-hidden style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <span style={{ fontSize: 'clamp(80px,14vw,180px)', fontWeight: 900, color: 'rgba(255,255,255,0.022)', letterSpacing: '-0.04em', userSelect: 'none', whiteSpace: 'nowrap', textTransform: 'uppercase', transform: 'rotate(-12deg)' }}>MULTILASER</span>
+        <span style={{ fontSize: 'clamp(80px,14vw,180px)', fontWeight: 900, color: 'rgba(255,255,255,0.018)', letterSpacing: '-0.04em', userSelect: 'none', whiteSpace: 'nowrap', textTransform: 'uppercase', transform: 'rotate(-12deg)' }}>MULTILASER</span>
       </div>
-      <div aria-hidden style={{ position: 'fixed', top: -160, right: -80, width: 520, height: 520, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-      <div aria-hidden style={{ position: 'fixed', bottom: -200, left: -100, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(29,78,216,0.1) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div aria-hidden style={{ position: 'fixed', top: -160, right: -80, width: 520, height: 520, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.09) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div aria-hidden style={{ position: 'fixed', bottom: -200, left: -100, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(29,78,216,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+
+
+      {/* Logo Multilaser animada (mesmo SVG da tela de login) */}
+      <div style={{ position: 'absolute', top: 32, left: 32, zIndex: 2, opacity: 0.92 }}>
+        <svg width="110" height="32" viewBox="0 0 110 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="24" fontFamily="'Inter', Arial, sans-serif" fontWeight="900" fontSize="28" fill="#60A5FA" letterSpacing="-0.04em">MULTILASER</text>
+        </svg>
+      </div>
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1400, margin: '0 auto' }}>
 
         {/* Topbar */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 12, position: 'relative' }}>
           <div>
-            <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4, fontWeight: 600 }}>Production Guard · Grupo Multilaser</p>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', margin: 0, letterSpacing: '-0.02em' }}>
-              Dashboard de Conferencia{isOperator ? ` - Bancada ${workstationId}` : ''}
-            </h1>
-            <p style={{ fontSize: 12, color: 'rgba(148,163,184,0.6)', marginTop: 4 }}>
-              {isOperator ? currentWS?.name : 'Visao geral · Controle de materia-prima'}
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="19" cy="19" r="19" fill="#3B82F6" fillOpacity="0.13" />
+                <text x="7" y="27" fontFamily="'Inter', Arial, sans-serif" fontWeight="900" fontSize="18" fill="#60A5FA">M</text>
+              </svg>
+              <div>
+                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4, fontWeight: 600 }}>Production Guard · Grupo Multilaser</p>
+                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', margin: 0, letterSpacing: '-0.02em' }}>
+                  Dashboard de Conferência{isOperator ? ` - Bancada ${workstationId}` : ''}
+                </h1>
+                <p style={{ fontSize: 12, color: 'rgba(148,163,184,0.6)', marginTop: 4 }}>
+                  {isOperator ? currentWS?.name : 'Visão geral · Controle de matéria-prima'}
+                </p>
+              </div>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '8px 16px' }}>
@@ -185,50 +236,112 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* KPI Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
-          {[
-            { label: isOperator ? 'Etiquetas Geradas' : 'Total de Processos', value: isOperator ? labels.length : shipments.length, icon: isOperator ? Printer : Layers, color: BLUE_LT, trend: 'up' as const, trendValue: 'neste periodo' },
-            { label: 'Etiquetas Impressas', value: labelsAll.length, icon: Printer, color: BLUE_MID, trend: 'up' as const, trendValue: `${avgLabelsPerPn} por PN` },
-            { label: 'Produtos Conferidos', value: pnConcluido, icon: CheckCircle, color: GREEN, trend: 'up' as const, trendValue: `${completionRate}% do total` },
-            { label: 'Divergencias', value: divergences.length, icon: AlertTriangle, color: AMBER, trend: divergences.length > 0 ? 'down' as const : 'neutral' as const, trendValue: divergences.length > 0 ? 'requer atencao' : 'sem divergencias' },
-            { label: 'Pendentes', value: pnPendente, icon: Clock, color: RED, trend: 'neutral' as const, trendValue: `${pnEmProcesso} em processo` },
-          ].map((kpi, i) => <KpiCard key={i} {...kpi} delay={i} />)}
+        {/* KPI Cards + Telinha lateral */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24, position: 'relative' }}>
+
+          {/* KPI Processos em conferência */}
+          <KpiCard
+            label="Processos em conferência"
+            value={pnEmProcesso}
+            icon={Layers}
+            color={BLUE_LT}
+            trend="up"
+            trendValue={pnEmProcesso > 0 ? `${pnEmProcesso} ativos` : 'Nenhum'}
+            delay={0}
+          />
+          {/* KPI Produtos em conferência */}
+          <KpiCard
+            label="Produtos em conferência"
+            value={pnEmProcesso}
+            icon={CheckCircle}
+            color={GREEN}
+            trend="up"
+            trendValue={pnEmProcesso > 0 ? `${pnEmProcesso} ativos` : 'Nenhum'}
+            delay={1}
+          />
+
+          {/* Telinha lateral de processos em conferência */}
+          {pnEmProcesso > 0 && (
+            <motion.div
+              initial={{ x: 320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                position: 'absolute', top: 0, right: -370, width: 340, height: '100%',
+                background: 'rgba(15,23,42,0.92)',
+                border: '1px solid rgba(96,165,250,0.18)',
+                borderRadius: 18, boxShadow: '0 8px 32px rgba(59,91,219,0.13)',
+                padding: '24px 22px', zIndex: 10, overflowY: 'auto',
+                display: 'flex', flexDirection: 'column', gap: 12,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <Layers size={18} color={BLUE_LT} />
+                <span style={{ fontSize: 15, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.01em' }}>Processos em conferência</span>
+              </div>
+              {partNumbers.filter(p => p.status === 'em_processo').map((pn, idx) => (
+                <div key={pn.id || idx} style={{
+                  background: 'rgba(59,130,246,0.07)',
+                  border: '1px solid rgba(59,130,246,0.13)',
+                  borderRadius: 10, padding: '10px 14px', marginBottom: 6,
+                  display: 'flex', flexDirection: 'column', gap: 2,
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#e0e7ef' }}>{pn.part_number || pn.partNumber}</span>
+                  <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)' }}>{pn.description}</span>
+                  <span style={{ fontSize: 11, color: BLUE_LT, fontWeight: 600 }}>Remessa: {pn.shipmentId}</span>
+                </div>
+              ))}
+            </motion.div>
+            {/* Tabela de colaboradores que mais conferiram produtos nos processos em conferência */}
+            <GlassCard delay={5}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                <div>
+                  <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Top Colaboradores</p>
+                  <p style={{ fontSize: 18, fontWeight: 800, color: '#f1f5f9', lineHeight: 1 }}>Produtos em conferência</p>
+                </div>
+              </div>
+              <div style={{ maxHeight: 180, overflowY: 'auto', marginTop: 6 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ color: '#93C5FD', fontWeight: 700, background: 'rgba(59,91,219,0.07)' }}>
+                      <th style={{ textAlign: 'left', padding: '6px 8px' }}>Colaborador</th>
+                      <th style={{ textAlign: 'center', padding: '6px 8px' }}>Qtd. Conferida</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      // Agrupa por user dos labels dos processos em conferência
+                      const emConferenciaIds = partNumbers.filter(p => p.status === 'em_processo').map(p => p.id);
+                      const labelsEmConf = labelsAll.filter(l => emConferenciaIds.includes(l.partNumberId));
+                      const userMap: Record<string, { name: string, qty: number }> = {};
+                      labelsEmConf.forEach(l => {
+                        const user = l.userName || l.user_name || l.user || 'Desconhecido';
+                        if (!userMap[user]) userMap[user] = { name: user, qty: 0 };
+                        userMap[user].qty += l.quantity || 1;
+                      });
+                      const sorted = Object.values(userMap).sort((a, b) => b.qty - a.qty).slice(0, 8);
+                      if (sorted.length === 0) return (
+                        <tr><td colSpan={2} style={{ textAlign: 'center', color: 'rgba(148,163,184,0.6)', padding: 18 }}>Nenhum colaborador encontrado</td></tr>
+                      );
+                      return sorted.map((u, i) => (
+                        <tr key={u.name} style={{ background: i % 2 ? 'rgba(59,91,219,0.03)' : 'transparent' }}>
+                          <td style={{ padding: '7px 8px', fontWeight: 600, color: '#e0e7ef' }}>{u.name}</td>
+                          <td style={{ padding: '7px 8px', textAlign: 'center', color: '#60A5FA', fontWeight: 700 }}>{u.qty}</td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </GlassCard>
+          )}
         </div>
 
-        {/* Area chart + Donut */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 20 }}>
-          <GlassCard delay={5}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
-              <div>
-                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Etiquetas Impressas - Ultimos 7 dias</p>
-                <p style={{ fontSize: 30, fontWeight: 800, color: '#f1f5f9', lineHeight: 1 }}>{labels.length}</p>
-              </div>
-              <div style={{ width: 42, height: 42, borderRadius: 13, background: `${BLUE_LT}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <BarChart2 size={20} color={BLUE_LT} />
-              </div>
-            </div>
-            <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={labelsPerDay} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
-                <defs>
-                  <linearGradient id="areaG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={BLUE_LT} stopOpacity={0.35} />
-                    <stop offset="95%" stopColor={BLUE_LT} stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="dia" tick={{ fill: 'rgba(148,163,184,0.6)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'rgba(148,163,184,0.6)', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip content={<GlassTooltip />} />
-                <Area type="monotone" dataKey="qty" stroke={BLUE_LT} strokeWidth={2.5} fill="url(#areaG)"
-                  dot={{ fill: BLUE_LT, r: 3, strokeWidth: 0 }} activeDot={{ r: 5, fill: BLUE_LT, strokeWidth: 2, stroke: 'rgba(255,255,255,0.3)' }} name="Etiquetas" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </GlassCard>
+
 
           <GlassCard delay={6}>
-            <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Distribuicao dos Processos</p>
-            <p style={{ fontSize: 13, color: '#f1f5f9', marginBottom: 12 }}>{donutTotal} part numbers</p>
+            <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Distribuição dos Processos Finalizados</p>
+            <p style={{ fontSize: 13, color: '#f1f5f9', marginBottom: 12 }}>{donutTotal} processos</p>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <PieChart width={200} height={160}>
                 <Pie data={donutData.length ? donutData : [{ name: 'Vazio', value: 1, color: 'rgba(255,255,255,0.08)' }]}
@@ -241,16 +354,11 @@ export default function Dashboard() {
               </PieChart>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-              {[
-                { label: 'Concluidos', value: pnConcluido, color: GREEN },
-                { label: 'Em Processo', value: pnEmProcesso, color: BLUE_LT },
-                { label: 'Pendentes', value: pnPendente, color: AMBER },
-                { label: 'Divergencias', value: divergences.length, color: RED },
-              ].map((item, i) => (
+              {donutData.map((item, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: 3, background: item.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: 'rgba(226,232,240,0.8)' }}>{item.label}</span>
+                    <span style={{ fontSize: 12, color: 'rgba(226,232,240,0.8)' }}>{item.name}</span>
                   </div>
                   <span style={{ fontSize: 12, fontWeight: 700, color: item.color }}>{item.value}</span>
                 </div>
@@ -264,7 +372,7 @@ export default function Dashboard() {
           <GlassCard delay={7}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 2 }}>Etiquetas por Bancada</p>
+                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 2 }}>Taxa de Etiquetas por Bancada</p>
                 <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9' }}>{labelsAll.length} total</p>
               </div>
               <div style={{ width: 38, height: 38, borderRadius: 12, background: `${BLUE_MID}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -275,7 +383,7 @@ export default function Dashboard() {
               <BarChart data={labelsPerWs} margin={{ top: 0, right: 0, bottom: 0, left: -20 }} barSize={22}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
                 <XAxis dataKey="name" tick={{ fill: 'rgba(148,163,184,0.6)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'rgba(148,163,184,0.6)', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <YAxis tickFormatter={v => `${Math.round((v / labelsAll.length) * 100)}%`} tick={{ fill: 'rgba(148,163,184,0.6)', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<GlassTooltip />} />
                 <Bar dataKey="qty" radius={[6,6,0,0]} name="Etiquetas">
                   {labelsPerWs.map((entry, i) => (
@@ -284,68 +392,42 @@ export default function Dashboard() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </GlassCard>
-
-          <GlassCard delay={8}>
-            <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Evolucao Semanal</p>
-            <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9', marginBottom: 12 }}>
-              {labelsPerDay.reduce((a, b) => a + b.qty, 0)}{' '}
-              <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.6)', fontWeight: 500 }}>ultimos 7 dias</span>
-            </p>
-            <ResponsiveContainer width="100%" height={80}>
-              <LineChart data={labelsPerDay} margin={{ top: 0, right: 4, bottom: 0, left: -28 }}>
-                <defs>
-                  <linearGradient id="lineG" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor={BLUE_DK} />
-                    <stop offset="100%" stopColor={BLUE_LT} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="dia" tick={{ fill: 'rgba(148,163,184,0.5)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<GlassTooltip />} />
-                <Line type="monotone" dataKey="qty" stroke={`url(#lineG)`} strokeWidth={2.5} dot={false} name="Etiquetas" />
-              </LineChart>
-            </ResponsiveContainer>
-            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <p style={{ fontSize: 10, color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Status das Bancadas</p>
-              {(isOperator ? workstations.filter(w => w.id === workstationId) : workstations).map(ws => (
-                <div key={ws.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', borderRadius: 8, background: ws.isOnline ? 'rgba(52,211,153,0.07)' : 'rgba(255,255,255,0.03)', border: `1px solid ${ws.isOnline ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)'}` }}>
-                  <span style={{ fontSize: 11, color: 'rgba(226,232,240,0.8)', fontWeight: 500 }}>{ws.name}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: ws.isOnline ? GREEN : 'rgba(148,163,184,0.4)', boxShadow: ws.isOnline ? `0 0 6px ${GREEN}` : 'none' }} />
-                    <span style={{ fontSize: 10, color: ws.isOnline ? GREEN : 'rgba(148,163,184,0.5)', fontWeight: 600 }}>{ws.isOnline ? 'Online' : 'Offline'}</span>
-                  </div>
-                </div>
+            <div style={{ marginTop: 10, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {labelsPerWs.map(ws => (
+                <span key={ws.name} style={{ fontSize: 11, color: '#93C5FD', background: 'rgba(59,91,219,0.08)', borderRadius: 8, padding: '3px 10px', fontWeight: 600 }}>
+                  {ws.name}: {Math.round((ws.qty / labelsAll.length) * 100)}%
+                </span>
               ))}
             </div>
           </GlassCard>
 
+
+
           <GlassCard delay={9}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 2 }}>Ultimas Divergencias</p>
-                <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9' }}>{divergences.length}</p>
+                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 2 }}>Divergências Resolvidas</p>
+                <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9' }}>{divergences.filter(d => d.status === 'resolvida').length}</p>
               </div>
-              <div style={{ width: 38, height: 38, borderRadius: 12, background: `${AMBER}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AlertTriangle size={17} color={AMBER} />
+              <div style={{ width: 38, height: 38, borderRadius: 12, background: `${GREEN}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AlertTriangle size={17} color={GREEN} />
               </div>
             </div>
-            {recentDivergences.length === 0 ? (
+            {divergences.filter(d => d.status === 'resolvida').length === 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 0', gap: 8 }}>
                 <CheckCircle size={28} color={GREEN} strokeWidth={1.5} />
-                <p style={{ fontSize: 12, color: 'rgba(148,163,184,0.6)', textAlign: 'center' }}>Nenhuma divergencia registrada</p>
+                <p style={{ fontSize: 12, color: 'rgba(148,163,184,0.6)', textAlign: 'center' }}>Nenhuma divergência resolvida</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {recentDivergences.map((d: any, i: number) => (
+                {divergences.filter(d => d.status === 'resolvida').slice(0, 5).map((d: any, i: number) => (
                   <motion.div key={d.id || i} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 9, background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.15)' }}>
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 9, background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(226,232,240,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.partNumber || d.part_number || 'N/A'}</p>
-                      <p style={{ fontSize: 10, color: 'rgba(148,163,184,0.6)' }}>{d.type === 'sobra' ? 'Sobra' : d.type === 'falta' ? 'Falta' : d.type || 'Divergencia'}</p>
+                      <p style={{ fontSize: 10, color: 'rgba(148,163,184,0.6)' }}>{d.type === 'sobra' ? 'Sobra' : d.type === 'falta' ? 'Falta' : d.type || 'Divergência'}</p>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: (d.difference ?? 0) > 0 ? AMBER : RED, flexShrink: 0 }}>
-                      {(d.difference ?? 0) > 0 ? '+' : ''}{d.difference ?? 'N/A'}
-                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: GREEN, flexShrink: 0 }}>Resolvida</span>
                   </motion.div>
                 ))}
               </div>
