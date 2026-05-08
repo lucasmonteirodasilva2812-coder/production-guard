@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
 import LabelPreview, { LabelData } from '@/components/LabelPreview';
-import { Printer, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { Printer, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search, ChevronsDown, ChevronsUp, Clock, Tag, ListChecks, ChevronRight, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Label } from '@/types/production';
@@ -73,6 +73,7 @@ export default function Workstation() {
   const setSelectedPN = useWorkstationNavStore(s => s.setSelectedPN);
   const resetNav = useWorkstationNavStore(s => s.reset);
   const [shipmentSearch, setShipmentSearch] = useState('');
+  const [pnTableSearch, setPnTableSearch] = useState('');
   const topRef = useRef<HTMLDivElement>(null);
   const labelsRef = useRef<HTMLDivElement>(null);
 
@@ -108,6 +109,13 @@ export default function Workstation() {
   const conferidos = shipmentPNs.filter(pn => pn.status === 'concluido' || pn.status === 'divergente').length;
   const sobras = shipmentPNs.filter(pn => pn.labeledQty > pn.declaredQty).length;
   const faltas = shipmentPNs.filter(pn => pn.labeledQty < pn.declaredQty && pn.labeledQty > 0).length;
+  const pendentePNs = shipmentPNs.filter(pn => pn.status === 'pendente').length;
+  const filteredShipmentPNs = pnTableSearch
+    ? shipmentPNs.filter(pn =>
+        pn.partNumber.toLowerCase().includes(pnTableSearch.toLowerCase()) ||
+        (pn.description || '').toLowerCase().includes(pnTableSearch.toLowerCase())
+      )
+    : shipmentPNs;
 
   // Select PN by clicking table row or typing in input
   const selectPnById = useCallback((id: string) => {
@@ -346,7 +354,10 @@ export default function Workstation() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left: form fields */}
             <div className="space-y-3">
-              <h2 className="text-sm font-semibold">Gerar Etiqueta de Produto</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wide flex items-center gap-2">
+                <Tag className="w-4 h-4 text-success" />
+                Gerar Etiqueta de Produto
+              </h2>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -395,27 +406,48 @@ export default function Workstation() {
 
               {selected && (
                 <div className="grid grid-cols-3 gap-2 mt-1">
-                  <div className="bg-muted/50 p-2 rounded text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase">Remessa</p>
-                    <p className="text-lg font-mono font-bold">{selected.declaredQty.toLocaleString('pt-BR')}</p>
+                  <div className="bg-info/10 p-3 rounded-lg border border-info/20 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-md bg-info/20 flex items-center justify-center shrink-0">
+                      <Package2 className="w-4 h-4 text-info" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-info/80 uppercase font-semibold tracking-wide">Remessa</p>
+                      <p className="text-base font-mono font-bold text-info">{selected.declaredQty.toLocaleString('pt-BR')}</p>
+                    </div>
                   </div>
-                  <div className="bg-destructive/5 p-2 rounded text-center border border-destructive/20">
-                    <p className="text-[10px] text-destructive uppercase">Pendente</p>
-                    <p className="text-lg font-mono font-bold text-destructive">{available.toLocaleString('pt-BR')}</p>
+                  <div className="bg-destructive/10 p-3 rounded-lg border border-destructive/20 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-md bg-destructive/20 flex items-center justify-center shrink-0">
+                      <Clock className="w-4 h-4 text-destructive" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-destructive/80 uppercase font-semibold tracking-wide">Pendente</p>
+                      <p className="text-base font-mono font-bold text-destructive">{available.toLocaleString('pt-BR')}</p>
+                    </div>
                   </div>
-                  <div className="bg-success/5 p-2 rounded text-center border border-success/20">
-                    <p className="text-[10px] text-success uppercase">Conferido</p>
-                    <p className="text-lg font-mono font-bold text-success">{selected.labeledQty.toLocaleString('pt-BR')}</p>
+                  <div className="bg-success/10 p-3 rounded-lg border border-success/20 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-md bg-success/20 flex items-center justify-center shrink-0">
+                      <CheckCircle className="w-4 h-4 text-success" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-success/80 uppercase font-semibold tracking-wide">Conferido</p>
+                      <p className="text-base font-mono font-bold text-success">{selected.labeledQty.toLocaleString('pt-BR')}</p>
+                    </div>
                   </div>
                 </div>
               )}
 
 
-              <div className="flex gap-2">
-                <Button onClick={() => handleLookupAndPrint()} disabled={createLabel.isPending || createReservation.isPending}>
-                  <Printer className="w-4 h-4 mr-1" />Imprimir
-                </Button>
-              </div>
+              <Button
+                onClick={() => handleLookupAndPrint()}
+                disabled={createLabel.isPending || createReservation.isPending}
+                className="w-full justify-between"
+                size="lg"
+              >
+                <span className="flex items-center gap-2">
+                  <Printer className="w-4 h-4" />Imprimir Etiqueta
+                </span>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
 
             </div>
 
@@ -523,6 +555,21 @@ export default function Workstation() {
       {/* ── Part Number table ── */}
       {activeTab === 'normal' && (
         <div className="industrial-panel overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-primary" />
+              Itens do Processo
+            </h3>
+            <div className="relative w-52">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                value={pnTableSearch}
+                onChange={e => setPnTableSearch(e.target.value)}
+                placeholder="Buscar part number..."
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md bg-muted border border-border focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -536,10 +583,10 @@ export default function Workstation() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {shipmentPNs.length === 0 && (
-                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">Nenhum Part Number nesta remessa</td></tr>
+                {filteredShipmentPNs.length === 0 && (
+                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground text-sm">{pnTableSearch ? `Nenhum resultado para "${pnTableSearch}"` : 'Nenhum Part Number nesta remessa'}</td></tr>
                 )}
-                {shipmentPNs.map(pn => {
+                {filteredShipmentPNs.map(pn => {
                   const diff = pn.labeledQty - pn.declaredQty;
                   const pct = pn.declaredQty > 0 ? Math.min((pn.labeledQty / pn.declaredQty) * 100, 100) : 0;
                   return (
@@ -564,6 +611,48 @@ export default function Workstation() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bottom stat cards ── */}
+      {activeTab === 'normal' && selectedShipment && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="industrial-panel p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-info/15 flex items-center justify-center shrink-0">
+              <Package2 className="w-5 h-5 text-info" />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Total de Itens</p>
+              <p className="text-2xl font-black font-mono">{totalItems}</p>
+            </div>
+          </div>
+          <div className="industrial-panel p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
+              <CheckCircle className="w-5 h-5 text-success" />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Confirmados</p>
+              <p className="text-2xl font-black font-mono text-success">{conferidos}</p>
+            </div>
+          </div>
+          <div className="industrial-panel p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+              <Tag className="w-5 h-5 text-warning" />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Sobras</p>
+              <p className="text-2xl font-black font-mono text-warning">{sobras}</p>
+            </div>
+          </div>
+          <div className="industrial-panel p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-destructive/15 flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5 text-destructive" />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Pendentes</p>
+              <p className="text-2xl font-black font-mono text-destructive">{pendentePNs}</p>
+            </div>
           </div>
         </div>
       )}
