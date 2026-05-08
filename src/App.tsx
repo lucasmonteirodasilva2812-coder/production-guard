@@ -17,6 +17,7 @@ import ImportPage from './pages/ImportPage';
 import Supervisor from './pages/Supervisor';
 import AdminPage from './pages/AdminPage';
 import ModuleSelect from './pages/ModuleSelect';
+import BasePage from './pages/BasePage';
 import NotFound from './pages/NotFound';
 import PrintLabel from './pages/PrintLabel';
 
@@ -76,7 +77,14 @@ export default function App() {
   if (screen === 'module-select') return (
     <QueryClientProvider client={queryClient}>
       <ModuleSelect
-        onSelectModule={() => setScreen('app')}
+        onSelectModule={() => {
+          const { user: u } = useAuthStore.getState();
+          if (u?.role === 'operador') {
+            setScreen('workstation-select');
+          } else {
+            setScreen('app');
+          }
+        }}
         onLogout={() => {
           useAuthStore.getState().logout();
           setScreen('login');
