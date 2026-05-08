@@ -258,8 +258,9 @@ export default function Dashboard() {
                 </div>
               ))}
             </motion.div>
-            {/* Tabela de colaboradores que mais conferiram produtos nos processos em conferência */}
-            <GlassCard delay={5}>
+          )}
+          {/* Tabela de colaboradores que mais conferiram produtos nos processos em conferência */}
+          <GlassCard delay={5}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
                 <div>
                   <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Top Colaboradores</p>
