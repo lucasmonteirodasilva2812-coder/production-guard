@@ -1,29 +1,86 @@
 ﻿import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
-  AreaChart, Area, BarChart, Bar, LineChart, Line,
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  RadialBarChart, RadialBar, Cell,
 } from 'recharts';
+import {
+  Printer, AlertTriangle, CheckCircle, Clock,
+  TrendingUp, TrendingDown, Activity, RefreshCw, Download,
+  BarChart2, Layers, Zap,
+} from 'lucide-react';
 import { useShipments, usePartNumbers, useLabels, useDivergences, useWorkstations } from '@/hooks/useProductionData';
 import { useAuthStore } from '@/store/authStore';
-import { Package, Printer, AlertTriangle, CheckCircle, FileText, Activity, TrendingUp } from 'lucide-react';
 
-const C1 = '#38bdf8';
-const C2 = '#0ea5e9';
-const C3 = '#7dd3fc';
-const C4 = '#0284c7';
-const CARD = 'rgba(15,32,64,0.85)';
-const BORDER = '#1e3a5f';
+const BLUE_LT = '#60A5FA';
+const BLUE_MID = '#3B82F6';
+const BLUE_DK = '#1D4ED8';
+const GREEN = '#34D399';
+const AMBER = '#FBBF24';
+const RED = '#F87171';
 
-function MiniTooltip({ active, payload, label }: any) {
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.45, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] } }),
+};
+
+function GlassTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: '#0a1e3c', border: '1px solid #1e3a5f', borderRadius: 6, padding: '4px 10px', fontSize: 11, color: '#e0f2fe' }}>
-      <div style={{ color: '#94a3b8', marginBottom: 2 }}>{label}</div>
+    <div style={{
+      background: 'rgba(15,23,42,0.9)', backdropFilter: 'blur(16px)',
+      border: '1px solid rgba(96,165,250,0.25)', borderRadius: 10,
+      padding: '8px 14px', fontSize: 12, color: '#e2e8f0',
+    }}>
+      <p style={{ color: '#94a3b8', marginBottom: 4, fontSize: 11 }}>{label}</p>
       {payload.map((p: any, i: number) => (
-        <div key={i} style={{ color: p.color }}>{p.value}</div>
+        <p key={i} style={{ color: p.color || BLUE_LT, fontWeight: 700 }}>{p.value}</p>
       ))}
     </div>
+  );
+}
+
+function GlassCard({ children, delay = 0, style = {} }: {
+  children: React.ReactNode; delay?: number; style?: React.CSSProperties;
+}) {
+  return (
+    <motion.div
+      variants={fadeUp} initial="hidden" animate="visible" custom={delay}
+      whileHover={{ y: -3, boxShadow: '0 24px 48px rgba(59,130,246,0.18)' }}
+      style={{
+        background: 'rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 20, padding: 24, position: 'relative', ...style,
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function KpiCard({ label, value, icon: Icon, color, trend, trendValue, delay }: {
+  label: string; value: number | string; icon: any; color: string;
+  trend?: 'up' | 'down' | 'neutral'; trendValue?: string; delay?: number;
+}) {
+  return (
+    <GlassCard delay={delay ?? 0}>
+      <div style={{ position: 'absolute', top: 0, left: 24, right: 24, height: 2, background: `linear-gradient(90deg, ${color}, transparent)`, borderRadius: 99 }} />
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+        <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</p>
+        <div style={{ width: 38, height: 38, borderRadius: 12, background: `${color}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={18} color={color} strokeWidth={2} />
+        </div>
+      </div>
+      <p style={{ fontSize: 38, fontWeight: 800, color: '#f1f5f9', lineHeight: 1, fontVariantNumeric: 'tabular-nums', marginBottom: 8 }}>{value}</p>
+      {trendValue && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          {trend === 'up' && <TrendingUp size={12} color={GREEN} />}
+          {trend === 'down' && <TrendingDown size={12} color={RED} />}
+          <span style={{ fontSize: 11, color: trend === 'up' ? GREEN : trend === 'down' ? RED : 'rgba(148,163,184,0.7)', fontWeight: 600 }}>{trendValue}</span>
+        </div>
+      )}
+    </GlassCard>
   );
 }
 
@@ -47,8 +104,8 @@ export default function Dashboard() {
   const pnPendente = partNumbers.filter(p => p.status === 'pendente').length;
   const totalPn = partNumbers.length || 1;
   const completionRate = Math.round((pnConcluido / totalPn) * 100);
+  const currentWS = workstations.find(w => w.id === workstationId);
 
-  // Labels por dia (Ãºltimos 7 dias)
   const labelsPerDay = useMemo(() => {
     const map: Record<string, number> = {};
     const today = new Date();
@@ -67,208 +124,239 @@ export default function Dashboard() {
     return Object.entries(map).map(([dia, qty]) => ({ dia, qty }));
   }, [labels]);
 
-  // Labels por bancada
-  const labelsPerWs = useMemo(() => {
-    return workstations.map(ws => ({
-      name: ws.name.replace('Bancada ', 'B'),
-      qty: labelsAll.filter((l: any) => l.workstationId === ws.id).length,
-      online: ws.isOnline,
-    }));
-  }, [workstations, labelsAll]);
+  const labelsPerWs = useMemo(() => workstations.map(ws => ({
+    name: ws.name.replace('Bancada ', 'B'),
+    qty: labelsAll.filter((l: any) => l.workstationId === ws.id).length,
+    online: ws.isOnline,
+  })), [workstations, labelsAll]);
 
-  // Status dos PNs para radial
-  const radialData = [
-    { name: 'ConcluÃ­do', value: completionRate, fill: '#22d3ee' },
-  ];
-
-  // PNs por status para barras de progresso
-  const statusData = [
-    { label: 'ConcluÃ­dos', value: pnConcluido, total: totalPn, color: '#22d3ee' },
-    { label: 'Em Processo', value: pnEmProcesso, total: totalPn, color: '#38bdf8' },
-    { label: 'Pendentes', value: pnPendente, total: totalPn, color: '#0ea5e9' },
-    { label: 'DivergÃªncias', value: divergences.length, total: Math.max(totalPn, divergences.length, 1), color: '#f59e0b' },
-  ];
-
-  const stats = isOperator ? [
-    { label: 'Etiquetas', value: labels.length, icon: Printer, color: C1 },
-    { label: 'ConcluÃ­dos', value: pnConcluido, icon: CheckCircle, color: '#22d3ee' },
-    { label: 'Em Processo', value: pnEmProcesso, icon: Activity, color: C3 },
-    { label: 'DivergÃªncias', value: divergences.length, icon: AlertTriangle, color: '#f59e0b' },
-  ] : [
-    { label: 'Remessas', value: shipments.length, icon: FileText, color: C3 },
-    { label: 'Etiquetas', value: labels.length, icon: Printer, color: C1 },
-    { label: 'ConcluÃ­dos', value: pnConcluido, icon: CheckCircle, color: '#22d3ee' },
-    { label: 'DivergÃªncias', value: divergences.length, icon: AlertTriangle, color: '#f59e0b' },
-  ];
-
-  const currentWS = workstations.find(w => w.id === workstationId);
+  const donutData = [
+    { name: 'Concluidos', value: pnConcluido, color: GREEN },
+    { name: 'Divergencias', value: divergences.length, color: RED },
+    { name: 'Pendentes', value: pnPendente, color: AMBER },
+    { name: 'Em Processo', value: pnEmProcesso, color: BLUE_LT },
+  ].filter(d => d.value > 0);
+  const donutTotal = donutData.reduce((a, b) => a + b.value, 0) || 1;
+  const avgLabelsPerPn = totalPn > 1 ? (labelsAll.length / totalPn).toFixed(1) : '0';
+  const recentDivergences = divergences.slice(0, 5);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #060f1e 0%, #0a1628 60%, #0c1f3a 100%)', padding: '24px', color: '#e0f2fe' }}>
-
-      {/* Header */}
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 4 }}>
-            MÃ³dulo ConferÃªncia
-          </div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#e0f2fe', margin: 0 }}>
-            Dashboard{isOperator ? ` â€” Bancada ${workstationId}` : ''}
-          </h1>
-          <p style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-            {isOperator ? currentWS?.name : 'VisÃ£o geral da linha de produÃ§Ã£o'}
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '6px 14px' }}>
-          <TrendingUp size={14} color={C1} />
-          <span style={{ fontSize: 12, color: C1, fontWeight: 600 }}>
-            {completionRate}% concluÃ­do
-          </span>
-        </div>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0F172A 0%, #1E3A5F 50%, #0F172A 100%)',
+      padding: '28px 28px 48px',
+      color: '#e2e8f0',
+      fontFamily: "'Inter', system-ui, sans-serif",
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Marca dagua */}
+      <div aria-hidden style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
+        <span style={{ fontSize: 'clamp(80px,14vw,180px)', fontWeight: 900, color: 'rgba(255,255,255,0.022)', letterSpacing: '-0.04em', userSelect: 'none', whiteSpace: 'nowrap', textTransform: 'uppercase', transform: 'rotate(-12deg)' }}>MULTILASER</span>
       </div>
+      <div aria-hidden style={{ position: 'fixed', top: -160, right: -80, width: 520, height: 520, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div aria-hidden style={{ position: 'fixed', bottom: -200, left: -100, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(29,78,216,0.1) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
-        {stats.map((s, i) => (
-          <div key={i} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${s.color}88, transparent)` }} />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{s.label}</span>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: `${s.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <s.icon size={15} color={s.color} />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1400, margin: '0 auto' }}>
+
+        {/* Topbar */}
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4, fontWeight: 600 }}>Production Guard · Grupo Multilaser</p>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', margin: 0, letterSpacing: '-0.02em' }}>
+              Dashboard de Conferencia{isOperator ? ` - Bancada ${workstationId}` : ''}
+            </h1>
+            <p style={{ fontSize: 12, color: 'rgba(148,163,184,0.6)', marginTop: 4 }}>
+              {isOperator ? currentWS?.name : 'Visao geral · Controle de materia-prima'}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '8px 16px' }}>
+              <Activity size={14} color={BLUE_LT} />
+              <span style={{ fontSize: 12, color: BLUE_LT, fontWeight: 700 }}>{completionRate}% concluido</span>
+            </div>
+            <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '8px 16px', color: 'rgba(226,232,240,0.85)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              <RefreshCw size={13} />Atualizar
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} style={{ display: 'flex', alignItems: 'center', gap: 7, background: `linear-gradient(135deg, ${BLUE_MID}, ${BLUE_DK})`, border: '1px solid rgba(96,165,250,0.3)', borderRadius: 12, padding: '8px 16px', color: '#f1f5f9', fontSize: 12, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
+              <Download size={13} />Exportar
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* KPI Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
+          {[
+            { label: isOperator ? 'Etiquetas Geradas' : 'Total de Processos', value: isOperator ? labels.length : shipments.length, icon: isOperator ? Printer : Layers, color: BLUE_LT, trend: 'up' as const, trendValue: 'neste periodo' },
+            { label: 'Etiquetas Impressas', value: labelsAll.length, icon: Printer, color: BLUE_MID, trend: 'up' as const, trendValue: `${avgLabelsPerPn} por PN` },
+            { label: 'Produtos Conferidos', value: pnConcluido, icon: CheckCircle, color: GREEN, trend: 'up' as const, trendValue: `${completionRate}% do total` },
+            { label: 'Divergencias', value: divergences.length, icon: AlertTriangle, color: AMBER, trend: divergences.length > 0 ? 'down' as const : 'neutral' as const, trendValue: divergences.length > 0 ? 'requer atencao' : 'sem divergencias' },
+            { label: 'Pendentes', value: pnPendente, icon: Clock, color: RED, trend: 'neutral' as const, trendValue: `${pnEmProcesso} em processo` },
+          ].map((kpi, i) => <KpiCard key={i} {...kpi} delay={i} />)}
+        </div>
+
+        {/* Area chart + Donut */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, marginBottom: 20 }}>
+          <GlassCard delay={5}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div>
+                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Etiquetas Impressas - Ultimos 7 dias</p>
+                <p style={{ fontSize: 30, fontWeight: 800, color: '#f1f5f9', lineHeight: 1 }}>{labels.length}</p>
+              </div>
+              <div style={{ width: 42, height: 42, borderRadius: 13, background: `${BLUE_LT}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <BarChart2 size={20} color={BLUE_LT} />
               </div>
             </div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#f0f9ff', fontFamily: 'monospace', lineHeight: 1 }}>{s.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Linha do meio: grÃ¡fico de Ã¡rea grande + lateral direita */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, marginBottom: 16 }}>
-
-        {/* Ãrea grande â€” etiquetas por dia */}
-        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div>
-              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>Etiquetas impressas</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f9ff' }}>{labels.length} <span style={{ fontSize: 11, color: C1, fontWeight: 600 }}>Ãºltimos 7 dias</span></div>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={160}>
-            <AreaChart data={labelsPerDay} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-              <defs>
-                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={C1} stopOpacity={0.35} />
-                  <stop offset="95%" stopColor={C1} stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" vertical={false} />
-              <XAxis dataKey="dia" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <Tooltip content={<MiniTooltip />} />
-              <Area type="monotone" dataKey="qty" stroke={C1} strokeWidth={2.5} fill="url(#areaGrad)" dot={{ fill: C1, r: 3, strokeWidth: 0 }} activeDot={{ r: 5, fill: C1 }} name="Etiquetas" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Lateral direita: bancadas */}
-        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px' }}>
-          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Etiquetas por bancada</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f9ff', marginBottom: 14 }}>{labelsAll.length} total</div>
-          <ResponsiveContainer width="100%" height={150}>
-            <BarChart data={labelsPerWs} margin={{ top: 0, right: 0, bottom: 0, left: -20 }} barSize={18}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" horizontal={true} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <Tooltip content={<MiniTooltip />} />
-              <Bar dataKey="qty" radius={[4, 4, 0, 0]} name="Etiquetas">
-                {labelsPerWs.map((entry, i) => (
-                  <Cell key={i} fill={entry.online ? C2 : '#1e3a5f'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Linha inferior: radial + progresso PNs + bancadas status + linha etiquetas */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
-
-        {/* Taxa de conclusÃ£o */}
-        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, alignSelf: 'flex-start' }}>ConclusÃ£o</div>
-          <div style={{ position: 'relative', width: 110, height: 110 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <RadialBarChart cx="50%" cy="50%" innerRadius="65%" outerRadius="90%" data={radialData} startAngle={90} endAngle={-270} barSize={10}>
-                <RadialBar dataKey="value" cornerRadius={6} background={{ fill: '#1e3a5f' }} />
-              </RadialBarChart>
+            <ResponsiveContainer width="100%" height={180}>
+              <AreaChart data={labelsPerDay} margin={{ top: 4, right: 4, bottom: 0, left: -18 }}>
+                <defs>
+                  <linearGradient id="areaG" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={BLUE_LT} stopOpacity={0.35} />
+                    <stop offset="95%" stopColor={BLUE_LT} stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="dia" tick={{ fill: 'rgba(148,163,184,0.6)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'rgba(148,163,184,0.6)', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip content={<GlassTooltip />} />
+                <Area type="monotone" dataKey="qty" stroke={BLUE_LT} strokeWidth={2.5} fill="url(#areaG)"
+                  dot={{ fill: BLUE_LT, r: 3, strokeWidth: 0 }} activeDot={{ r: 5, fill: BLUE_LT, strokeWidth: 2, stroke: 'rgba(255,255,255,0.3)' }} name="Etiquetas" />
+              </AreaChart>
             </ResponsiveContainer>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 20, fontWeight: 900, color: '#f0f9ff' }}>{completionRate}%</span>
-              <span style={{ fontSize: 9, color: '#64748b' }}>concluÃ­do</span>
+          </GlassCard>
+
+          <GlassCard delay={6}>
+            <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Distribuicao dos Processos</p>
+            <p style={{ fontSize: 13, color: '#f1f5f9', marginBottom: 12 }}>{donutTotal} part numbers</p>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <PieChart width={200} height={160}>
+                <Pie data={donutData.length ? donutData : [{ name: 'Vazio', value: 1, color: 'rgba(255,255,255,0.08)' }]}
+                  cx="50%" cy="50%" innerRadius={52} outerRadius={72} paddingAngle={3} dataKey="value" labelLine={false}>
+                  {(donutData.length ? donutData : [{ color: 'rgba(255,255,255,0.08)' }]).map((entry, i) => (
+                    <Cell key={i} fill={entry.color} stroke="transparent" />
+                  ))}
+                </Pie>
+                <Tooltip content={<GlassTooltip />} />
+              </PieChart>
             </div>
-          </div>
-          <div style={{ marginTop: 8, display: 'flex', gap: 12, fontSize: 10 }}>
-            <span style={{ color: '#22d3ee' }}>{pnConcluido} OK</span>
-            <span style={{ color: '#64748b' }}>{totalPn} total</span>
-          </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+              {[
+                { label: 'Concluidos', value: pnConcluido, color: GREEN },
+                { label: 'Em Processo', value: pnEmProcesso, color: BLUE_LT },
+                { label: 'Pendentes', value: pnPendente, color: AMBER },
+                { label: 'Divergencias', value: divergences.length, color: RED },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: 3, background: item.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, color: 'rgba(226,232,240,0.8)' }}>{item.label}</span>
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: item.color }}>{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
         </div>
 
-        {/* Progresso por status */}
-        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px' }}>
-          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>Status PNs</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {statusData.map((s, i) => (
-              <div key={i}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span style={{ fontSize: 10, color: '#94a3b8' }}>{s.label}</span>
-                  <span style={{ fontSize: 10, color: s.color, fontWeight: 700 }}>{s.value}</span>
-                </div>
-                <div style={{ height: 5, borderRadius: 99, background: '#1e3a5f', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 99, background: `linear-gradient(90deg, ${s.color}, ${s.color}88)`, width: `${Math.round((s.value / s.total) * 100)}%`, transition: 'width 0.6s ease' }} />
-                </div>
+        {/* Bottom row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+          <GlassCard delay={7}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 2 }}>Etiquetas por Bancada</p>
+                <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9' }}>{labelsAll.length} total</p>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bancadas online/offline */}
-        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px' }}>
-          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14 }}>Bancadas</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {(isOperator ? workstations.filter(w => w.id === workstationId) : workstations).map(ws => (
-              <div key={ws.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', borderRadius: 8, background: ws.isOnline ? 'rgba(34,211,238,0.07)' : 'rgba(255,255,255,0.03)', border: `1px solid ${ws.isOnline ? '#22d3ee33' : '#1e3a5f'}` }}>
-                <span style={{ fontSize: 11, color: '#cbd5e1', fontWeight: 600 }}>{ws.name}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: ws.isOnline ? '#22d3ee' : '#475569', boxShadow: ws.isOnline ? '0 0 6px #22d3ee' : 'none' }} />
-                  <span style={{ fontSize: 10, color: ws.isOnline ? '#22d3ee' : '#475569' }}>{ws.isOnline ? 'Online' : 'Offline'}</span>
-                </div>
+              <div style={{ width: 38, height: 38, borderRadius: 12, background: `${BLUE_MID}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Zap size={17} color={BLUE_MID} />
               </div>
-            ))}
-          </div>
+            </div>
+            <ResponsiveContainer width="100%" height={140}>
+              <BarChart data={labelsPerWs} margin={{ top: 0, right: 0, bottom: 0, left: -20 }} barSize={22}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: 'rgba(148,163,184,0.6)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'rgba(148,163,184,0.6)', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip content={<GlassTooltip />} />
+                <Bar dataKey="qty" radius={[6,6,0,0]} name="Etiquetas">
+                  {labelsPerWs.map((entry, i) => (
+                    <Cell key={i} fill={entry.online ? BLUE_LT : 'rgba(255,255,255,0.1)'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </GlassCard>
+
+          <GlassCard delay={8}>
+            <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Evolucao Semanal</p>
+            <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9', marginBottom: 12 }}>
+              {labelsPerDay.reduce((a, b) => a + b.qty, 0)}{' '}
+              <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.6)', fontWeight: 500 }}>ultimos 7 dias</span>
+            </p>
+            <ResponsiveContainer width="100%" height={80}>
+              <LineChart data={labelsPerDay} margin={{ top: 0, right: 4, bottom: 0, left: -28 }}>
+                <defs>
+                  <linearGradient id="lineG" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor={BLUE_DK} />
+                    <stop offset="100%" stopColor={BLUE_LT} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="dia" tick={{ fill: 'rgba(148,163,184,0.5)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<GlassTooltip />} />
+                <Line type="monotone" dataKey="qty" stroke={`url(#lineG)`} strokeWidth={2.5} dot={false} name="Etiquetas" />
+              </LineChart>
+            </ResponsiveContainer>
+            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <p style={{ fontSize: 10, color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Status das Bancadas</p>
+              {(isOperator ? workstations.filter(w => w.id === workstationId) : workstations).map(ws => (
+                <div key={ws.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', borderRadius: 8, background: ws.isOnline ? 'rgba(52,211,153,0.07)' : 'rgba(255,255,255,0.03)', border: `1px solid ${ws.isOnline ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)'}` }}>
+                  <span style={{ fontSize: 11, color: 'rgba(226,232,240,0.8)', fontWeight: 500 }}>{ws.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: ws.isOnline ? GREEN : 'rgba(148,163,184,0.4)', boxShadow: ws.isOnline ? `0 0 6px ${GREEN}` : 'none' }} />
+                    <span style={{ fontSize: 10, color: ws.isOnline ? GREEN : 'rgba(148,163,184,0.5)', fontWeight: 600 }}>{ws.isOnline ? 'Online' : 'Offline'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+
+          <GlassCard delay={9}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 2 }}>Ultimas Divergencias</p>
+                <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9' }}>{divergences.length}</p>
+              </div>
+              <div style={{ width: 38, height: 38, borderRadius: 12, background: `${AMBER}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AlertTriangle size={17} color={AMBER} />
+              </div>
+            </div>
+            {recentDivergences.length === 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 0', gap: 8 }}>
+                <CheckCircle size={28} color={GREEN} strokeWidth={1.5} />
+                <p style={{ fontSize: 12, color: 'rgba(148,163,184,0.6)', textAlign: 'center' }}>Nenhuma divergencia registrada</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {recentDivergences.map((d: any, i: number) => (
+                  <motion.div key={d.id || i} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: 9, background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.15)' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(226,232,240,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.partNumber || d.part_number || 'N/A'}</p>
+                      <p style={{ fontSize: 10, color: 'rgba(148,163,184,0.6)' }}>{d.type === 'sobra' ? 'Sobra' : d.type === 'falta' ? 'Falta' : d.type || 'Divergencia'}</p>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: (d.difference ?? 0) > 0 ? AMBER : RED, flexShrink: 0 }}>
+                      {(d.difference ?? 0) > 0 ? '+' : ''}{d.difference ?? 'N/A'}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </GlassCard>
         </div>
 
-        {/* Mini line chart â€” evoluÃ§Ã£o cumulativa */}
-        <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px' }}>
-          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>EvoluÃ§Ã£o semanal</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f9ff', marginBottom: 8 }}>
-            {labelsPerDay.reduce((a, b) => a + b.qty, 0)} <span style={{ fontSize: 10, color: C3, fontWeight: 500 }}>7 dias</span>
-          </div>
-          <ResponsiveContainer width="100%" height={90}>
-            <LineChart data={labelsPerDay} margin={{ top: 0, right: 0, bottom: 0, left: -30 }}>
-              <defs>
-                <linearGradient id="lineGlow" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor={C4} />
-                  <stop offset="100%" stopColor={C1} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="dia" tick={{ fill: '#64748b', fontSize: 9 }} axisLine={false} tickLine={false} />
-              <Tooltip content={<MiniTooltip />} />
-              <Line type="monotone" dataKey="qty" stroke="url(#lineGlow)" strokeWidth={2.5} dot={false} name="Etiquetas" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
+          style={{ textAlign: 'center', marginTop: 40, fontSize: 11, color: 'rgba(148,163,184,0.35)', letterSpacing: '0.05em' }}>
+          Production Guard · Grupo Multilaser · Sistema de Conferencia de Materia-Prima
+        </motion.p>
       </div>
     </div>
   );
