@@ -16,7 +16,7 @@ import Workstation from './pages/Workstation';
 import ImportPage from './pages/ImportPage';
 import Supervisor from './pages/Supervisor';
 import AdminPage from './pages/AdminPage';
-import BasePage from './pages/BasePage';
+import ModuleSelect from './pages/ModuleSelect';
 import NotFound from './pages/NotFound';
 import PrintLabel from './pages/PrintLabel';
 
@@ -27,6 +27,7 @@ const queryClient = new QueryClient({
 type Screen =
   | 'splash'
   | 'login'
+  | 'module-select'
   | 'workstation-select'
   | 'app';
 
@@ -66,9 +67,20 @@ export default function App() {
           } else {
             useAuthStore.getState().setMode('admin');
           }
-          setScreen('app');
+          setScreen('module-select');
         }}
         onBack={() => setScreen('login')}
+      />
+    </QueryClientProvider>
+  );
+  if (screen === 'module-select') return (
+    <QueryClientProvider client={queryClient}>
+      <ModuleSelect
+        onSelectModule={() => setScreen('app')}
+        onLogout={() => {
+          useAuthStore.getState().logout();
+          setScreen('login');
+        }}
       />
     </QueryClientProvider>
   );
