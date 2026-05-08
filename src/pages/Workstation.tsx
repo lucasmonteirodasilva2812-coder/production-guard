@@ -9,8 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
-import LabelPreview, { LabelData } from '@/components/LabelPreview';
-import { Printer, RotateCcw, QrCode, ChevronLeft, Package2, Box, Search, ChevronsDown, ChevronsUp, Clock, Tag, ListChecks, ChevronRight, CheckCircle } from 'lucide-react';
+import LabelPreview from '@/components/LabelPreview';
+import { Printer, RotateCcw, QrCode, ChevronLeft, Package2, Search, ChevronsUp, Clock, Tag, ListChecks, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { Label } from '@/types/production';
@@ -84,10 +84,7 @@ export default function Workstation() {
   const [expiryDate, setExpiryDate] = useState('');
   const [lastLabel, setLastLabel] = useState<Label | null>(null);
 
-  // Form state (box label)
-  const [boxPn, setBoxPn] = useState('');
-  const [boxQty, setBoxQty] = useState('');
-  const [lastBoxLabel, setLastBoxLabel] = useState<LabelData | null>(null);
+
 
   const currentWS = workstations.find(w => w.id === workstationId);
   const selectedShipmentData = shipments.find(s => s.id === selectedShipment);
@@ -194,39 +191,6 @@ export default function Workstation() {
     handlePrint(mslVal, descVal);
   };
 
-  // ── Box label print (web) ────────────────────────────────────────────────
-  const handleBoxPrint = async () => {
-    if (!boxPn.trim()) { toast.error('Informe o Part Number'); return; }
-    const qty = parseInt(boxQty);
-    if (isNaN(qty) || qty <= 0) { toast.error('Quantidade inválida'); return; }
-
-    let descVal = '';
-    let mslVal: string | null = null;
-    try {
-      const { api } = await import('@/lib/api');
-      const base = await api.lookupPnBase(boxPn.trim());
-      if (base.description) descVal = base.description;
-      if (base.msl) mslVal = base.msl;
-    } catch {
-      // PN não cadastrado na base — prossegue sem dados
-    }
-
-    const now = new Date().toISOString();
-    const boxLabel: LabelData = {
-      partNumber: boxPn.trim(),
-      description: descVal,
-      quantity: qty,
-      printedBy: user?.name || 'Operador',
-      printedAt: now,
-      msl: mslVal,
-      labelType: 'caixa',
-      shipmentName,
-    };
-    setLastBoxLabel(boxLabel);
-    openLabelPrintPopup(boxLabel);
-    toast.success('Etiqueta de caixa pronta para impressão');
-  };
-
   // ── Remessa selection ─────────────────────────────────────────────────────
   if (!selectedShipment) {
     const filteredShipments = shipments.filter(s =>
@@ -308,49 +272,47 @@ export default function Workstation() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-black truncate">{shipmentName}</h1>
-            <div className="flex gap-1.5 flex-wrap">
-              <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">
-                TOTAL: {totalItems}
+            <div className="flex gap-2 flex-wrap items-center">
+              <span className="flex items-center gap-1.5 text-xs bg-muted/60 border border-border px-2.5 py-1 rounded-full font-semibold">
+                <Package2 className="w-3 h-3 text-info" />{totalItems}
               </span>
-              <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded-full font-medium">
-                CONF: {conferidos}
+              <span className="flex items-center gap-1.5 text-xs bg-success/10 border border-success/20 text-success px-2.5 py-1 rounded-full font-semibold">
+                <CheckCircle className="w-3 h-3" />{conferidos}
               </span>
               {sobras > 0 && (
-                <span className="text-xs bg-warning/15 text-warning px-2 py-0.5 rounded-full font-medium">
-                  SOBRAS: {sobras}
+                <span className="flex items-center gap-1.5 text-xs bg-warning/10 border border-warning/20 text-warning px-2.5 py-1 rounded-full font-semibold">
+                  <Tag className="w-3 h-3" />{sobras}
+                </span>
+              )}
+              {pendentePNs > 0 && (
+                <span className="flex items-center gap-1.5 text-xs bg-destructive/10 border border-destructive/20 text-destructive px-2.5 py-1 rounded-full font-semibold">
+                  <Clock className="w-3 h-3" />{pendentePNs}
                 </span>
               )}
             </div>
           </div>
-          {activeUsers.length > 0 && (
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              Usuários atuando: {activeUsers.join(', ')}
-            </p>
-          )}
         </div>
-        {/* Tabs */}
-        <div className="flex gap-2 shrink-0">
-          <button onClick={() => setActiveTab('normal')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', activeTab === 'normal' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground')}>
-            <Printer className="w-3.5 h-3.5 inline mr-1.5" />Etiqueta
-          </button>
-          <button onClick={() => setActiveTab('caixa')} className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors', activeTab === 'caixa' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground')}>
-            <Box className="w-3.5 h-3.5 inline mr-1.5" />Caixa
-          </button>
+        {/* Direita: usuários online + reimpressões */}
+        <div className="flex items-center gap-2 shrink-0">
+          {activeUsers.length > 0 && (
+            <div className="flex items-center gap-1.5 bg-muted/50 border border-border rounded-lg px-3 py-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse shrink-0" />
+              <span className="text-xs text-muted-foreground font-medium">{activeUsers.join(', ')}</span>
+            </div>
+          )}
           {recentLabels.length > 0 && (
             <button
               onClick={() => labelsRef.current?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title="Ir para reimpressões"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ChevronsDown className="w-3.5 h-3.5 inline mr-1" />Reimpressões
+              <RotateCcw className="w-3.5 h-3.5" />Reimpressões
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Normal label form ── */}
-      {activeTab === 'normal' && (
-        <div className="industrial-panel p-4">
+      {/* ── Form ── */}
+      <div className="industrial-panel p-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left: form fields */}
             <div className="space-y-3">
@@ -437,17 +399,6 @@ export default function Workstation() {
               )}
 
 
-              <Button
-                onClick={() => handleLookupAndPrint()}
-                disabled={createLabel.isPending || createReservation.isPending}
-                className="w-full justify-between"
-                size="lg"
-              >
-                <span className="flex items-center gap-2">
-                  <Printer className="w-4 h-4" />Imprimir Etiqueta
-                </span>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
 
             </div>
 
@@ -484,77 +435,9 @@ export default function Workstation() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* ── Box label form ── */}
-      {activeTab === 'caixa' && (
-        <div className="industrial-panel p-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <h2 className="text-sm font-semibold">Gerar Etiqueta de Caixa</h2>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Part Number *</label>
-                  <Input
-                    id="box-pn-input"
-                    value={boxPn}
-                    onChange={e => setBoxPn(e.target.value)}
-                    placeholder="Ex: CPRE005A"
-                    className="font-mono"
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        document.getElementById('box-qty-input')?.focus();
-                      }
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Quantidade *</label>
-                  <Input
-                    id="box-qty-input"
-                    type="number"
-                    min={1}
-                    value={boxQty}
-                    onChange={e => setBoxQty(e.target.value)}
-                    placeholder="Ex: 10000"
-                    className="font-mono"
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleBoxPrint();
-                        setBoxQty('');
-                        document.getElementById('box-pn-input')?.focus();
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-              <Button onClick={handleBoxPrint} className="gap-2">
-                <Box className="w-4 h-4" />Imprimir Etiqueta de Caixa
-              </Button>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-xs text-muted-foreground self-start">Pré-visualização</p>
-              {lastBoxLabel ? (
-                <div style={{ width: '150mm', height: '75mm', overflow: 'hidden', position: 'relative', margin: '0 auto' }}>
-                  <div style={{ transform: 'scale(1.5)', transformOrigin: 'top left', position: 'absolute', top: 0, left: 0 }}>
-                    <LabelPreview label={lastBoxLabel} />
-                  </div>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed border-border rounded-lg w-full flex items-center justify-center" style={{ height: 160 }}>
-                  <p className="text-xs text-muted-foreground">A etiqueta aparecerá aqui após impressão</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Part Number table ── */}
-      {activeTab === 'normal' && (
-        <div className="industrial-panel overflow-hidden">
+      <div className="industrial-panel overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
               <ListChecks className="w-4 h-4 text-primary" />
@@ -613,10 +496,9 @@ export default function Workstation() {
             </table>
           </div>
         </div>
-      )}
 
       {/* ── Bottom stat cards ── */}
-      {activeTab === 'normal' && selectedShipment && (
+      {selectedShipment && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="industrial-panel p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-info/15 flex items-center justify-center shrink-0">
@@ -658,7 +540,7 @@ export default function Workstation() {
       )}
 
       {/* ── Labels list + preview ── */}
-      {activeTab === 'normal' && recentLabels.length > 0 && (
+      {recentLabels.length > 0 && (
         <div ref={labelsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 industrial-panel p-4">
             <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Etiquetas Geradas — Workflow {workstationId}</h3>
