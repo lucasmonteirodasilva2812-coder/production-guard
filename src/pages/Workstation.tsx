@@ -291,39 +291,39 @@ export default function Workstation() {
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="industrial-panel p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-info/15 flex items-center justify-center shrink-0">
+        <div className="bg-info/10 border border-info/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-info/20 flex items-center justify-center shrink-0">
             <Package2 className="w-5 h-5 text-info" />
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Total de Itens</p>
-            <p className="text-2xl font-black font-mono">{totalItems}</p>
+            <p className="text-[10px] text-info/70 uppercase tracking-wide font-semibold">Total de Itens</p>
+            <p className="text-2xl font-black font-mono text-info">{totalItems}</p>
           </div>
         </div>
-        <div className="industrial-panel p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center shrink-0">
+        <div className="bg-success/10 border border-success/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-success/20 flex items-center justify-center shrink-0">
             <CheckCircle className="w-5 h-5 text-success" />
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Confirmados</p>
+            <p className="text-[10px] text-success/70 uppercase tracking-wide font-semibold">Confirmados</p>
             <p className="text-2xl font-black font-mono text-success">{conferidos}</p>
           </div>
         </div>
-        <div className="industrial-panel p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+        <div className="bg-warning/10 border border-warning/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center shrink-0">
             <Tag className="w-5 h-5 text-warning" />
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Sobras</p>
+            <p className="text-[10px] text-warning/70 uppercase tracking-wide font-semibold">Sobras</p>
             <p className="text-2xl font-black font-mono text-warning">{sobras}</p>
           </div>
         </div>
-        <div className="industrial-panel p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-destructive/15 flex items-center justify-center shrink-0">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-destructive/20 flex items-center justify-center shrink-0">
             <Clock className="w-5 h-5 text-destructive" />
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Pendentes</p>
+            <p className="text-[10px] text-destructive/70 uppercase tracking-wide font-semibold">Pendentes</p>
             <p className="text-2xl font-black font-mono text-destructive">{pendentePNs}</p>
           </div>
         </div>
@@ -503,8 +503,8 @@ export default function Workstation() {
       {/* ── Labels list + preview ── */}
       {recentLabels.length > 0 && (
         <div ref={labelsRef} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 industrial-panel p-4">
-            <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Etiquetas Geradas — Workflow {workstationId}</h3>
+          <div className="industrial-panel p-4">
+            <h3 className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Etiquetas Geradas — {shipmentName || `Bancada ${workstationId}`}</h3>
             <div className="space-y-1 max-h-60 overflow-y-auto">
               {recentLabels.map(label => (
                 <div key={label.id}
@@ -530,7 +530,7 @@ export default function Workstation() {
               ))}
             </div>
           </div>
-          <div className="industrial-panel p-4 flex flex-col items-center overflow-auto">
+          <div className="lg:col-span-2 industrial-panel p-4 flex flex-col items-center overflow-auto">
             <div className="flex items-center justify-between w-full mb-3">
               <h3 className="text-xs text-muted-foreground uppercase tracking-wider">Última Etiqueta</h3>
               <button
