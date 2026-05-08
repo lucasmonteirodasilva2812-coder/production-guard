@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -48,7 +48,7 @@ export default function Dashboard() {
   const totalPn = partNumbers.length || 1;
   const completionRate = Math.round((pnConcluido / totalPn) * 100);
 
-  // Labels por dia (últimos 7 dias)
+  // Labels por dia (Ãºltimos 7 dias)
   const labelsPerDay = useMemo(() => {
     const map: Record<string, number> = {};
     const today = new Date();
@@ -78,27 +78,27 @@ export default function Dashboard() {
 
   // Status dos PNs para radial
   const radialData = [
-    { name: 'Concluído', value: completionRate, fill: '#22d3ee' },
+    { name: 'ConcluÃ­do', value: completionRate, fill: '#22d3ee' },
   ];
 
   // PNs por status para barras de progresso
   const statusData = [
-    { label: 'Concluídos', value: pnConcluido, total: totalPn, color: '#22d3ee' },
+    { label: 'ConcluÃ­dos', value: pnConcluido, total: totalPn, color: '#22d3ee' },
     { label: 'Em Processo', value: pnEmProcesso, total: totalPn, color: '#38bdf8' },
     { label: 'Pendentes', value: pnPendente, total: totalPn, color: '#0ea5e9' },
-    { label: 'Divergências', value: divergences.length, total: Math.max(totalPn, divergences.length, 1), color: '#f59e0b' },
+    { label: 'DivergÃªncias', value: divergences.length, total: Math.max(totalPn, divergences.length, 1), color: '#f59e0b' },
   ];
 
   const stats = isOperator ? [
     { label: 'Etiquetas', value: labels.length, icon: Printer, color: C1 },
-    { label: 'Concluídos', value: pnConcluido, icon: CheckCircle, color: '#22d3ee' },
+    { label: 'ConcluÃ­dos', value: pnConcluido, icon: CheckCircle, color: '#22d3ee' },
     { label: 'Em Processo', value: pnEmProcesso, icon: Activity, color: C3 },
-    { label: 'Divergências', value: divergences.length, icon: AlertTriangle, color: '#f59e0b' },
+    { label: 'DivergÃªncias', value: divergences.length, icon: AlertTriangle, color: '#f59e0b' },
   ] : [
     { label: 'Remessas', value: shipments.length, icon: FileText, color: C3 },
     { label: 'Etiquetas', value: labels.length, icon: Printer, color: C1 },
-    { label: 'Concluídos', value: pnConcluido, icon: CheckCircle, color: '#22d3ee' },
-    { label: 'Divergências', value: divergences.length, icon: AlertTriangle, color: '#f59e0b' },
+    { label: 'ConcluÃ­dos', value: pnConcluido, icon: CheckCircle, color: '#22d3ee' },
+    { label: 'DivergÃªncias', value: divergences.length, icon: AlertTriangle, color: '#f59e0b' },
   ];
 
   const currentWS = workstations.find(w => w.id === workstationId);
@@ -110,19 +110,19 @@ export default function Dashboard() {
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 4 }}>
-            Módulo Conferência
+            MÃ³dulo ConferÃªncia
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#e0f2fe', margin: 0 }}>
-            Dashboard{isOperator ? ` — Bancada ${workstationId}` : ''}
+            Dashboard{isOperator ? ` â€” Bancada ${workstationId}` : ''}
           </h1>
           <p style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-            {isOperator ? currentWS?.name : 'Visão geral da linha de produção'}
+            {isOperator ? currentWS?.name : 'VisÃ£o geral da linha de produÃ§Ã£o'}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '6px 14px' }}>
           <TrendingUp size={14} color={C1} />
           <span style={{ fontSize: 12, color: C1, fontWeight: 600 }}>
-            {completionRate}% concluído
+            {completionRate}% concluÃ­do
           </span>
         </div>
       </div>
@@ -143,15 +143,15 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Linha do meio: gráfico de área grande + lateral direita */}
+      {/* Linha do meio: grÃ¡fico de Ã¡rea grande + lateral direita */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, marginBottom: 16 }}>
 
-        {/* Área grande — etiquetas por dia */}
+        {/* Ãrea grande â€” etiquetas por dia */}
         <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <div>
               <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>Etiquetas impressas</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f9ff' }}>{labels.length} <span style={{ fontSize: 11, color: C1, fontWeight: 600 }}>últimos 7 dias</span></div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f9ff' }}>{labels.length} <span style={{ fontSize: 11, color: C1, fontWeight: 600 }}>Ãºltimos 7 dias</span></div>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={160}>
@@ -194,9 +194,9 @@ export default function Dashboard() {
       {/* Linha inferior: radial + progresso PNs + bancadas status + linha etiquetas */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
 
-        {/* Taxa de conclusão */}
+        {/* Taxa de conclusÃ£o */}
         <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, alignSelf: 'flex-start' }}>Conclusão</div>
+          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, alignSelf: 'flex-start' }}>ConclusÃ£o</div>
           <div style={{ position: 'relative', width: 110, height: 110 }}>
             <ResponsiveContainer width="100%" height="100%">
               <RadialBarChart cx="50%" cy="50%" innerRadius="65%" outerRadius="90%" data={radialData} startAngle={90} endAngle={-270} barSize={10}>
@@ -205,7 +205,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: 20, fontWeight: 900, color: '#f0f9ff' }}>{completionRate}%</span>
-              <span style={{ fontSize: 9, color: '#64748b' }}>concluído</span>
+              <span style={{ fontSize: 9, color: '#64748b' }}>concluÃ­do</span>
             </div>
           </div>
           <div style={{ marginTop: 8, display: 'flex', gap: 12, fontSize: 10 }}>
@@ -248,9 +248,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Mini line chart — evolução cumulativa */}
+        {/* Mini line chart â€” evoluÃ§Ã£o cumulativa */}
         <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px' }}>
-          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Evolução semanal</div>
+          <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>EvoluÃ§Ã£o semanal</div>
           <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f9ff', marginBottom: 8 }}>
             {labelsPerDay.reduce((a, b) => a + b.qty, 0)} <span style={{ fontSize: 10, color: C3, fontWeight: 500 }}>7 dias</span>
           </div>
@@ -270,132 +270,6 @@ export default function Dashboard() {
         </div>
 
       </div>
-    </div>
-  );
-}
-  const { data: partNumbers = [] } = usePartNumbers();
-  const { data: labelsAll = [] } = useLabels();
-  const { data: divergences = [] } = useDivergences();
-  const { data: workstations = [] } = useWorkstations();
-
-  // Operators only see their workstation data
-  const labels = isOperator && workstationId
-    ? labelsAll.filter(l => l.workstationId === workstationId)
-    : labelsAll;
-
-  const stats = isOperator ? [
-    { label: 'Etiquetas Impressas', value: labels.length, icon: Printer, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Concluídos', value: partNumbers.filter(p => p.status === 'concluido').length, icon: CheckCircle, color: 'text-success', bg: 'bg-success/10' },
-    { label: 'Em Processo', value: partNumbers.filter(p => p.status === 'em_processo').length, icon: Activity, color: 'text-processing', bg: 'bg-processing/10' },
-    { label: 'Divergências', value: divergences.length, icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10' },
-  ] : [
-    { label: 'Remessas', value: shipments.length, icon: FileText, color: 'text-info', bg: 'bg-info/10' },
-    { label: 'Etiquetas Impressas', value: labels.length, icon: Printer, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Concluídos', value: partNumbers.filter(p => p.status === 'concluido').length, icon: CheckCircle, color: 'text-success', bg: 'bg-success/10' },
-    { label: 'Divergências', value: divergences.length, icon: AlertTriangle, color: 'text-warning', bg: 'bg-warning/10' },
-  ];
-
-  const currentWS = workstations.find(w => w.id === workstationId);
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          {isOperator ? `Bancada ${workstationId} — ${currentWS?.name || ''}` : 'Visão geral da linha de produção'}
-        </p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(s => (
-          <div key={s.label} className="industrial-panel p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-muted-foreground uppercase tracking-wider">{s.label}</span>
-              <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center`}>
-                <s.icon className={`w-4 h-4 ${s.color}`} />
-              </div>
-            </div>
-            <p className="text-3xl font-bold font-mono">{s.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Workstation status — admin sees all, operator sees own */}
-      <div className="industrial-panel p-4">
-        <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-primary" />
-          {isOperator ? 'Minha Bancada' : 'Status das Bancadas'}
-        </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {(isOperator ? workstations.filter(w => w.id === workstationId) : workstations).map(ws => (
-            <div key={ws.id} className={`p-3 rounded-lg border ${ws.isOnline ? 'border-success/30 glow-green' : 'border-destructive/30'} bg-background/50`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">{ws.name}</span>
-                <div className={`w-2.5 h-2.5 rounded-full ${ws.isOnline ? 'bg-success animate-pulse-green' : 'bg-destructive'}`} />
-              </div>
-              <p className={`text-xs mt-1 ${ws.isOnline ? 'text-success' : 'text-destructive'}`}>
-                {ws.isOnline ? 'Online' : 'Offline'}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Part Numbers Table */}
-      {partNumbers.length > 0 && (
-        <div className="industrial-panel p-4">
-          <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
-            <Package className="w-4 h-4 text-primary" />
-            Part Numbers
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="pb-2 text-xs text-muted-foreground font-medium">Part Number</th>
-                  <th className="pb-2 text-xs text-muted-foreground font-medium">Descrição</th>
-                  <th className="pb-2 text-xs text-muted-foreground font-medium text-right">Remessa</th>
-                  <th className="pb-2 text-xs text-muted-foreground font-medium text-right">Físico</th>
-                  <th className="pb-2 text-xs text-muted-foreground font-medium text-right">Diferença</th>
-                  <th className="pb-2 text-xs text-muted-foreground font-medium text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {partNumbers.map(pn => {
-                  const progress = pn.declaredQty > 0 ? Math.round((pn.labeledQty / pn.declaredQty) * 100) : 0;
-                  const diff = pn.labeledQty - pn.declaredQty;
-                  return (
-                    <tr key={pn.id} className="hover:bg-muted/30">
-                      <td className="py-2.5 font-mono font-medium">{pn.partNumber}</td>
-                      <td className="py-2.5 text-muted-foreground max-w-[200px] truncate">{pn.description}</td>
-                      <td className="py-2.5 text-right font-mono">{pn.declaredQty.toLocaleString('pt-BR')}</td>
-                      <td className="py-2.5 text-right">
-                        <span className="font-mono">{pn.labeledQty.toLocaleString('pt-BR')}</span>
-                        <div className="w-full bg-muted rounded-full h-1 mt-1.5">
-                          <div className="h-1 rounded-full bg-primary transition-all" style={{ width: `${Math.min(progress, 100)}%` }} />
-                        </div>
-                      </td>
-                      <td className={cn('py-2.5 text-right font-mono font-medium',
-                        diff === 0 ? 'text-success' : diff < 0 ? 'text-destructive' : 'text-warning')}>
-                        {diff > 0 ? '+' : ''}{diff.toLocaleString('pt-BR')}
-                      </td>
-                      <td className="py-2.5 text-center"><StatusBadge status={pn.status} /></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {partNumbers.length === 0 && (
-        <div className="industrial-panel p-12 text-center">
-          <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Nenhuma remessa importada ainda.</p>
-        </div>
-      )}
     </div>
   );
 }
