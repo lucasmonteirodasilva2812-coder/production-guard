@@ -273,9 +273,6 @@ export default function Dashboard() {
     </div>
   );
 }
-
-
-  const { data: shipments = [] } = useShipments();
   const { data: partNumbers = [] } = usePartNumbers();
   const { data: labelsAll = [] } = useLabels();
   const { data: divergences = [] } = useDivergences();
