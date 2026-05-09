@@ -300,6 +300,7 @@ export default function Dashboard() {
                   </tbody>
                 </table>
               </div>
+
             </GlassCard>
           )}
         </div>
