@@ -40,6 +40,7 @@ function GlassTooltip({ active, payload, label }: any) {
   );
 }
 
+// FIM DO ARQUIVO: não adicionar nada após esta linha
 function GlassCard({ children, delay = 0, style = {} }: {
   children: React.ReactNode; delay?: number; style?: React.CSSProperties;
 }) {
@@ -406,7 +407,6 @@ export default function Dashboard() {
           style={{ textAlign: 'center', marginTop: 40, fontSize: 11, color: 'rgba(148,163,184,0.35)', letterSpacing: '0.05em' }}>
           Production Guard · Grupo Multilaser · Sistema de Conferencia de Materia-Prima
         </motion.p>
-      </div>
     </div>
   );
 }
