@@ -158,19 +158,25 @@ export default function ImportPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
+              <colgroup>
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '20%' }} />
+              </colgroup>
               <thead>
                 <tr className="border-b border-border">
-                  <th className="pb-2 text-xs text-muted-foreground font-medium text-left">Processos</th>
+                  <th className="pb-2 text-xs text-muted-foreground font-medium text-left pl-2">Processos</th>
                   <th className="pb-2 text-xs text-muted-foreground font-medium text-left">Importado</th>
                   <th className="pb-2 text-xs text-muted-foreground font-medium text-right">Part Numbers</th>
-                  <th className="pb-2 text-xs text-muted-foreground font-medium text-right">Status</th>
-                  <th className="pb-2 text-xs text-muted-foreground font-medium">Importado por</th>
+                  <th className="pb-2 text-xs text-muted-foreground font-medium text-center">Status</th>
+                  <th className="pb-2 text-xs text-muted-foreground font-medium text-center pr-2">Importado por</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map(s => {
                   const displayName = s.fileName.replace(/\.(xlsx|xls|csv)$/i, "");
-                  // Busca todos os part numbers da remessa
                   const pns = partNumbers.filter(pn => pn.shipmentId === s.id);
                   const total = pns.length;
                   const pendentes = pns.filter(pn => pn.status === 'pendente').length;
@@ -179,22 +185,19 @@ export default function ImportPage() {
                   let status = 'Pendente';
                   if (concluidos === total && total > 0) status = 'Conferido';
                   else if (emConferencia > 0 || concluidos > 0) status = 'Em Conferência';
-                  // badge cor
                   let badgeClass = status === 'Conferido' ? 'text-success' : status === 'Em Conferência' ? 'text-info' : 'text-warning';
                   return (
                     <tr key={s.id} className="hover:bg-muted/20">
-                      <td className="py-2.5 font-mono font-semibold">{displayName}</td>
-                      <td className="py-2.5 text-muted-foreground">
-                        {new Date(s.importedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-                      </td>
+                      <td className="py-2.5 font-mono font-semibold pl-2">{displayName}</td>
+                      <td className="py-2.5 text-muted-foreground">{new Date(s.importedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
                       <td className="py-2.5 text-right font-mono">{s.totalParts}</td>
-                      <td className="py-2.5 text-right font-mono">
+                      <td className="py-2.5 text-center font-mono">
                         <span className={badgeClass}>{status}</span>
                       </td>
-                      <td className="py-2.5 text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
+                      <td className="py-2.5 text-muted-foreground text-center pr-2">
+                        <div className="flex items-center gap-2 justify-center">
                           <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
-                          {s.importedBy}
+                          <span className="truncate max-w-[120px]">{s.importedBy}</span>
                         </div>
                       </td>
                     </tr>

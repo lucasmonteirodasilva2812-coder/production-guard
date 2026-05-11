@@ -4,7 +4,6 @@ import { Zap, CheckCircle } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../components/ui/tooltip';
 import { useLabels, useDivergences, useWorkstations } from '../hooks/useProductionData';
-
 const BLUE_MID = '#3B5BDB';
 const BLUE_LT = '#93C5FD';
 const GREEN = '#34D399';
