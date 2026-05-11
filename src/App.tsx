@@ -65,30 +65,13 @@ export default function App() {
           const { user: u } = useAuthStore.getState();
           if (u?.role === 'operador') {
             useAuthStore.getState().setMode('operador');
-          } else {
-            useAuthStore.getState().setMode('admin');
-          }
-          setScreen('module-select');
-        }}
-        onBack={() => setScreen('login')}
-      />
-    </QueryClientProvider>
-  );
-  if (screen === 'module-select') return (
-    <QueryClientProvider client={queryClient}>
-      <ModuleSelect
-        onSelectModule={() => {
-          const { user: u } = useAuthStore.getState();
-          if (u?.role === 'operador') {
             setScreen('workstation-select');
           } else {
+            useAuthStore.getState().setMode('admin');
             setScreen('app');
           }
         }}
-        onLogout={() => {
-          useAuthStore.getState().logout();
-          setScreen('login');
-        }}
+        onBack={() => setScreen('login')}
       />
     </QueryClientProvider>
   );
@@ -113,7 +96,6 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route element={<AppLayout />}>
-              <Route path="/" element={<Dashboard />} />
               <Route path="/workstation" element={<Workstation />} />
               {(isAdmin || user?.role === 'supervisor') && (
                 <>
@@ -126,11 +108,13 @@ export default function App() {
               {isAdmin && <Route path="/admin" element={<AdminPage />} />}
               {isOperator && (
                 <>
-                  <Route path="/import" element={<Navigate to="/" replace />} />
-                  <Route path="/supervisor" element={<Navigate to="/" replace />} />
-                  <Route path="/admin" element={<Navigate to="/" replace />} />
+                  <Route path="/import" element={<Navigate to="/workstation" replace />} />
+                  <Route path="/supervisor" element={<Navigate to="/workstation" replace />} />
+                  <Route path="/admin" element={<Navigate to="/workstation" replace />} />
                 </>
               )}
+              {/* Redirecionar / para /workstation */}
+              <Route path="/" element={<Navigate to="/workstation" replace />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

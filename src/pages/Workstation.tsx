@@ -214,13 +214,14 @@ export default function Workstation() {
           />
         </div>
 
-        <div className="industrial-panel overflow-hidden">
+        <div className="industrial-panel overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="p-3 text-xs text-muted-foreground font-medium text-left">Nome / Código</th>
                 <th className="p-3 text-xs text-muted-foreground font-medium text-right">Part Numbers</th>
                 <th className="p-3 text-xs text-muted-foreground font-medium text-right">Total un</th>
+                <th className="p-3 text-xs text-muted-foreground font-medium text-center">Status</th>
                 <th className="p-3 text-xs text-muted-foreground font-medium text-left">Data</th>
                 <th className="p-3 text-xs text-muted-foreground font-medium text-left">Importado por</th>
               </tr>
@@ -228,7 +229,7 @@ export default function Workstation() {
             <tbody className="divide-y divide-border">
               {filteredShipments.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center text-muted-foreground">
+                  <td colSpan={6} className="p-12 text-center text-muted-foreground">
                     {shipments.length === 0 ? (
                       <div>
                         <Package2 className="w-10 h-10 mx-auto mb-2 opacity-20" />
@@ -240,19 +241,29 @@ export default function Workstation() {
                   </td>
                 </tr>
               )}
-              {filteredShipments.map(s => (
-                <tr
-                  key={s.id}
-                  onClick={() => setSelectedShipment(s.id)}
-                  className="cursor-pointer hover:bg-muted/30 transition-colors"
-                >
-                  <td className="p-3 font-mono font-semibold">{s.fileName}</td>
-                  <td className="p-3 text-right font-mono">{s.totalParts}</td>
-                  <td className="p-3 text-right font-mono">{s.totalQuantity.toLocaleString('pt-BR')}</td>
-                  <td className="p-3 text-muted-foreground">{new Date(s.importedAt).toLocaleDateString('pt-BR')}</td>
-                  <td className="p-3 text-muted-foreground">{s.importedBy}</td>
-                </tr>
-              ))}
+              {filteredShipments.map(s => {
+                const pns = partNumbers.filter(pn => pn.shipmentId === s.id);
+                const total = pns.length;
+                const pendentes = pns.filter(pn => pn.status === 'pendente').length;
+                const emConferencia = pns.filter(pn => pn.status === 'em_processo').length;
+                const concluidos = pns.filter(pn => pn.status === 'concluido').length;
+                let status = 'Pendente';
+                if (concluidos === total && total > 0) status = 'Conferido';
+                else if (emConferencia > 0 || concluidos > 0) status = 'Em Conferência';
+                let badgeClass = status === 'Conferido' ? 'text-success' : status === 'Em Conferência' ? 'text-info' : 'text-warning';
+                return (
+                  <tr key={s.id} className="cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => setSelectedShipment(s.id)}>
+                    <td className="p-3 font-mono font-semibold">{s.fileName}</td>
+                    <td className="p-3 text-right font-mono">{s.totalParts}</td>
+                    <td className="p-3 text-right font-mono">{s.totalQuantity.toLocaleString('pt-BR')}</td>
+                    <td className={"p-3 text-center font-mono " + badgeClass}>
+                      <span>{status}</span>
+                    </td>
+                    <td className="p-3 text-muted-foreground">{new Date(s.importedAt).toLocaleDateString('pt-BR')}</td>
+                    <td className="p-3 text-muted-foreground">{s.importedBy}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
