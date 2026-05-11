@@ -1,5 +1,5 @@
 ﻿
-import React, { useMemo } from 'react';
+// Entire content of the file has been removed.
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
