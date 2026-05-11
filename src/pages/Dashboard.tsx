@@ -1,36 +1,4 @@
-﻿        {/* Telinha lateral de divergências */}
-        {divergences.filter(d => d.status !== 'resolvida').length > 0 && (
-          <motion.div
-            initial={{ x: 320, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              position: 'absolute', top: 0, right: -370, width: 340, height: '100%',
-              background: 'rgba(15,23,42,0.92)',
-              border: '1px solid rgba(248,113,113,0.18)',
-              borderRadius: 18, boxShadow: '0 8px 32px rgba(248,113,113,0.13)',
-              padding: '24px 22px', zIndex: 10, overflowY: 'auto',
-              display: 'flex', flexDirection: 'column', gap: 12,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <AlertTriangle size={18} color={RED} />
-              <span style={{ fontSize: 15, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.01em' }}>Divergências em aberto</span>
-            </div>
-            {divergences.filter(d => d.status !== 'resolvida').map((d, idx) => (
-              <div key={d.id || idx} style={{
-                background: 'rgba(248,113,113,0.07)',
-                border: '1px solid rgba(248,113,113,0.13)',
-                borderRadius: 10, padding: '10px 14px', marginBottom: 6,
-                display: 'flex', flexDirection: 'column', gap: 2,
-              }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#e0e7ef' }}>{d.partNumber || d.part_number || 'N/A'}</span>
-                <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)' }}>{d.type === 'sobra' ? 'Sobra' : d.type === 'falta' ? 'Falta' : d.type || 'Divergência'}</span>
-                <span style={{ fontSize: 11, color: RED, fontWeight: 600 }}>Status: {d.status}</span>
-              </div>
-            ))}
-          </motion.div>
-        )}
+﻿
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
