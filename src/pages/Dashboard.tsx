@@ -1,23 +1,6 @@
 ﻿export default function Dashboard() {
   return <div style={{color:'#fff',padding:40}}>Dashboard vazio</div>;
 }
-                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4, fontWeight: 600 }}>Production Guard · Grupo Multilaser</p>
-                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', margin: 0, letterSpacing: '-0.02em' }}>
-                  Dashboard de Conferência{isOperator ? ` - Bancada ${workstationId}` : ''}
-                </h1>
-                <p style={{ fontSize: 12, color: 'rgba(148,163,184,0.6)', marginTop: 4 }}>
-                  {isOperator ? currentWS?.name : 'Visão geral · Controle de matéria-prima'}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '8px 16px' }}>
-              <Activity size={14} color={BLUE_LT} />
-              <span style={{ fontSize: 12, color: BLUE_LT, fontWeight: 700 }}>{completionRate}% concluido</span>
-            </div>
-            <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.07)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '8px 16px', color: 'rgba(226,232,240,0.85)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-              <RefreshCw size={13} />Atualizar
             </motion.button>
             <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} style={{ display: 'flex', alignItems: 'center', gap: 7, background: `linear-gradient(135deg, ${BLUE_MID}, ${BLUE_DK})`, border: '1px solid rgba(96,165,250,0.3)', borderRadius: 12, padding: '8px 16px', color: '#f1f5f9', fontSize: 12, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
               <Download size={13} />Exportar
