@@ -1,23 +1,6 @@
 ﻿export default function Dashboard() {
   return <div style={{color:'#fff',padding:40}}>Dashboard vazio</div>;
 }
-        <svg width="140" height="38" viewBox="0 0 140 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="28" fontFamily="'Inter', Arial, sans-serif" fontWeight="900" fontSize="32" fill="#60A5FA" letterSpacing="-0.04em">MULTILASER</text>
-        </svg>
-      </div>
-
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1400, margin: '0 auto' }}>
-
-        {/* Topbar */}
-        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 12, position: 'relative' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="19" cy="19" r="19" fill="#3B82F6" fillOpacity="0.13" />
-                <text x="7" y="27" fontFamily="'Inter', Arial, sans-serif" fontWeight="900" fontSize="18" fill="#60A5FA">M</text>
-              </svg>
-              <div>
                 <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4, fontWeight: 600 }}>Production Guard · Grupo Multilaser</p>
                 <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f1f5f9', margin: 0, letterSpacing: '-0.02em' }}>
                   Dashboard de Conferência{isOperator ? ` - Bancada ${workstationId}` : ''}
