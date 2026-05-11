@@ -1,41 +1,6 @@
 ﻿export default function Dashboard() {
-  // ...outros hooks e lógica...
-  // Cálculo dos colaboradores em conferência
-  const emConferenciaIds = partNumbers.filter(p => p.status === 'em_processo').map(p => p.id);
-  const labelsEmConf = labelsAll.filter(l => emConferenciaIds.includes(l.partNumberId));
-  const userMap: Record<string, { name: string, qty: number }> = {};
-  labelsEmConf.forEach(l => {
-    const user = l.userName || l.user_name || l.user || 'Desconhecido';
-    if (!userMap[user]) userMap[user] = { name: user, qty: 0 };
-    userMap[user].qty += l.quantity || 1;
-  });
-  const sortedUsers = Object.values(userMap).sort((a, b) => b.qty - a.qty).slice(0, 8);
-
   return (
-    // ...código anterior...
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-      <thead>
-        <tr style={{ color: '#93C5FD', fontWeight: 700, background: 'rgba(59,91,219,0.07)' }}>
-          <th style={{ textAlign: 'left', padding: '6px 8px' }}>#</th>
-          <th style={{ textAlign: 'left', padding: '6px 8px' }}>Colaborador</th>
-          <th style={{ textAlign: 'center', padding: '6px 8px' }}>Itens</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sortedUsers.length === 0 ? (
-          <tr><td colSpan={3} style={{ textAlign: 'center', color: 'rgba(148,163,184,0.6)', padding: 18 }}>Nenhum colaborador encontrado</td></tr>
-        ) : (
-          sortedUsers.map((u, i) => (
-            <tr key={u.name} style={{ background: i % 2 ? 'rgba(59,91,219,0.03)' : 'transparent' }}>
-              <td style={{ padding: '7px 8px', color: '#a5b4fc', fontWeight: 700, textAlign: 'center' }}>{i + 1}</td>
-              <td style={{ padding: '7px 8px', fontWeight: 600, color: '#e0e7ef' }}>{u.name}</td>
-              <td style={{ padding: '7px 8px', textAlign: 'center', color: '#60A5FA', fontWeight: 700 }}>{u.qty}</td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-    // ...restante do layout...
+    <div style={{color:'#fff',padding:40}}>Dashboard vazio</div>
   );
 }
               </div>
