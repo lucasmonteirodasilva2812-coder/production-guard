@@ -20,14 +20,13 @@ export function AppSidebar() {
   const ws = workstations.find(w => w.id === workstationId);
   const isAdmin = mode === 'admin';
   const isOperator = mode === 'operador';
-  const isSupervisor = user?.role === 'supervisor';
-
+  const isAdmin = mode === 'admin';
+  const isOperator = mode === 'operador';
 
   const adminNav = [
     { to: '/workstation', icon: Factory, label: "Workflow's" },
     { to: '/import', icon: FileUp, label: 'Importar' },
     { to: '/base', icon: Database, label: 'Base' },
-    { to: '/supervisor', icon: ShieldCheck, label: 'Supervisor' },
     { to: '/admin', icon: Settings, label: 'Admin' },
   ];
 
@@ -35,14 +34,7 @@ export function AppSidebar() {
     { to: '/workstation', icon: Factory, label: "Workflow's" },
   ];
 
-  const supervisorNav = [
-    { to: '/workstation', icon: Factory, label: "Workflow's" },
-    { to: '/import', icon: FileUp, label: 'Importar' },
-    { to: '/base', icon: Database, label: 'Base' },
-    { to: '/supervisor', icon: ShieldCheck, label: 'Supervisor' },
-  ];
-
-  const navItems = isAdmin ? adminNav : isSupervisor ? supervisorNav : operatorNav;
+  const navItems = isAdmin ? adminNav : operatorNav;
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -64,7 +56,7 @@ export function AppSidebar() {
           <div>
             <h1 className="text-sm font-bold text-sidebar-foreground">Production Guard</h1>
             <p className="text-[10px] text-muted-foreground capitalize">
-              {isAdmin ? '⚙ Administrador' : isOperator ? '🔧 Operador' : '👁 Supervisor'}
+              {isAdmin ? '⚙ Administrador' : '🔧 Operador'}
             </p>
           </div>
         </div>

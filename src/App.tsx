@@ -11,10 +11,8 @@ import { api } from '@/lib/api';
 import SplashScreen from './pages/SplashScreen';
 import LoginPage from './pages/LoginPage';
 import WorkstationSelect from './pages/WorkstationSelect';
-import Dashboard from './pages/Dashboard';
 import Workstation from './pages/Workstation';
 import ImportPage from './pages/ImportPage';
-import Supervisor from './pages/Supervisor';
 import AdminPage from './pages/AdminPage';
 import ModuleSelect from './pages/ModuleSelect';
 import BasePage from './pages/BasePage';
@@ -101,7 +99,6 @@ export default function App() {
                 <>
                   <Route path="/import" element={<ImportPage />} />
                   <Route path="/base" element={<BasePage />} />
-                  <Route path="/supervisor" element={<Supervisor />} />
                   {/* <Route path="/print/label/:id" element={<PrintLabel />} /> */}
                 </>
               )}
@@ -109,7 +106,6 @@ export default function App() {
               {isOperator && (
                 <>
                   <Route path="/import" element={<Navigate to="/workstation" replace />} />
-                  <Route path="/supervisor" element={<Navigate to="/workstation" replace />} />
                   <Route path="/admin" element={<Navigate to="/workstation" replace />} />
                 </>
               )}
