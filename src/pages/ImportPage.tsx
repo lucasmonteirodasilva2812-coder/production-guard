@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { useShipments, useCreateShipment } from '@/hooks/useProductionData';
+import { useShipments, useCreateShipment, usePartNumbers } from '@/hooks/useProductionData';
 import { Input } from '@/components/ui/input';
 import { FileUp, CheckCircle, AlertCircle, Search, Upload, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
@@ -30,6 +30,7 @@ export default function ImportPage() {
   const user = useAuthStore(s => s.user);
   const { data: shipments = [] } = useShipments();
   const createShipment = useCreateShipment();
+  const { data: partNumbers = [] } = usePartNumbers();
   // Removido campo de nome manual da remessa
   const [search, setSearch] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -168,13 +169,18 @@ export default function ImportPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map(s => {
-                  // Remove extensão .xlsx, .xls ou .csv do nome
                   const displayName = s.fileName.replace(/\.(xlsx|xls|csv)$/i, "");
-                  // Status fictício: pode ser ajustado conforme backend futuramente
-                  // Opções: pendente, finalizado, em conferência, pausado
-                  // Aqui, exemplo: alterna status por id para demo
-                  const statusOptions = ["pendente", "finalizado", "em conferência", "pausado"];
-                  const status = statusOptions[s.id % statusOptions.length];
+                  // Busca todos os part numbers da remessa
+                  const pns = partNumbers.filter(pn => pn.shipmentId === s.id);
+                  const total = pns.length;
+                  const pendentes = pns.filter(pn => pn.status === 'pendente').length;
+                  const emConferencia = pns.filter(pn => pn.status === 'em_processo').length;
+                  const concluidos = pns.filter(pn => pn.status === 'concluido').length;
+                  let status = 'Pendente';
+                  if (concluidos === total && total > 0) status = 'Conferido';
+                  else if (emConferencia > 0 || concluidos > 0) status = 'Em Conferência';
+                  // badge cor
+                  let badgeClass = status === 'Conferido' ? 'text-success' : status === 'Em Conferência' ? 'text-info' : 'text-warning';
                   return (
                     <tr key={s.id} className="hover:bg-muted/20">
                       <td className="py-2.5 font-mono font-semibold">{displayName}</td>
@@ -183,14 +189,7 @@ export default function ImportPage() {
                       </td>
                       <td className="py-2.5 text-right font-mono">{s.totalParts}</td>
                       <td className="py-2.5 text-right font-mono">
-                        <span className={
-                          status === "finalizado" ? "text-success" :
-                          status === "pendente" ? "text-warning" :
-                          status === "em conferência" ? "text-info" :
-                          status === "pausado" ? "text-muted-foreground" : ""
-                        }>
-                          {status}
-                        </span>
+                        <span className={badgeClass}>{status}</span>
                       </td>
                       <td className="py-2.5 text-muted-foreground">
                         <div className="flex items-center gap-1.5">
