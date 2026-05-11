@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 // xlsx imported dynamically to keep bundle lean
 async function parseExcelFile(file: File): Promise<{ partNumber: string; description: string; quantity: number }[]> {
-  // @ts-expect-error xlsx types resolved at runtime
+  // xlsx types resolved at runtime
   const XLSX = await import('xlsx');
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: 'array' });
@@ -159,30 +159,48 @@ export default function ImportPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="pb-2 text-xs text-muted-foreground font-medium text-left">Nome / Código</th>
-                  <th className="pb-2 text-xs text-muted-foreground font-medium text-left">Data de Adição</th>
+                  <th className="pb-2 text-xs text-muted-foreground font-medium text-left">Processos</th>
+                  <th className="pb-2 text-xs text-muted-foreground font-medium text-left">Importado</th>
                   <th className="pb-2 text-xs text-muted-foreground font-medium text-right">Part Numbers</th>
-                  <th className="pb-2 text-xs text-muted-foreground font-medium text-right">Total un</th>
+                  <th className="pb-2 text-xs text-muted-foreground font-medium text-right">Status</th>
                   <th className="pb-2 text-xs text-muted-foreground font-medium">Importado por</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.map(s => (
-                  <tr key={s.id} className="hover:bg-muted/20">
-                    <td className="py-2.5 font-mono font-semibold">{s.fileName}</td>
-                    <td className="py-2.5 text-muted-foreground">
-                      {new Date(s.importedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-                    </td>
-                    <td className="py-2.5 text-right font-mono">{s.totalParts}</td>
-                    <td className="py-2.5 text-right font-mono">{s.totalQuantity.toLocaleString('pt-BR')}</td>
-                    <td className="py-2.5 text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
-                        {s.importedBy}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map(s => {
+                  // Remove extensão .xlsx, .xls ou .csv do nome
+                  const displayName = s.fileName.replace(/\.(xlsx|xls|csv)$/i, "");
+                  // Status fictício: pode ser ajustado conforme backend futuramente
+                  // Opções: pendente, finalizado, em conferência, pausado
+                  // Aqui, exemplo: alterna status por id para demo
+                  const statusOptions = ["pendente", "finalizado", "em conferência", "pausado"];
+                  const status = statusOptions[s.id % statusOptions.length];
+                  return (
+                    <tr key={s.id} className="hover:bg-muted/20">
+                      <td className="py-2.5 font-mono font-semibold">{displayName}</td>
+                      <td className="py-2.5 text-muted-foreground">
+                        {new Date(s.importedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                      </td>
+                      <td className="py-2.5 text-right font-mono">{s.totalParts}</td>
+                      <td className="py-2.5 text-right font-mono">
+                        <span className={
+                          status === "finalizado" ? "text-success" :
+                          status === "pendente" ? "text-warning" :
+                          status === "em conferência" ? "text-info" :
+                          status === "pausado" ? "text-muted-foreground" : ""
+                        }>
+                          {status}
+                        </span>
+                      </td>
+                      <td className="py-2.5 text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                          {s.importedBy}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
