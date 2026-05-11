@@ -1,5 +1,7 @@
 ﻿
-// Entire content of the file has been removed.
+export default function Dashboard() {
+  return <div style={{color:'#fff',padding:40}}>Dashboard vazio</div>;
+}
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
