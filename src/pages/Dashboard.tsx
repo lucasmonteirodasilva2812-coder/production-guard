@@ -1,23 +1,7 @@
 ﻿
-
 export default function Dashboard() {
   return <div style={{color:'#fff',padding:40}}>Dashboard vazio</div>;
 }
-
-  // Só processos finalizados
-  const pnFinalizados = partNumbers.filter(p => p.status === 'concluido');
-  const donutData = pnFinalizados.map(p => ({
-    name: p.part_number || p.partNumber || 'Processo',
-    value: 1,
-    color: GREEN,
-  }));
-  const donutTotal = donutData.length || 1;
-  const avgLabelsPerPn = totalPn > 1 ? (labelsAll.length / totalPn).toFixed(1) : '0';
-  const recentDivergences = divergences.slice(0, 5);
-
-  return (
-    <div style={{
-      minHeight: '100vh',
       background: 'linear-gradient(135deg, #090E1A 0%, #101624 50%, #090E1A 100%)',
       padding: '28px 28px 48px',
       color: '#e2e8f0',
