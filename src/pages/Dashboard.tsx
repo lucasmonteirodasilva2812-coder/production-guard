@@ -1,4 +1,37 @@
-﻿import React, { useMemo } from 'react';
+﻿        {/* Telinha lateral de divergências */}
+        {divergences.filter(d => d.status !== 'resolvida').length > 0 && (
+          <motion.div
+            initial={{ x: 320, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: 'absolute', top: 0, right: -370, width: 340, height: '100%',
+              background: 'rgba(15,23,42,0.92)',
+              border: '1px solid rgba(248,113,113,0.18)',
+              borderRadius: 18, boxShadow: '0 8px 32px rgba(248,113,113,0.13)',
+              padding: '24px 22px', zIndex: 10, overflowY: 'auto',
+              display: 'flex', flexDirection: 'column', gap: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <AlertTriangle size={18} color={RED} />
+              <span style={{ fontSize: 15, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.01em' }}>Divergências em aberto</span>
+            </div>
+            {divergences.filter(d => d.status !== 'resolvida').map((d, idx) => (
+              <div key={d.id || idx} style={{
+                background: 'rgba(248,113,113,0.07)',
+                border: '1px solid rgba(248,113,113,0.13)',
+                borderRadius: 10, padding: '10px 14px', marginBottom: 6,
+                display: 'flex', flexDirection: 'column', gap: 2,
+              }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#e0e7ef' }}>{d.partNumber || d.part_number || 'N/A'}</span>
+                <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)' }}>{d.type === 'sobra' ? 'Sobra' : d.type === 'falta' ? 'Falta' : d.type || 'Divergência'}</span>
+                <span style={{ fontSize: 11, color: RED, fontWeight: 600 }}>Status: {d.status}</span>
+              </div>
+            ))}
+          </motion.div>
+        )}
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
@@ -49,9 +82,9 @@ function GlassCard({ children, delay = 0, style = {} }: {
       variants={fadeUp} initial="hidden" animate="visible" custom={delay}
       whileHover={{ y: -3, boxShadow: '0 24px 48px rgba(59,130,246,0.18)' }}
       style={{
-        background: 'rgba(255,255,255,0.05)',
+        background: 'rgba(17,24,39,0.72)',
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.1)',
+        border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: 20, padding: 24, position: 'relative', ...style,
       }}
     >
@@ -107,23 +140,7 @@ export default function Dashboard() {
   const completionRate = Math.round((pnConcluido / totalPn) * 100);
   const currentWS = workstations.find(w => w.id === workstationId);
 
-  const labelsPerDay = useMemo(() => {
-    const map: Record<string, number> = {};
-    const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const key = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-      map[key] = 0;
-    }
-    labels.forEach((l: any) => {
-      if (!l.printedAt) return;
-      const d = new Date(l.printedAt);
-      const key = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-      if (key in map) map[key] = (map[key] || 0) + 1;
-    });
-    return Object.entries(map).map(([dia, qty]) => ({ dia, qty }));
-  }, [labels]);
+  // Evolução semanal removida
 
   const labelsPerWs = useMemo(() => workstations.map(ws => ({
     name: ws.name.replace('Bancada ', 'B'),
@@ -145,25 +162,24 @@ export default function Dashboard() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0B1120 0%, #17203A 50%, #0B1120 100%)',
+      background: 'linear-gradient(135deg, #090E1A 0%, #101624 50%, #090E1A 100%)',
       padding: '28px 28px 48px',
       color: '#e2e8f0',
       fontFamily: "'Inter', system-ui, sans-serif",
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Marca dagua */}
+      {/* Marca d'água e logos Multilaser */}
       <div aria-hidden style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <span style={{ fontSize: 'clamp(80px,14vw,180px)', fontWeight: 900, color: 'rgba(255,255,255,0.018)', letterSpacing: '-0.04em', userSelect: 'none', whiteSpace: 'nowrap', textTransform: 'uppercase', transform: 'rotate(-12deg)' }}>MULTILASER</span>
+        <span style={{ fontSize: 'clamp(80px,14vw,180px)', fontWeight: 900, color: 'rgba(96,165,250,0.018)', letterSpacing: '-0.04em', userSelect: 'none', whiteSpace: 'nowrap', textTransform: 'uppercase', transform: 'rotate(-12deg)' }}>MULTILASER</span>
       </div>
-      <div aria-hidden style={{ position: 'fixed', top: -160, right: -80, width: 520, height: 520, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.09) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-      <div aria-hidden style={{ position: 'fixed', bottom: -200, left: -100, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(29,78,216,0.07) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div aria-hidden style={{ position: 'fixed', top: -160, right: -80, width: 520, height: 520, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.13) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
+      <div aria-hidden style={{ position: 'fixed', bottom: -200, left: -100, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(29,78,216,0.11) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
 
-
-      {/* Logo Multilaser animada (mesmo SVG da tela de login) */}
-      <div style={{ position: 'absolute', top: 32, left: 32, zIndex: 2, opacity: 0.92 }}>
-        <svg width="110" height="32" viewBox="0 0 110 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <text x="0" y="24" fontFamily="'Inter', Arial, sans-serif" fontWeight="900" fontSize="28" fill="#60A5FA" letterSpacing="-0.04em">MULTILASER</text>
+      {/* Logo Multilaser SVG (igual tela inicial) */}
+      <div style={{ position: 'absolute', top: 32, left: 32, zIndex: 2, opacity: 0.97 }}>
+        <svg width="140" height="38" viewBox="0 0 140 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <text x="0" y="28" fontFamily="'Inter', Arial, sans-serif" fontWeight="900" fontSize="32" fill="#60A5FA" letterSpacing="-0.04em">MULTILASER</text>
         </svg>
       </div>
 
@@ -204,112 +220,64 @@ export default function Dashboard() {
         </motion.div>
 
         {/* KPI Cards + Telinha lateral */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24, position: 'relative' }}>
-
-          {/* KPI Processos em conferência */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18, marginBottom: 28, position: 'relative' }}>
           <KpiCard
             label="Processos em conferência"
             value={pnEmProcesso}
-            icon={Layers}
-            color={BLUE_LT}
-            trend="up"
-            trendValue={pnEmProcesso > 0 ? `${pnEmProcesso} ativos` : 'Nenhum'}
-            delay={0}
-          />
-          {/* KPI Produtos em conferência */}
-          <KpiCard
-            label="Produtos em conferência"
-            value={pnEmProcesso}
-            icon={CheckCircle}
-            color={GREEN}
-            trend="up"
-            trendValue={pnEmProcesso > 0 ? `${pnEmProcesso} ativos` : 'Nenhum'}
-            delay={1}
-          />
-
-          {/* Telinha lateral de processos em conferência */}
-          {pnEmProcesso > 0 && (
-            <motion.div
-              initial={{ x: 320, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              style={{
-                position: 'absolute', top: 0, right: -370, width: 340, height: '100%',
-                background: 'rgba(15,23,42,0.92)',
-                border: '1px solid rgba(96,165,250,0.18)',
-                borderRadius: 18, boxShadow: '0 8px 32px rgba(59,91,219,0.13)',
-                padding: '24px 22px', zIndex: 10, overflowY: 'auto',
-                display: 'flex', flexDirection: 'column', gap: 12,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <Layers size={18} color={BLUE_LT} />
-                <span style={{ fontSize: 15, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.01em' }}>Processos em conferência</span>
-              </div>
-              {partNumbers.filter(p => p.status === 'em_processo').map((pn, idx) => (
-                <div key={pn.id || idx} style={{
-                  background: 'rgba(59,130,246,0.07)',
-                  border: '1px solid rgba(59,130,246,0.13)',
-                  borderRadius: 10, padding: '10px 14px', marginBottom: 6,
-                  display: 'flex', flexDirection: 'column', gap: 2,
-                }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#e0e7ef' }}>{pn.part_number || pn.partNumber}</span>
-                  <span style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)' }}>{pn.description}</span>
-                  <span style={{ fontSize: 11, color: BLUE_LT, fontWeight: 600 }}>Remessa: {pn.shipmentId}</span>
                 </div>
               ))}
             </motion.div>
           )}
           {/* Tabela de colaboradores que mais conferiram produtos nos processos em conferência */}
           <GlassCard delay={5}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-                <div>
-                  <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Top Colaboradores</p>
-                  <p style={{ fontSize: 18, fontWeight: 800, color: '#f1f5f9', lineHeight: 1 }}>Produtos em conferência</p>
-                </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <div>
+                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Top Colaboradores</p>
+                <p style={{ fontSize: 18, fontWeight: 800, color: '#f1f5f9', lineHeight: 1 }}>Produtos em conferência</p>
               </div>
-              <div style={{ maxHeight: 180, overflowY: 'auto', marginTop: 6 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                  <thead>
-                    <tr style={{ color: '#93C5FD', fontWeight: 700, background: 'rgba(59,91,219,0.07)' }}>
-                      <th style={{ textAlign: 'left', padding: '6px 8px' }}>Colaborador</th>
-                      <th style={{ textAlign: 'center', padding: '6px 8px' }}>Qtd. Conferida</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      // Agrupa por user dos labels dos processos em conferência
-                      const emConferenciaIds = partNumbers.filter(p => p.status === 'em_processo').map(p => p.id);
-                      const labelsEmConf = labelsAll.filter(l => emConferenciaIds.includes(l.partNumberId));
-                      const userMap: Record<string, { name: string, qty: number }> = {};
-                      labelsEmConf.forEach(l => {
-                        const user = l.userName || l.user_name || l.user || 'Desconhecido';
-                        if (!userMap[user]) userMap[user] = { name: user, qty: 0 };
-                        userMap[user].qty += l.quantity || 1;
-                      });
-                      const sorted = Object.values(userMap).sort((a, b) => b.qty - a.qty).slice(0, 8);
-                      if (sorted.length === 0) return (
-                        <tr><td colSpan={2} style={{ textAlign: 'center', color: 'rgba(148,163,184,0.6)', padding: 18 }}>Nenhum colaborador encontrado</td></tr>
-                      );
-                      return sorted.map((u, i) => (
-                        <tr key={u.name} style={{ background: i % 2 ? 'rgba(59,91,219,0.03)' : 'transparent' }}>
-                          <td style={{ padding: '7px 8px', fontWeight: 600, color: '#e0e7ef' }}>{u.name}</td>
-                          <td style={{ padding: '7px 8px', textAlign: 'center', color: '#60A5FA', fontWeight: 700 }}>{u.qty}</td>
-                        </tr>
-                      ));
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-
-            </GlassCard>
+            </div>
+            <div style={{ maxHeight: 220, overflowY: 'auto', marginTop: 6 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ color: '#93C5FD', fontWeight: 700, background: 'rgba(59,91,219,0.07)' }}>
+                    <th style={{ textAlign: 'left', padding: '6px 8px' }}>#</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px' }}>Colaborador</th>
+                    <th style={{ textAlign: 'center', padding: '6px 8px' }}>Itens</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const emConferenciaIds = partNumbers.filter(p => p.status === 'em_processo').map(p => p.id);
+                    const labelsEmConf = labelsAll.filter(l => emConferenciaIds.includes(l.partNumberId));
+                    const userMap: Record<string, { name: string, qty: number }> = {};
+                    labelsEmConf.forEach(l => {
+                      const user = l.userName || l.user_name || l.user || 'Desconhecido';
+                      if (!userMap[user]) userMap[user] = { name: user, qty: 0 };
+                      userMap[user].qty += l.quantity || 1;
+                    });
+                    const sorted = Object.values(userMap).sort((a, b) => b.qty - a.qty).slice(0, 8);
+                    if (sorted.length === 0) return (
+                      <tr><td colSpan={3} style={{ textAlign: 'center', color: 'rgba(148,163,184,0.6)', padding: 18 }}>Nenhum colaborador encontrado</td></tr>
+                    );
+                    return sorted.map((u, i) => (
+                      <tr key={u.name} style={{ background: i % 2 ? 'rgba(59,91,219,0.03)' : 'transparent' }}>
+                        <td style={{ padding: '7px 8px', color: '#a5b4fc', fontWeight: 700, textAlign: 'center' }}>{i + 1}</td>
+                        <td style={{ padding: '7px 8px', fontWeight: 600, color: '#e0e7ef' }}>{u.name}</td>
+                        <td style={{ padding: '7px 8px', textAlign: 'center', color: '#60A5FA', fontWeight: 700 }}>{u.qty}</td>
+                      </tr>
+                    ));
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </GlassCard>
         </div>
 
 
 
           <GlassCard delay={6}>
             <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Distribuição dos Processos Finalizados</p>
-            <p style={{ fontSize: 13, color: '#f1f5f9', marginBottom: 12 }}>{donutTotal} processos</p>
+            <p style={{ fontSize: 13, color: '#f1f5f9', marginBottom: 12 }}>{donutTotal} processos finalizados</p>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <PieChart width={200} height={160}>
                 <Pie data={donutData.length ? donutData : [{ name: 'Vazio', value: 1, color: 'rgba(255,255,255,0.08)' }]}
@@ -378,7 +346,7 @@ export default function Dashboard() {
                 <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9' }}>{divergences.filter(d => d.status === 'resolvida').length}</p>
               </div>
               <div style={{ width: 38, height: 38, borderRadius: 12, background: `${GREEN}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <AlertTriangle size={17} color={GREEN} />
+                <CheckCircle size={17} color={GREEN} />
               </div>
             </div>
             {divergences.filter(d => d.status === 'resolvida').length === 0 ? (
