@@ -1,43 +1,6 @@
 ﻿export default function Dashboard() {
   return <div style={{color:'#fff',padding:40}}>Dashboard vazio</div>;
 }
-            </motion.button>
-            <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} style={{ display: 'flex', alignItems: 'center', gap: 7, background: `linear-gradient(135deg, ${BLUE_MID}, ${BLUE_DK})`, border: '1px solid rgba(96,165,250,0.3)', borderRadius: 12, padding: '8px 16px', color: '#f1f5f9', fontSize: 12, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
-              <Download size={13} />Exportar
-            </motion.button>
-          </div>
-        </motion.div>
-
-        {/* KPI Cards + Telinha lateral */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18, marginBottom: 28, position: 'relative' }}>
-          <KpiCard
-            label="Processos em conferência"
-            value={pnEmProcesso}
-            icon={Clock}
-            color={AMBER}
-          />
-          {/* Tabela de colaboradores que mais conferiram produtos nos processos em conferência */}
-          <GlassCard delay={5}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <div>
-                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Top Colaboradores</p>
-                <p style={{ fontSize: 18, fontWeight: 800, color: '#f1f5f9', lineHeight: 1 }}>Produtos em conferência</p>
-              </div>
-            </div>
-            <div style={{ maxHeight: 220, overflowY: 'auto', marginTop: 6 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ color: '#93C5FD', fontWeight: 700, background: 'rgba(59,91,219,0.07)' }}>
-                    <th style={{ textAlign: 'left', padding: '6px 8px' }}>#</th>
-                    <th style={{ textAlign: 'left', padding: '6px 8px' }}>Colaborador</th>
-                    <th style={{ textAlign: 'center', padding: '6px 8px' }}>Itens</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(() => {
-                    const emConferenciaIds = partNumbers.filter(p => p.status === 'em_processo').map(p => p.id);
-                    const labelsEmConf = labelsAll.filter(l => emConferenciaIds.includes(l.partNumberId));
-                    const userMap: Record<string, { name: string, qty: number }> = {};
                     labelsEmConf.forEach(l => {
                       const user = l.userName || l.user_name || l.user || 'Desconhecido';
                       if (!userMap[user]) userMap[user] = { name: user, qty: 0 };
