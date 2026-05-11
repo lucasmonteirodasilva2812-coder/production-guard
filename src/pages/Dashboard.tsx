@@ -224,10 +224,9 @@ export default function Dashboard() {
           <KpiCard
             label="Processos em conferência"
             value={pnEmProcesso}
-                </div>
-              ))}
-            </motion.div>
-          )}
+            icon={Clock}
+            color={AMBER}
+          />
           {/* Tabela de colaboradores que mais conferiram produtos nos processos em conferência */}
           <GlassCard delay={5}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
