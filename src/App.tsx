@@ -63,20 +63,12 @@ export default function App() {
           const { user: u } = useAuthStore.getState();
           if (u?.role === 'operador') {
             useAuthStore.getState().setMode('operador');
-            setScreen('workstation-select');
+            setScreen('app');
           } else {
             useAuthStore.getState().setMode('admin');
             setScreen('app');
           }
         }}
-        onBack={() => setScreen('login')}
-      />
-    </QueryClientProvider>
-  );
-  if (screen === 'workstation-select') return (
-    <QueryClientProvider client={queryClient}>
-      <WorkstationSelect
-        onSelected={() => setScreen('app')}
         onBack={() => setScreen('login')}
       />
     </QueryClientProvider>
