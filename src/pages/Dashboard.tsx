@@ -38,66 +38,6 @@
     // ...restante do layout...
   );
 }
-                    labelsEmConf.forEach(l => {
-                      const user = l.userName || l.user_name || l.user || 'Desconhecido';
-                      if (!userMap[user]) userMap[user] = { name: user, qty: 0 };
-                      userMap[user].qty += l.quantity || 1;
-                    });
-                    const sorted = Object.values(userMap).sort((a, b) => b.qty - a.qty).slice(0, 8);
-                    if (sorted.length === 0) return (
-                      <tr><td colSpan={3} style={{ textAlign: 'center', color: 'rgba(148,163,184,0.6)', padding: 18 }}>Nenhum colaborador encontrado</td></tr>
-                    );
-                    return sorted.map((u, i) => (
-                      <tr key={u.name} style={{ background: i % 2 ? 'rgba(59,91,219,0.03)' : 'transparent' }}>
-                        <td style={{ padding: '7px 8px', color: '#a5b4fc', fontWeight: 700, textAlign: 'center' }}>{i + 1}</td>
-                        <td style={{ padding: '7px 8px', fontWeight: 600, color: '#e0e7ef' }}>{u.name}</td>
-                        <td style={{ padding: '7px 8px', textAlign: 'center', color: '#60A5FA', fontWeight: 700 }}>{u.qty}</td>
-                      </tr>
-                    ));
-                  })()}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
-        </div>
-
-
-
-          <GlassCard delay={6}>
-            <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 4 }}>Distribuição dos Processos Finalizados</p>
-            <p style={{ fontSize: 13, color: '#f1f5f9', marginBottom: 12 }}>{donutTotal} processos finalizados</p>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <PieChart width={200} height={160}>
-                <Pie data={donutData.length ? donutData : [{ name: 'Vazio', value: 1, color: 'rgba(255,255,255,0.08)' }]}
-                  cx="50%" cy="50%" innerRadius={52} outerRadius={72} paddingAngle={3} dataKey="value" labelLine={false}>
-                  {(donutData.length ? donutData : [{ color: 'rgba(255,255,255,0.08)' }]).map((entry, i) => (
-                    <Cell key={i} fill={entry.color} stroke="transparent" />
-                  ))}
-                </Pie>
-                <Tooltip content={<GlassTooltip />} />
-              </PieChart>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-              {donutData.map((item, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: 3, background: item.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: 'rgba(226,232,240,0.8)' }}>{item.name}</span>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: item.color }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-        </div>
-
-        {/* Bottom row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-          <GlassCard delay={7}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div>
-                <p style={{ fontSize: 11, color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: 2 }}>Taxa de Etiquetas por Bancada</p>
-                <p style={{ fontSize: 22, fontWeight: 800, color: '#f1f5f9' }}>{labelsAll.length} total</p>
               </div>
               <div style={{ width: 38, height: 38, borderRadius: 12, background: `${BLUE_MID}1A`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Zap size={17} color={BLUE_MID} />
