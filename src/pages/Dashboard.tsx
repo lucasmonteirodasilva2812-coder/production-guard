@@ -1,23 +1,6 @@
-﻿
-export default function Dashboard() {
+﻿export default function Dashboard() {
   return <div style={{color:'#fff',padding:40}}>Dashboard vazio</div>;
 }
-      background: 'linear-gradient(135deg, #090E1A 0%, #101624 50%, #090E1A 100%)',
-      padding: '28px 28px 48px',
-      color: '#e2e8f0',
-      fontFamily: "'Inter', system-ui, sans-serif",
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      {/* Marca d'água e logos Multilaser */}
-      <div aria-hidden style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0, overflow: 'hidden' }}>
-        <span style={{ fontSize: 'clamp(80px,14vw,180px)', fontWeight: 900, color: 'rgba(96,165,250,0.018)', letterSpacing: '-0.04em', userSelect: 'none', whiteSpace: 'nowrap', textTransform: 'uppercase', transform: 'rotate(-12deg)' }}>MULTILASER</span>
-      </div>
-      <div aria-hidden style={{ position: 'fixed', top: -160, right: -80, width: 520, height: 520, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.13) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-      <div aria-hidden style={{ position: 'fixed', bottom: -200, left: -100, width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(29,78,216,0.11) 0%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
-
-      {/* Logo Multilaser SVG (igual tela inicial) */}
-      <div style={{ position: 'absolute', top: 32, left: 32, zIndex: 2, opacity: 0.97 }}>
         <svg width="140" height="38" viewBox="0 0 140 38" fill="none" xmlns="http://www.w3.org/2000/svg">
           <text x="0" y="28" fontFamily="'Inter', Arial, sans-serif" fontWeight="900" fontSize="32" fill="#60A5FA" letterSpacing="-0.04em">MULTILASER</text>
         </svg>
