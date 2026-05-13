@@ -37,8 +37,11 @@ export function AppSidebar() {
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
       onSettled: () => {
-        // Force full page reload to reset to mode-select
-        window.location.reload();
+        // Volta para tela de login simples sem reload
+        if (typeof window !== 'undefined') {
+          const evt = new CustomEvent('session-expired');
+          window.dispatchEvent(evt);
+        }
       },
     });
   };
