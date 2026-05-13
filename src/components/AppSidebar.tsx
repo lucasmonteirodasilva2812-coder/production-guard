@@ -97,10 +97,6 @@ export function AppSidebar() {
           </div>
         )}
 
-        {/* Server URL toggle (operator) */}
-        {isOperator && (
-        {/* Bloco de exibição do servidor removido conforme solicitado */}
-
         {/* User info + logout */}
         <div className="flex items-center gap-2 px-2">
           <div className="text-xs flex-1 min-w-0">
