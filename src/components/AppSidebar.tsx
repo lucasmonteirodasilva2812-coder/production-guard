@@ -20,6 +20,8 @@ export function AppSidebar() {
   const ws = workstations.find(w => w.id === workstationId);
   const isAdmin = mode === 'admin';
   const isOperator = mode === 'operador';
+  const isSupervisor = mode === 'supervisor';
+
 
   const adminNav = [
     { to: '/workstation', icon: Factory, label: "Workflow's" },
@@ -28,11 +30,20 @@ export function AppSidebar() {
     { to: '/admin', icon: Settings, label: 'Admin' },
   ];
 
+  const supervisorNav = [
+    { to: '/workstation', icon: Factory, label: "Workflow's" },
+    { to: '/import', icon: FileUp, label: 'Importar' },
+    { to: '/base', icon: Database, label: 'Base' },
+    // NÃO inclui Admin!
+  ];
+
   const operatorNav = [
     { to: '/workstation', icon: Factory, label: "Workflow's" },
   ];
 
-  const navItems = isAdmin ? adminNav : operatorNav;
+  let navItems = operatorNav;
+  if (isAdmin) navItems = adminNav;
+  else if (isSupervisor) navItems = supervisorNav;
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
