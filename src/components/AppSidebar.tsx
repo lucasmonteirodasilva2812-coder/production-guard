@@ -99,18 +99,7 @@ export function AppSidebar() {
 
         {/* Server URL toggle (operator) */}
         {isOperator && (
-          <button
-            onClick={() => setShowServerUrl(!showServerUrl)}
-            className="flex items-center gap-2 w-full px-2 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Network className="w-3 h-3" />
-            <span className="flex-1 text-left">Servidor</span>
-            <ChevronRight className={cn('w-3 h-3 transition-transform', showServerUrl && 'rotate-90')} />
-          </button>
-        )}
-        {isOperator && showServerUrl && (
-          <p className="text-[10px] font-mono text-muted-foreground px-2 break-all">{serverUrl}</p>
-        )}
+        {/* Bloco de exibição do servidor removido conforme solicitado */}
 
         {/* User info + logout */}
         <div className="flex items-center gap-2 px-2">
