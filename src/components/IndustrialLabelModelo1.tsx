@@ -36,20 +36,21 @@ export function IndustrialLabelModelo1({ label, onQrLoad }: Props) {
         </div>
       </div>
       <div style={{ display: 'flex', height: 130 }}>
-        {/* Esquerda: QR ID */}
+        {/* Esquerda: QR principal (agora PartNumber;quantidade;ID) */}
         <div style={{ width: 90, borderRight: '2px solid #222', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <QRImg value={label.labelSeqId} size={80} onLoad={() => setQrLoaded(q => q + 1)} />
+          <QRImg value={`${label.partNumber};${label.quantity};${label.labelSeqId}`} size={80} onLoad={() => setQrLoaded(q => q + 1)} />
         </div>
         {/* Centro: PN, descrição */}
         <div style={{ flex: 1, padding: '6px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRight: '2px solid #222' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, textAlign: 'center', marginBottom: 2 }}>Part Number:</div>
           <div style={{ fontSize: 24, fontWeight: 900, textAlign: 'center', letterSpacing: 1 }}>{label.partNumber}</div>
           <div style={{ fontSize: 11, textAlign: 'center', marginTop: 2, fontWeight: 500 }}>{label.description}</div>
         </div>
-        {/* Direita: Quantidade + QR quantidade */}
+        {/* Direita: Quantidade + QR quantidade + PROCESSO */}
         <div style={{ width: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 2 }}>QUANTIDADE:</div>
-          <QRImg value={String(label.quantity)} size={60} onLoad={() => setQrLoaded(q => q + 1)} />
+          <QRImg value={`${label.partNumber};${label.quantity};${label.labelSeqId}`} size={60} onLoad={() => setQrLoaded(q => q + 1)} />
+          {/* PROCESSO logo abaixo do QRcode */}
+          <div style={{ textAlign: 'center', fontWeight: 700, fontSize: 11, marginTop: 6 }}>PROCESSO:</div>
+          <div style={{ textAlign: 'center', fontWeight: 900, fontSize: 12 }}>{label.processo || '-'}</div>
         </div>
       </div>
       {/* Centro inferior: Quantidade grande */}
@@ -61,10 +62,7 @@ export function IndustrialLabelModelo1({ label, onQrLoad }: Props) {
           <div>MSL {label.msl || '-'}</div>
         </div>
         <div style={{ flex: 1, borderRight: '2px solid #222', textAlign: 'center', padding: '2px 0' }}>ID: {label.labelSeqId}</div>
-        <div style={{ width: 110, padding: '2px 4px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ textAlign: 'right', fontWeight: 700 }}>PROCESSO:</div>
-          <div style={{ textAlign: 'right', fontWeight: 900 }}>{label.processo || '-'}</div>
-        </div>
+        <div style={{ width: 110 }} />
       </div>
       <div style={{ fontSize: 10, textAlign: 'center', marginTop: 1 }}>{label.printedBy} - {label.printedAt}</div>
     </div>
