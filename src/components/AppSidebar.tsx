@@ -18,10 +18,9 @@ export function AppSidebar() {
   const [showServerUrl, setShowServerUrl] = useState(false);
 
   const ws = workstations.find(w => w.id === workstationId);
-  const isAdmin = mode === 'admin';
-  const isOperator = mode === 'operador';
-  const isSupervisor = mode === 'supervisor';
-
+  const isAdmin = user?.role === 'admin';
+  const isSupervisor = user?.role === 'supervisor';
+  const isOperator = user?.role === 'operador';
 
   const adminNav = [
     { to: '/workstation', icon: Factory, label: "Workflow's" },
