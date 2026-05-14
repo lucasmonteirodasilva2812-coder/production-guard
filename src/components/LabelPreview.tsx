@@ -176,7 +176,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
             </div>
           </div>
           {/* PROCESSO no mesmo layout de MSL */}
-          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', marginTop: 6, background: '#fafafa', minWidth: 60, textAlign: 'center' }}>
+          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', marginTop: 'auto', marginBottom: 0, background: '#fafafa', minWidth: 60, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
             <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Processo</div>
             <div style={{ fontSize: 9, fontWeight: 900, color: '#111', lineHeight: 1.1 }}>{label.shipmentName || '-'}</div>
           </div>
