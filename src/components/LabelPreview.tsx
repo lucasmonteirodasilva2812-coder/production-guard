@@ -106,7 +106,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
         {/* LEFT COLUMN: QR principal (PartNumber;quantidade;ID) */}
         <div style={{ borderRight: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 2px 2px 2px', justifyContent: 'center' }}>
           <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', marginBottom: 3, flexShrink: 0, justifyContent: 'center', background: '#fff' }}>
-            <div style={{ fontSize: 7, color: '#555', fontWeight: 700, textAlign: 'center', padding: '2px 0 0 0', width: '100%', letterSpacing: 0.2, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 6, color: '#555', fontWeight: 600, textAlign: 'center', padding: '1px 0 0 0', width: '100%', letterSpacing: 0.1, textTransform: 'uppercase', lineHeight: 1 }}>
               PartNumber;Qtd;ID
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1px 0' }}>
