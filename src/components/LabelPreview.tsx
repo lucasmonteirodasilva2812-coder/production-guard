@@ -171,7 +171,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
         {/* RIGHT COLUMN: QR Part Number, QR Quantidade e PROCESSO abaixo (estilo MSL) */}
         <div style={{ borderLeft: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 2px 2px 2px' }}>
           {/* QR Part Number */}
-          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, marginBottom: 2, width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, marginBottom: 14, width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
             <QRImg value={label.partNumber} size={50} />
           </div>
           {/* QR Quantidade */}
