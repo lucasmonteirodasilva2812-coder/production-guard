@@ -171,12 +171,12 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
         {/* RIGHT COLUMN: QR Part Number, QR Quantidade e PROCESSO abaixo (estilo MSL) */}
         <div style={{ borderLeft: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 2px 2px 2px' }}>
           {/* QR Part Number */}
-          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, marginBottom: 2, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-            <QRImg value={label.partNumber} size={36} />
+          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, marginBottom: 2, width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+            <QRImg value={label.partNumber} size={40} />
           </div>
           {/* QR Quantidade */}
-          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, marginBottom: 4, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-            <QRImg value={String(label.quantity)} size={36} />
+          <div style={{ border: `1px solid ${BB}`, borderRadius: 2, marginBottom: 4, width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+            <QRImg value={String(label.quantity)} size={40} />
           </div>
           {/* PROCESSO no mesmo layout de MSL */}
           <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', marginTop: 'auto', marginBottom: 0, background: '#fafafa', minWidth: 60, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
