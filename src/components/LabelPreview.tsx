@@ -107,19 +107,11 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
         <div style={{ borderRight: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 2px 2px 2px' }}>
           <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', marginBottom: 3, flexShrink: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1px 0' }}>
-              <QRImg value={`${label.partNumber};${label.quantity};${label.compositeId || label.labelSeqId}`} size={60} />
+              <QRImg value={`${label.partNumber};${label.quantity};${label.labelSeqId}`} size={60} />
             </div>
           </div>
           {/* Info boxes */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 2, width: '100%' }}>
-            {/* PROCESSO original */}
-            <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
-              <ClipboardList size={10} color='#444' style={{ flexShrink: 0 }} />
-              <div style={{ overflow: 'hidden', minWidth: 0 }}>
-                <div style={{ fontSize: 7, color: '#555', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.2, lineHeight: 1 }}>Processo</div>
-                <div style={{ fontSize: 8, fontWeight: 900, color: '#111', lineHeight: 1.1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label.shipmentName || '-'}</div>
-              </div>
-            </div>
             {/* DATA VENC */}
             <div style={{ border: `1px solid ${BB}`, borderRadius: 2, padding: '2px 3px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, background: '#fafafa' }}>
               <Calendar size={10} color='#444' style={{ flexShrink: 0 }} />
@@ -176,28 +168,17 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: QR quantidade + PROCESSO */}
+        {/* RIGHT COLUMN: QR quantidade (PartNumber;quantidade;ID) + PROCESSO abaixo */}
         <div style={{ borderLeft: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 2px 2px 2px' }}>
           <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', marginBottom: 3, flexShrink: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1px 0' }}>
-              <QRImg value={`${label.partNumber};${label.quantity};${label.compositeId || label.labelSeqId}`} size={52} />
+              <QRImg value={`${label.partNumber};${label.quantity};${label.labelSeqId}`} size={60} />
             </div>
           </div>
           {/* PROCESSO logo abaixo do QRcode */}
           <div style={{ textAlign: 'center', fontWeight: 700, fontSize: 11, marginTop: 6 }}>PROCESSO:</div>
           <div style={{ textAlign: 'center', fontWeight: 900, fontSize: 12 }}>{label.shipmentName || '-'}</div>
         </div>
-          {/* RIGHT COLUMN: QR Part Number e QR Quantidade */}
-          <div style={{ borderLeft: `1px solid ${BI}`, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', padding: '6px 2px 2px 2px' }}>
-            <div style={{ border: `1px solid ${BB}`, borderRadius: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', width: '100%', marginBottom: 3, flexShrink: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1px 0' }}>
-                <QRImg value={label.partNumber} size={52} />
-              </div>
-            </div>
-            {/* PROCESSO logo abaixo do QRcode */}
-            <div style={{ textAlign: 'center', fontWeight: 700, fontSize: 11, marginTop: 6 }}>PROCESSO:</div>
-            <div style={{ textAlign: 'center', fontWeight: 900, fontSize: 12 }}>{label.shipmentName || '-'}</div>
-          </div>
       </div>
     </div>
   );
