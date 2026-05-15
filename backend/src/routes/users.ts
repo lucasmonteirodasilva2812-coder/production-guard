@@ -7,9 +7,39 @@ const router = Router();
 function requireAdmin(req: any, res: any, next: any) {
   if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Acesso restrito a administradores' });
+  import { pool } from '../pg';
+  import db from '../db';
+
+  // Helper para detectar se deve usar Postgres
+  const isPg = !!process.env.DATABASE_URL;
   }
   next();
 }
+  // GET /api/users — compatível com SQLite e PostgreSQL
+  import express from 'express';
+  const router = express.Router();
+
+  router.get('/', async (req, res) => {
+    if (isPg) {
+      // PostgreSQL/Supabase
+      try {
+        const result = await pool.query('SELECT * FROM users');
+        res.json(result.rows);
+      } catch (err) {
+        res.status(500).json({ error: 'Erro ao buscar usuários (PostgreSQL)' });
+      }
+    } else {
+      // SQLite legado
+      try {
+        const users = db.prepare('SELECT * FROM users').all();
+        res.json(users);
+      } catch (err) {
+        res.status(500).json({ error: 'Erro ao buscar usuários (SQLite)' });
+      }
+    }
+  });
+
+  export default router;
 
 router.get('/', requireAdmin, (_req, res) => {
   const users = db.prepare(

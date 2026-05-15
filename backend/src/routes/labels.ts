@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import db, { nextLabelSeqId } from '../db';
+import { pool } from '../pg';
+const isPg = !!process.env.DATABASE_URL;
 import { broadcast } from '../sse';
 
 const router = Router();
@@ -10,9 +12,15 @@ function logLabelError(context, err, extra = {}) {
   console.error(`[labels] ERRO [${context}]`, err, extra);
 }
 
-router.get('/', (_req, res) => {
+router.get('/', async (_req, res) => {
   try {
-    const rows = db.prepare('SELECT * FROM labels ORDER BY printed_at DESC').all();
+    let rows;
+    if (isPg) {
+      const result = await pool.query('SELECT * FROM labels ORDER BY printed_at DESC');
+      rows = result.rows;
+    } else {
+      rows = db.prepare('SELECT * FROM labels ORDER BY printed_at DESC').all();
+    }
     res.json(rows.map(mapLabel));
   } catch (err) {
     logLabelError('GET /', err);
@@ -37,13 +45,29 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Campos obrigatórios ausentes' });
     }
 
-    const pn = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
-    const reservation = db.prepare('SELECT * FROM reservations WHERE id = ?').get(reservationId) as any;
-    const ws = db.prepare('SELECT * FROM workstations WHERE id = ?').get(workstationId) as any;
+    let pn, reservation, ws;
+    if (isPg) {
+      const pnRes = await pool.query('SELECT * FROM part_numbers WHERE id = $1', [partNumberId]);
+      pn = pnRes.rows[0];
+      const resvRes = await pool.query('SELECT * FROM reservations WHERE id = $1', [reservationId]);
+      reservation = resvRes.rows[0];
+      const wsRes = await pool.query('SELECT * FROM workstations WHERE id = $1', [workstationId]);
+      ws = wsRes.rows[0];
+    } else {
+      pn = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
+      reservation = db.prepare('SELECT * FROM reservations WHERE id = ?').get(reservationId) as any;
+      ws = db.prepare('SELECT * FROM workstations WHERE id = ?').get(workstationId) as any;
+    }
     if (!pn || !reservation) return res.status(404).json({ error: 'Part number ou reserva não encontrados' });
 
     const qty = reservation.quantity;
-    const seqId = nextLabelSeqId();
+    let seqId;
+    if (isPg) {
+      const seqRes = await pool.query('UPDATE label_sequence SET last_value = last_value + 1 RETURNING last_value');
+      seqId = seqRes.rows[0].last_value;
+    } else {
+      seqId = nextLabelSeqId();
+    }
 
     // Composite ID: YYMMDDHHmmss (12 chars, timestamp-based)
     const now = new Date();
@@ -62,33 +86,64 @@ router.post('/', async (req, res) => {
     const jobId = uuid();
     const printedAt = now.toISOString();
 
-    db.prepare(`
-      INSERT INTO labels (id, label_seq_id, composite_id, part_number_id, part_number, description, quantity,
-        workstation_id, printed_at, printed_by, zpl_command, qr_validated, print_job_id, msl, expiry_date, label_type)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
-    `).run(labelId, seqId, compositeId, partNumberId, pn.part_number, descriptionOverride || pn.description, qty,
-      workstationId, printedAt, printedBy, zpl, jobId, msl || null, expiryDate || null, labelType);
+    if (isPg) {
+      await pool.query(`
+        INSERT INTO labels (id, label_seq_id, composite_id, part_number_id, part_number, description, quantity,
+          workstation_id, printed_at, printed_by, zpl_command, qr_validated, print_job_id, msl, expiry_date, label_type)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, $12, $13, $14, $15)
+      `, [labelId, seqId, compositeId, partNumberId, pn.part_number, descriptionOverride || pn.description, qty,
+        workstationId, printedAt, printedBy, zpl, jobId, msl || null, expiryDate || null, labelType]);
+    } else {
+      db.prepare(`
+        INSERT INTO labels (id, label_seq_id, composite_id, part_number_id, part_number, description, quantity,
+          workstation_id, printed_at, printed_by, zpl_command, qr_validated, print_job_id, msl, expiry_date, label_type)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+      `).run(labelId, seqId, compositeId, partNumberId, pn.part_number, descriptionOverride || pn.description, qty,
+        workstationId, printedAt, printedBy, zpl, jobId, msl || null, expiryDate || null, labelType);
+    }
 
     // Em ambiente cloud, não imprime — retorna ZPL para download
     const isCloud = process.env.RENDER || process.env.NODE_ENV === 'production';
     let printJobStatus = 'skipped';
     if (!isCloud) {
-      db.prepare(`INSERT INTO print_jobs (id, label_id, status, printer_ip, created_at, retries) VALUES (?, ?, 'queued', ?, ?, 0)`)
-        .run(jobId, labelId, ws?.printer_ip || '', printedAt);
-      db.prepare("UPDATE print_jobs SET status = 'printed', completed_at = ? WHERE id = ?").run(new Date().toISOString(), jobId);
-      printJobStatus = 'printed';
+      if (isPg) {
+        await pool.query(`INSERT INTO print_jobs (id, label_id, status, printer_ip, created_at, retries) VALUES ($1, $2, 'queued', $3, $4, 0)`,
+          [jobId, labelId, ws?.printer_ip || '', printedAt]);
+        await pool.query("UPDATE print_jobs SET status = 'printed', completed_at = $1 WHERE id = $2", [new Date().toISOString(), jobId]);
+        printJobStatus = 'printed';
+      } else {
+        db.prepare(`INSERT INTO print_jobs (id, label_id, status, printer_ip, created_at, retries) VALUES (?, ?, 'queued', ?, ?, 0)`)
+          .run(jobId, labelId, ws?.printer_ip || '', printedAt);
+        db.prepare("UPDATE print_jobs SET status = 'printed', completed_at = ? WHERE id = ?").run(new Date().toISOString(), jobId);
+        printJobStatus = 'printed';
+      }
     }
 
-    db.prepare("UPDATE reservations SET status = 'consumido' WHERE id = ?").run(reservationId);
-    db.prepare("UPDATE part_numbers SET labeled_qty = labeled_qty + ?, status = CASE WHEN status = 'pendente' THEN 'em_processo' ELSE status END WHERE id = ?").run(qty, partNumberId);
-
-    const updatedPN = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
-    if (updatedPN && updatedPN.labeled_qty >= updatedPN.declared_qty) {
-      db.prepare("UPDATE part_numbers SET status = 'concluido' WHERE id = ?").run(partNumberId);
+    if (isPg) {
+      await pool.query("UPDATE reservations SET status = 'consumido' WHERE id = $1", [reservationId]);
+      await pool.query("UPDATE part_numbers SET labeled_qty = labeled_qty + $1, status = CASE WHEN status = 'pendente' THEN 'em_processo' ELSE status END WHERE id = $2", [qty, partNumberId]);
+      const updatedPNRes = await pool.query('SELECT * FROM part_numbers WHERE id = $1', [partNumberId]);
+      const updatedPN = updatedPNRes.rows[0];
+      if (updatedPN && updatedPN.labeled_qty >= updatedPN.declared_qty) {
+        await pool.query("UPDATE part_numbers SET status = 'concluido' WHERE id = $1", [partNumberId]);
+      }
+    } else {
+      db.prepare("UPDATE reservations SET status = 'consumido' WHERE id = ?").run(reservationId);
+      db.prepare("UPDATE part_numbers SET labeled_qty = labeled_qty + ?, status = CASE WHEN status = 'pendente' THEN 'em_processo' ELSE status END WHERE id = ?").run(qty, partNumberId);
+      const updatedPN = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(partNumberId) as any;
+      if (updatedPN && updatedPN.labeled_qty >= updatedPN.declared_qty) {
+        db.prepare("UPDATE part_numbers SET status = 'concluido' WHERE id = ?").run(partNumberId);
+      }
     }
 
-    const label = db.prepare('SELECT * FROM labels WHERE id = ?').get(labelId);
-    const mappedLabel = mapLabel(label);
+    let label, mappedLabel;
+    if (isPg) {
+      const labelRes = await pool.query('SELECT * FROM labels WHERE id = $1', [labelId]);
+      label = labelRes.rows[0];
+    } else {
+      label = db.prepare('SELECT * FROM labels WHERE id = ?').get(labelId);
+    }
+    mappedLabel = mapLabel(label);
 
     broadcast('labels:created', mappedLabel);
     broadcast('part-numbers:updated', { id: partNumberId });
@@ -127,14 +182,29 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
-    const label = db.prepare('SELECT * FROM labels WHERE id = ?').get(req.params.id) as any;
+    let label;
+    if (isPg) {
+      const labelRes = await pool.query('SELECT * FROM labels WHERE id = $1', [req.params.id]);
+      label = labelRes.rows[0];
+    } else {
+      label = db.prepare('SELECT * FROM labels WHERE id = ?').get(req.params.id) as any;
+    }
     if (!label) return res.status(404).json({ error: 'Etiqueta não encontrada' });
 
-    db.prepare('DELETE FROM labels WHERE id = ?').run(req.params.id);
-    db.prepare('UPDATE part_numbers SET labeled_qty = MAX(0, labeled_qty - ?) WHERE id = ?')
-      .run(label.quantity, label.part_number_id);
+    if (isPg) {
+      await pool.query('DELETE FROM labels WHERE id = $1', [req.params.id]);
+      // PostgreSQL não tem MAX em UPDATE direto, então faz em duas etapas
+      const pnRes = await pool.query('SELECT labeled_qty FROM part_numbers WHERE id = $1', [label.part_number_id]);
+      const currentQty = pnRes.rows[0]?.labeled_qty || 0;
+      const newQty = Math.max(0, currentQty - label.quantity);
+      await pool.query('UPDATE part_numbers SET labeled_qty = $1 WHERE id = $2', [newQty, label.part_number_id]);
+    } else {
+      db.prepare('DELETE FROM labels WHERE id = ?').run(req.params.id);
+      db.prepare('UPDATE part_numbers SET labeled_qty = MAX(0, labeled_qty - ?) WHERE id = ?')
+        .run(label.quantity, label.part_number_id);
+    }
 
     broadcast('labels:deleted', { id: req.params.id });
     broadcast('part-numbers:updated', { id: label.part_number_id });
