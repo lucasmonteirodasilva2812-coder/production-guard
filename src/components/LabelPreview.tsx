@@ -110,7 +110,7 @@ function IndustrialLabelModelo1({ label }: { label: LabelData }) {
               PartNumber;Qtd;ID
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1px 0' }}>
-              <QRImg value={`${label.partNumber};${label.quantity};${label.labelSeqId}`} size={60} />
+              <QRImg value={`${label.partNumber};${label.quantity};${label.labelSeqId?.toString().padStart(12, '0')}`} size={60} />
             </div>
           </div>
           {/* Info boxes */}
