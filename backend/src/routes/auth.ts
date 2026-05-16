@@ -31,6 +31,7 @@ router.post('/login', async (req, res) => {
       user: { id: user.id, username: user.username, name: user.name, role: user.role },
     });
   } catch (err) {
+    console.error('[ERRO LOGIN]', err);
     res.status(500).json({ error: 'Erro ao autenticar (PostgreSQL)' });
   }
 });
