@@ -8,12 +8,8 @@ services:
     envVars:
       - key: PORT
         value: 3001
-      - key: DB_PATH
-        value: /data
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1
+      - key: DATABASE_URL
+        sync: false # Defina no painel do Render com a string do Supabase
     autoDeploy: true
 
   - name: production-guard-frontend

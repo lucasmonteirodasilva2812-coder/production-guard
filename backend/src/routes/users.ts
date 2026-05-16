@@ -1,57 +1,30 @@
+import crypto from 'crypto';
+
+function hashPassword(password: string) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
-import db, { hashPassword } from '../db';
+import { pool } from '../pg.js';
 
 const router = Router();
 
 function requireAdmin(req: any, res: any, next: any) {
   if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Acesso restrito a administradores' });
-  import { pool } from '../pg';
-  import db from '../db';
-
-  // Helper para detectar se deve usar Postgres
-  const isPg = !!process.env.DATABASE_URL;
   }
   next();
 }
-  // GET /api/users — compatível com SQLite e PostgreSQL
-  import express from 'express';
-  const router = express.Router();
 
-  router.get('/', async (req, res) => {
-    if (isPg) {
-      // PostgreSQL/Supabase
-      try {
-        const result = await pool.query('SELECT * FROM users');
-        res.json(result.rows);
-      } catch (err) {
-        res.status(500).json({ error: 'Erro ao buscar usuários (PostgreSQL)' });
-      }
-    } else {
-      // SQLite legado
-      try {
-        const users = db.prepare('SELECT * FROM users').all();
-        res.json(users);
-      } catch (err) {
-        res.status(500).json({ error: 'Erro ao buscar usuários (SQLite)' });
-      }
-    }
-  });
-
-  export default router;
-
-router.get('/', requireAdmin, (_req, res) => {
-  const users = db.prepare(
-    'SELECT id, username, name, role, is_blocked, created_at FROM users ORDER BY created_at'
-  ).all();
-  res.json(users.map((u: any) => ({
+router.get('/', requireAdmin, async (_req, res) => {
+  const result = await pool.query('SELECT id, username, name, role, is_blocked, created_at FROM users ORDER BY created_at');
+  res.json(result.rows.map((u: any) => ({
     id: u.id, username: u.username, name: u.name,
     role: u.role, isBlocked: Boolean(u.is_blocked), createdAt: u.created_at,
   })));
 });
 
-router.post('/', requireAdmin, (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   const { username, password, name, role = 'operador' } = req.body as {
     username: string; password: string; name: string; role?: string;
   };
@@ -59,38 +32,40 @@ router.post('/', requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'Campos obrigatórios: username, password, name' });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
-  if (existing) return res.status(409).json({ error: 'Usuário já existe' });
+  const existing = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+  if (existing.rows.length > 0) return res.status(409).json({ error: 'Usuário já existe' });
 
   const id = uuid();
-  db.prepare('INSERT INTO users (id, username, password, name, role, is_blocked, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)')
-    .run(id, username, hashPassword(password), name, role, new Date().toISOString());
+  await pool.query('INSERT INTO users (id, username, password, name, role, is_blocked, created_at) VALUES ($1, $2, $3, $4, $5, 0, $6)',
+    [id, username, hashPassword(password), name, role, new Date().toISOString()]);
 
   res.status(201).json({ id, username, name, role, isBlocked: false });
 });
 
-router.patch('/:id', requireAdmin, (req, res) => {
+router.patch('/:id', requireAdmin, async (req, res) => {
   const { isBlocked, password, name, role } = req.body as any;
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id) as any;
+  const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+  const user = userRes.rows[0];
   if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
 
   if (isBlocked !== undefined) {
-    db.prepare('UPDATE users SET is_blocked = ? WHERE id = ?').run(isBlocked ? 1 : 0, req.params.id);
+    await pool.query('UPDATE users SET is_blocked = $1 WHERE id = $2', [isBlocked ? 1 : 0, req.params.id]);
   }
-  if (password) db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashPassword(password), req.params.id);
-  if (name) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name, req.params.id);
-  if (role) db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, req.params.id);
+  if (password) await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashPassword(password), req.params.id]);
+  if (name) await pool.query('UPDATE users SET name = $1 WHERE id = $2', [name, req.params.id]);
+  if (role) await pool.query('UPDATE users SET role = $1 WHERE id = $2', [role, req.params.id]);
 
-  const updated = db.prepare('SELECT id, username, name, role, is_blocked FROM users WHERE id = ?').get(req.params.id) as any;
+  const updatedRes = await pool.query('SELECT id, username, name, role, is_blocked FROM users WHERE id = $1', [req.params.id]);
+  const updated = updatedRes.rows[0];
   res.json({
     id: updated.id, username: updated.username, name: updated.name,
     role: updated.role, isBlocked: Boolean(updated.is_blocked),
   });
 });
 
-router.delete('/:id', requireAdmin, (req, res) => {
-  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+router.delete('/:id', requireAdmin, async (req, res) => {
+  await pool.query('DELETE FROM sessions WHERE user_id = $1', [req.params.id]);
+  await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
 });
 

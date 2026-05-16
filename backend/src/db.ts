@@ -1,7 +1,3 @@
-db.pragma('foreign_keys = ON');
-db.exec(`
-db.prepare('UPDATE workstations SET is_online = 0').run();
-db.prepare('UPDATE users SET is_blocked = 0 WHERE username = ? AND role = ?').run('admin', 'admin');
 // Arquivo migrado para PostgreSQL/Supabase
 // Veja backend/src/pg.ts para conexão
 

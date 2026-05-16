@@ -1,40 +1,40 @@
+
 import { Router } from 'express';
-import db from '../db';
-import { broadcast, getConnectedClients } from '../sse';
+import { pool } from '../pg.js';
+import { broadcast, getConnectedClients } from '../sse.js';
 
 const router = Router();
 
 // Listar todas as bancadas
-router.get('/', (_req, res) => {
-  const rows = db.prepare('SELECT * FROM workstations ORDER BY name').all();
-  res.json(rows.map(mapWS));
+router.get('/', async (_req, res) => {
+  const result = await pool.query('SELECT * FROM workstations ORDER BY name');
+  res.json(result.rows.map(mapWS));
 });
 
 // Criar ou reutilizar bancada pelo nome
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const { name } = req.body as { name: string };
   if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatório' });
 
-  const existing = db.prepare('SELECT * FROM workstations WHERE name = ?').get(name.trim()) as any;
+  const existingRes = await pool.query('SELECT * FROM workstations WHERE name = $1', [name.trim()]);
+  const existing = existingRes.rows[0];
   if (existing) return res.json(mapWS(existing));
 
-  const result = db.prepare(
-    'INSERT INTO workstations (name, printer_ip, printer_port, is_online) VALUES (?, \'\', 9100, 0)'
-  ).run(name.trim());
-  const row = db.prepare('SELECT * FROM workstations WHERE id = ?').get(result.lastInsertRowid);
+  const insertRes = await pool.query('INSERT INTO workstations (name, printer_ip, printer_port, is_online) VALUES ($1, $2, $3, 0) RETURNING *', [name.trim(), '', 9100]);
+  const row = insertRes.rows[0];
   broadcast('workstations:updated', {});
   res.status(201).json(mapWS(row));
 });
 
 // Atualizar status (online/offline manual pelo admin)
-router.patch('/:id', (req, res) => {
+router.patch('/:id', async (req, res) => {
   const { isOnline } = req.body as { isOnline?: boolean };
   if (isOnline !== undefined) {
-    db.prepare('UPDATE workstations SET is_online = ? WHERE id = ?').run(isOnline ? 1 : 0, req.params.id);
+    await pool.query('UPDATE workstations SET is_online = $1 WHERE id = $2', [isOnline ? 1 : 0, req.params.id]);
     broadcast('workstations:updated', {});
   }
-  const row = db.prepare('SELECT * FROM workstations WHERE id = ?').get(req.params.id);
-  res.json(mapWS(row));
+  const rowRes = await pool.query('SELECT * FROM workstations WHERE id = $1', [req.params.id]);
+  res.json(mapWS(rowRes.rows[0]));
 });
 
 // Usuários ativos em uma bancada (SSE clients)
@@ -47,8 +47,8 @@ router.get('/:id/active-users', (req, res) => {
 });
 
 // Remover bancada
-router.delete('/:id', (req, res) => {
-  db.prepare('DELETE FROM workstations WHERE id = ?').run(req.params.id);
+router.delete('/:id', async (req, res) => {
+  await pool.query('DELETE FROM workstations WHERE id = $1', [req.params.id]);
   broadcast('workstations:updated', {});
   res.json({ ok: true });
 });

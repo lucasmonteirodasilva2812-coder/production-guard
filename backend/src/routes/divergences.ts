@@ -1,23 +1,24 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
-import db from '../db';
+import { pool } from '../pg.js';
 
 const router = Router();
 
-router.get('/', (_req, res) => {
-  const rows = db.prepare('SELECT * FROM divergences ORDER BY created_at DESC').all();
+router.get('/', async (_req, res) => {
+  const { rows } = await pool.query('SELECT * FROM divergences ORDER BY created_at DESC');
   res.json(rows.map(mapDivergence));
 });
 
-router.post('/finalize/:partNumberId', (req, res) => {
+router.post('/finalize/:partNumberId', async (req, res) => {
   const { createdBy } = req.body as { createdBy: string };
-  const pn = db.prepare('SELECT * FROM part_numbers WHERE id = ?').get(req.params.partNumberId) as any;
+  const { rows } = await pool.query('SELECT * FROM part_numbers WHERE id = $1', [req.params.partNumberId]);
+  const pn = rows[0];
   if (!pn) return res.status(404).json({ error: 'Part number não encontrado' });
 
   const diff = pn.labeled_qty - pn.declared_qty;
 
   if (diff === 0) {
-    db.prepare("UPDATE part_numbers SET status = 'concluido' WHERE id = ?").run(pn.id);
+    await pool.query("UPDATE part_numbers SET status = 'concluido' WHERE id = $1", [pn.id]);
     return res.json({ divergence: null });
   }
 
@@ -34,18 +35,18 @@ router.post('/finalize/:partNumberId', (req, res) => {
     resolved: false,
   };
 
-  db.prepare(`
+  await pool.query(`
     INSERT INTO divergences (id, part_number_id, part_number, declared_qty, labeled_qty, difference, type, created_at, created_by, resolved)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-  `).run(report.id, report.partNumberId, report.partNumber, report.declaredQty, report.labeledQty, report.difference, report.type, report.createdAt, report.createdBy);
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)
+  `, [report.id, report.partNumberId, report.partNumber, report.declaredQty, report.labeledQty, report.difference, report.type, report.createdAt, report.createdBy]);
 
-  db.prepare("UPDATE part_numbers SET status = 'divergente' WHERE id = ?").run(pn.id);
+  await pool.query("UPDATE part_numbers SET status = 'divergente' WHERE id = $1", [pn.id]);
 
   res.status(201).json({ divergence: report });
 });
 
-router.patch('/:id/resolve', (req, res) => {
-  db.prepare('UPDATE divergences SET resolved = 1 WHERE id = ?').run(req.params.id);
+router.patch('/:id/resolve', async (req, res) => {
+  await pool.query('UPDATE divergences SET resolved = 1 WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
 });
 
